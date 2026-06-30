@@ -9,7 +9,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "dev:vanilla-chat": "pnpm --filter vanilla-chat dev"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

@@ -15,6 +15,14 @@
     },
     "lint": {
       "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

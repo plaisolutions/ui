@@ -1,4 +1,4 @@
-# plai-js
+# plai-ui
 
 Monorepo for the Plai chat SDK:
 
@@ -51,3 +51,4 @@ Fallback (if you prefer not to use corepack shims):
 npm install -g pnpm@11.5.3
 pnpm -v
 ```
+
