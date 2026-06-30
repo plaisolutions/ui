@@ -1,6 +1,6 @@
 # Vanilla Chat Example
 
-Interactive demo for [`@plai/client`](../../packages/client). Creates a chat session via the Plai API, persists it in `localStorage`, and drives a small chat UI with `PlaiChat` and `PlaiThreadTransport`.
+Interactive demo for `[@plai/client](../../packages/client)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives a small chat UI with `PlaiChat` and `PlaiThreadTransport`.
 
 ## Run
 
@@ -39,10 +39,11 @@ chat.subscribe((state) => {
 await chat.sendMessage({ text: "Hello" });
 ```
 
+
+
 ## Setup
 
 1. Enter your project bearer token, agent ID, and external ref.
 2. Click **Create session** — calls `POST /chat_sessions`.
 3. Chat using the returned `chat_token` (not the project token).
 
-See [`openapi.json`](./openapi.json) or [`docs/openapi.json`](../../docs/openapi.json) for API details.

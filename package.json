@@ -10,7 +10,8 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "format": "biome format --write .",
-    "dev:vanilla-chat": "pnpm --filter vanilla-chat dev"
+    "dev:vanilla-chat": "pnpm --filter vanilla-chat dev",
+    "dev:react-chat": "pnpm --filter react-chat dev"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
