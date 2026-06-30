@@ -1,0 +1,14 @@
+event: message_start
+data: {"type":"message_start","message":{"id":"msg_3","role":"assistant","model":"gpt-4o"}}
+
+event: content_block_start
+data: {"type":"content_block_start","index":0,"content_block":{"type":"guardrail","content":"Filtered"}}
+
+event: content_block_stop
+data: {"type":"content_block_stop","index":0}
+
+event: usage
+data: {"type":"usage","input_tokens":0,"output_tokens":0,"cached_tokens":null}
+
+event: message_stop
+data: {"type":"message_stop"}

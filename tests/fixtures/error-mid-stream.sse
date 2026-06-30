@@ -1,0 +1,14 @@
+event: message_start
+data: {"type":"message_start","message":{"id":"msg_5","role":"assistant","model":"gpt-4o"}}
+
+event: content_block_start
+data: {"type":"content_block_start","index":0,"content_block":{"type":"text"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"partial"}}
+
+event: error
+data: {"type":"error","error":{"type":"context_length_exceeded","message":"Model context length exceeded."}}
+
+event: message_stop
+data: {"type":"message_stop"}

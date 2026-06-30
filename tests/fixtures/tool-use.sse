@@ -1,0 +1,14 @@
+event: message_start
+data: {"type":"message_start","message":{"id":"msg_2","role":"assistant","model":"gpt-4o"}}
+
+event: content_block_start
+data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_1","name":"knowledge_search","tool_type":"vector_search","input":{"query":"hello"},"input_schema":{"type":"object"}}}
+
+event: content_block_stop
+data: {"type":"content_block_stop","index":0}
+
+event: tool_result
+data: {"type":"tool_result","tool_use_id":"toolu_1","tool_type":"vector_search","content":{"results":["a"]},"is_error":false,"error_details":null,"metadata":{"foo":"bar"}}
+
+event: message_stop
+data: {"type":"message_stop"}

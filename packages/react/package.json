@@ -1,0 +1,28 @@
+{
+  "name": "@plai/react",
+  "version": "0.1.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown src/index.ts --format esm --dts --clean --external @plai/client --external react",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome lint src"
+  },
+  "dependencies": {
+    "@plai/client": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "tsdown": "^0.15.5"
+  }
+}
