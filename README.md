@@ -14,6 +14,36 @@ pnpm test
 pnpm build
 ```
 
+## Manual Publish
+
+If you want to publish manually from your terminal, use a **granular npm access token** with:
+
+- Publish permission (`read/write`) for:
+  - `@plaisolutions/client`
+  - `@plaisolutions/react`
+- **Bypass 2FA for publish** enabled
+
+Configure the token locally (never commit it):
+
+```bash
+npm config set //registry.npmjs.org/:_authToken=<NPM_GRANULAR_TOKEN>
+npm whoami
+```
+
+Publish in this order:
+
+```bash
+pnpm --filter @plaisolutions/client publish --access public
+pnpm --filter @plaisolutions/react publish --access public
+```
+
+Verify:
+
+```bash
+npm view @plaisolutions/client version
+npm view @plaisolutions/react version
+```
+
 ## Release Automation
 
 This repo is configured with:
@@ -76,4 +106,3 @@ Fallback (if you prefer not to use corepack shims):
 npm install -g pnpm@11.5.3
 pnpm -v
 ```
-
