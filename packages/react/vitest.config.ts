@@ -8,7 +8,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@plai/client": resolve(__dirname, "../client/src/index.ts"),
+      "@plaisolutions/client": resolve(__dirname, "../client/src/index.ts"),
     },
   },
 })

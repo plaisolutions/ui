@@ -2,8 +2,8 @@
 
 Monorepo for the Plai chat SDK:
 
-- `@plai/client`: framework-agnostic SSE chat client.
-- `@plai/react`: React hook adapter built on top of `@plai/client`.
+- `@plaisolutions/client`: framework-agnostic SSE chat client.
+- `@plaisolutions/react`: React hook adapter built on top of `@plaisolutions/client`.
 
 ## Development
 

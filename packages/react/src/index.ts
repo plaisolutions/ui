@@ -7,4 +7,4 @@ export type {
   SendMessageInput,
   UIMessage,
   Usage,
-} from "@plai/client"
+} from "@plaisolutions/client"

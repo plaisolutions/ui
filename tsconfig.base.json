@@ -14,8 +14,8 @@
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@plai/client": ["./packages/client/src/index.ts"],
-      "@plai/react": ["./packages/react/src/index.ts"]
+      "@plaisolutions/client": ["./packages/client/src/index.ts"],
+      "@plaisolutions/react": ["./packages/react/src/index.ts"]
     }
   }
 }

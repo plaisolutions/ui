@@ -1,17 +1,17 @@
-# @plai/client
+# @plaisolutions/client
 
 Framework-agnostic SDK for Plai SSE chat sessions.
 
 ## Install
 
 ```bash
-pnpm add @plai/client
+pnpm add @plaisolutions/client
 ```
 
 ## Usage
 
 ```ts
-import { PlaiChat, PlaiThreadTransport } from "@plai/client";
+import { PlaiChat, PlaiThreadTransport } from "@plaisolutions/client";
 
 const chat = new PlaiChat({
   transport: new PlaiThreadTransport({

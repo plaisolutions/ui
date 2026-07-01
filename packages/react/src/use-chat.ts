@@ -1,4 +1,4 @@
-import { PlaiChat } from "@plai/client"
+import { PlaiChat } from "@plaisolutions/client"
 import type {
   ChatStatus,
   ChatTransport,
@@ -7,7 +7,7 @@ import type {
   SendMessageInput,
   UIMessage,
   Usage,
-} from "@plai/client"
+} from "@plaisolutions/client"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 export type UseChatOptions = {

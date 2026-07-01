@@ -1,5 +1,5 @@
 {
-  "name": "@plai/react",
+  "name": "@plaisolutions/react",
   "version": "0.1.0",
   "type": "module",
   "sideEffects": false,
@@ -11,13 +11,13 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsdown src/index.ts --format esm --dts --clean --external @plai/client --external react",
+    "build": "tsdown src/index.ts --format esm --dts --clean --external @plaisolutions/client --external react",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome lint src"
   },
   "dependencies": {
-    "@plai/client": "workspace:*"
+    "@plaisolutions/client": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18"

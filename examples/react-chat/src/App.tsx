@@ -48,7 +48,7 @@ export function App() {
   return (
     <div id="app">
       <header className="header">
-        <h1>@plai/react demo</h1>
+        <h1>@plaisolutions/react demo</h1>
         <p className="subtitle">
           Create a chat session, save it to localStorage, and interact with{" "}
           <code>useChat</code>.

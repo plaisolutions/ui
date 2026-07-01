@@ -1,6 +1,6 @@
 # React Chat Example
 
-Interactive demo for `[@plai/react](../../packages/react)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives a small chat UI with the `useChat` hook and `PlaiThreadTransport`.
+Interactive demo for `[@plaisolutions/react](../../packages/react)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives a small chat UI with the `useChat` hook and `PlaiThreadTransport`.
 
 ## Run
 
@@ -8,8 +8,8 @@ From the monorepo root:
 
 ```bash
 pnpm install
-pnpm --filter @plai/client build
-pnpm --filter @plai/react build
+pnpm --filter @plaisolutions/client build
+pnpm --filter @plaisolutions/react build
 pnpm --filter react-chat dev
 ```
 
@@ -23,8 +23,8 @@ pnpm dev
 
 ```tsx
 import { useMemo, useState } from "react";
-import { PlaiThreadTransport } from "@plai/client";
-import { useChat } from "@plai/react";
+import { PlaiThreadTransport } from "@plaisolutions/client";
+import { useChat } from "@plaisolutions/react";
 
 const transport = useMemo(
   () =>

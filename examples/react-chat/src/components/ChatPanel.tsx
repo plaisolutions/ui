@@ -1,5 +1,5 @@
-import { PlaiThreadTransport } from "@plai/client"
-import { useChat } from "@plai/react"
+import { PlaiThreadTransport } from "@plaisolutions/client"
+import { useChat } from "@plaisolutions/react"
 import { useMemo, useState } from "react"
 import type { ChatSession } from "../api"
 import type { DemoConfig } from "../storage"

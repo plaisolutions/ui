@@ -1,4 +1,4 @@
-import type { UIMessage } from "@plai/client"
+import type { UIMessage } from "@plaisolutions/client"
 
 function getMessageText(message: UIMessage): string {
   return message.parts

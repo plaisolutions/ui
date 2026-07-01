@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@plai/client": "workspace:*"
+    "@plaisolutions/client": "workspace:*"
   },
   "devDependencies": {
     "vite": "^8.1.0"

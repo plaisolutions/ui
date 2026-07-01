@@ -44,10 +44,10 @@ importers:
 
   examples/react-chat:
     dependencies:
-      '@plai/client':
+      '@plaisolutions/client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@plai/react':
+      '@plaisolutions/react':
         specifier: workspace:*
         version: link:../../packages/react
       react:
@@ -75,7 +75,7 @@ importers:
 
   examples/vanilla-chat:
     dependencies:
-      '@plai/client':
+      '@plaisolutions/client':
         specifier: workspace:*
         version: link:../../packages/client
     devDependencies:
@@ -91,7 +91,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@plai/client':
+      '@plaisolutions/client':
         specifier: workspace:*
         version: link:../client
       react:

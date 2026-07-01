@@ -1,4 +1,4 @@
-import { PlaiChat, PlaiThreadTransport } from "@plai/client"
+import { PlaiChat, PlaiThreadTransport } from "@plaisolutions/client"
 
 export function createPlaiChat({ api, chatSessionId, threadId, chatToken }) {
   return new PlaiChat({

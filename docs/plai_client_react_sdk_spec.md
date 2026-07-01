@@ -1,11 +1,11 @@
-# Software Specification: `@plai/client` and `@plai/react`
+# Software Specification: `@plaisolutions/client` and `@plaisolutions/react`
 
 ## 1. Purpose
 
 This document defines the proposed architecture, package boundaries, public APIs, internal modules, and implementation plan for two npm packages:
 
-- `@plai/client`
-- `@plai/react`
+- `@plaisolutions/client`
+- `@plaisolutions/react`
 
 The goal is to provide a developer-friendly SDK for building custom user interfaces on top of Plai's AI agent REST API, including endpoints that return Server-Sent Events (SSE).
 
@@ -31,9 +31,9 @@ examples/
   nextjs-chat/
 ```
 
-`@plai/client` will contain the framework-agnostic protocol and state management layer.
+`@plaisolutions/client` will contain the framework-agnostic protocol and state management layer.
 
-`@plai/react` will contain React-specific hooks built on top of `@plai/client`.
+`@plaisolutions/react` will contain React-specific hooks built on top of `@plaisolutions/client`.
 
 No prebuilt UI components are included in the scope of this document.
 
@@ -133,14 +133,14 @@ Recommended tooling:
 
 ### 4.2 Package Dependencies
 
-`@plai/client` should have zero runtime dependencies if possible.
+`@plaisolutions/client` should have zero runtime dependencies if possible.
 
-`@plai/react` should depend on:
+`@plaisolutions/react` should depend on:
 
 ```json
 {
   "dependencies": {
-    "@plai/client": "workspace:*"
+    "@plaisolutions/client": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18"
@@ -154,9 +154,9 @@ React should be a peer dependency, not a bundled dependency.
 
 ## 5. Package Responsibilities
 
-## 5.1 `@plai/client`
+## 5.1 `@plaisolutions/client`
 
-`@plai/client` is the framework-agnostic package.
+`@plaisolutions/client` is the framework-agnostic package.
 
 It is responsible for:
 
@@ -171,14 +171,14 @@ It is responsible for:
 
 It must not import React or any framework-specific dependency.
 
-## 5.2 `@plai/react`
+## 5.2 `@plaisolutions/react`
 
-`@plai/react` is the React adapter package.
+`@plaisolutions/react` is the React adapter package.
 
 It is responsible for:
 
 1. Providing React hooks such as `useChat`.
-2. Creating and managing instances of `PlaiChat` from `@plai/client`.
+2. Creating and managing instances of `PlaiChat` from `@plaisolutions/client`.
 3. Subscribing to state changes and updating React state.
 4. Handling React lifecycle concerns such as cleanup on unmount.
 5. Exposing a simple React-friendly API similar to:
@@ -189,7 +189,7 @@ const { messages, sendMessage, status, error, stop, reset } = useChat({
 });
 ```
 
-It must not duplicate the SSE parser, transport logic, or reducer logic from `@plai/client`.
+It must not duplicate the SSE parser, transport logic, or reducer logic from `@plaisolutions/client`.
 
 ---
 
@@ -322,7 +322,7 @@ The goal is that a UI developer can render messages like this:
 
 ---
 
-## 8. `@plai/client` Design
+## 8. `@plaisolutions/client` Design
 
 ## 8.1 Public API
 
@@ -727,7 +727,7 @@ async sendMessage(input: SendMessageInput): Promise<void> {
 
 ---
 
-## 9. `@plai/react` Design
+## 9. `@plaisolutions/react` Design
 
 ## 9.1 Public API
 
@@ -765,8 +765,8 @@ Example usage:
 "use client";
 
 import { useState } from "react";
-import { useChat } from "@plai/react";
-import { PlaiThreadTransport } from "@plai/client";
+import { useChat } from "@plaisolutions/react";
+import { PlaiThreadTransport } from "@plaisolutions/client";
 
 const transport = new PlaiThreadTransport({
   api: "/chat_sessions/session_123/threads/thread_456/invoke",
@@ -897,12 +897,12 @@ const transport = useMemo(() => {
 
 ## 10. Vanilla JavaScript Usage
 
-The purpose of `@plai/client` is to support framework-agnostic usage.
+The purpose of `@plaisolutions/client` is to support framework-agnostic usage.
 
 Example:
 
 ```ts
-import { PlaiChat, PlaiThreadTransport } from "@plai/client";
+import { PlaiChat, PlaiThreadTransport } from "@plaisolutions/client";
 
 const chat = new PlaiChat({
   transport: new PlaiThreadTransport({
@@ -954,11 +954,11 @@ document.querySelector("form")?.addEventListener("submit", async (event) => {
 
 Both packages should publish ESM-first builds.
 
-Recommended `package.json` for `@plai/client`:
+Recommended `package.json` for `@plaisolutions/client`:
 
 ```json
 {
-  "name": "@plai/client",
+  "name": "@plaisolutions/client",
   "version": "0.1.0",
   "type": "module",
   "sideEffects": false,
@@ -972,11 +972,11 @@ Recommended `package.json` for `@plai/client`:
 }
 ```
 
-Recommended `package.json` for `@plai/react`:
+Recommended `package.json` for `@plaisolutions/react`:
 
 ```json
 {
-  "name": "@plai/react",
+  "name": "@plaisolutions/react",
   "version": "0.1.0",
   "type": "module",
   "sideEffects": false,
@@ -990,7 +990,7 @@ Recommended `package.json` for `@plai/react`:
     "react": ">=18"
   },
   "dependencies": {
-    "@plai/client": "^0.1.0"
+    "@plaisolutions/client": "^0.1.0"
   },
   "files": ["dist"]
 }
@@ -1085,13 +1085,13 @@ The initial documentation should include:
 Example installation:
 
 ```bash
-pnpm add @plai/client @plai/react
+pnpm add @plaisolutions/client @plaisolutions/react
 ```
 
 For vanilla usage:
 
 ```bash
-pnpm add @plai/client
+pnpm add @plaisolutions/client
 ```
 
 ---
@@ -1112,7 +1112,7 @@ pnpm add @plai/client
 1. Define all SSE event types.
 2. Define UI message types.
 3. Define usage, error, transport, and state types.
-4. Export public types from `@plai/client`.
+4. Export public types from `@plaisolutions/client`.
 
 ### Phase 3: SSE Parser
 
@@ -1183,7 +1183,7 @@ Recommended initial decisions:
 2. Keep partial assistant content on errors.
 3. Treat tool result content as `unknown` or `string | unknown`, depending on backend guarantees.
 4. Expose `onEvent` for debugging and advanced users.
-5. Keep `@plai/react` headless and UI-free.
+5. Keep `@plaisolutions/react` headless and UI-free.
 
 ---
 
@@ -1191,9 +1191,9 @@ Recommended initial decisions:
 
 The first version is complete when:
 
-1. `@plai/client` can send a message to the invoke endpoint and process the SSE response.
-2. `@plai/client` can be used from vanilla JavaScript without React.
-3. `@plai/react` exposes a working `useChat` hook.
+1. `@plaisolutions/client` can send a message to the invoke endpoint and process the SSE response.
+2. `@plaisolutions/client` can be used from vanilla JavaScript without React.
+3. `@plaisolutions/react` exposes a working `useChat` hook.
 4. The hook exposes `messages`, `status`, `error`, `usage`, `sendMessage`, `stop`, and `reset`.
 5. Streaming text updates incrementally.
 6. Tool calls and tool results are represented in message parts.
@@ -1212,12 +1212,12 @@ The first version is complete when:
 The SDK should be implemented as two separate npm packages inside one monorepo:
 
 ```txt
-@plai/client
-@plai/react
+@plaisolutions/client
+@plaisolutions/react
 ```
 
-`@plai/client` is the core package. It owns the SSE protocol, transport, parser, reducer, normalized message model, observable state, and framework-agnostic `PlaiChat` class.
+`@plaisolutions/client` is the core package. It owns the SSE protocol, transport, parser, reducer, normalized message model, observable state, and framework-agnostic `PlaiChat` class.
 
-`@plai/react` is a thin React adapter. It owns hooks such as `useChat`, but delegates protocol and state logic to `@plai/client`.
+`@plaisolutions/react` is a thin React adapter. It owns hooks such as `useChat`, but delegates protocol and state logic to `@plaisolutions/client`.
 
 This design gives Plai a clean foundation for custom UI development today while keeping the door open for future framework adapters and optional UI packages later.

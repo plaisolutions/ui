@@ -1,19 +1,19 @@
-# @plai/react
+# @plaisolutions/react
 
-React hooks for Plai chat, powered by `@plai/client`.
+React hooks for Plai chat, powered by `@plaisolutions/client`.
 
 ## Install
 
 ```bash
-pnpm add @plai/client @plai/react
+pnpm add @plaisolutions/client @plaisolutions/react
 ```
 
 ## Usage
 
 ```tsx
 import { useState } from "react";
-import { PlaiThreadTransport } from "@plai/client";
-import { useChat } from "@plai/react";
+import { PlaiThreadTransport } from "@plaisolutions/client";
+import { useChat } from "@plaisolutions/react";
 
 const transport = new PlaiThreadTransport({
   api: "/api",

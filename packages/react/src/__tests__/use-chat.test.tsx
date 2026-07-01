@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import type { ChatTransport, PlaiSseEvent } from "@plai/client"
+import type { ChatTransport, PlaiSseEvent } from "@plaisolutions/client"
 import { useChat } from "../use-chat"
 
 function createTransport(events: PlaiSseEvent[], delayMs = 0): ChatTransport {

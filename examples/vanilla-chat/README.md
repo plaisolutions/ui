@@ -1,6 +1,6 @@
 # Vanilla Chat Example
 
-Interactive demo for `[@plai/client](../../packages/client)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives a small chat UI with `PlaiChat` and `PlaiThreadTransport`.
+Interactive demo for `[@plaisolutions/client](../../packages/client)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives a small chat UI with `PlaiChat` and `PlaiThreadTransport`.
 
 ## Run
 
@@ -8,7 +8,7 @@ From the monorepo root:
 
 ```bash
 pnpm install
-pnpm --filter @plai/client build
+pnpm --filter @plaisolutions/client build
 pnpm --filter vanilla-chat dev
 ```
 
@@ -21,7 +21,7 @@ pnpm dev
 ## What it demonstrates
 
 ```js
-import { PlaiChat, PlaiThreadTransport } from "@plai/client";
+import { PlaiChat, PlaiThreadTransport } from "@plaisolutions/client";
 
 const chat = new PlaiChat({
   transport: new PlaiThreadTransport({
