@@ -1,4 +1,4 @@
-# plai-ui
+# PLai Chat SDK
 
 Monorepo for the Plai chat SDK:
 
@@ -13,6 +13,31 @@ pnpm typecheck
 pnpm test
 pnpm build
 ```
+
+## Release Automation
+
+This repo is configured with:
+
+- `.github/workflows/ci.yml`: lint, typecheck, test, build on PRs/push to `main`.
+- `.github/workflows/release.yml`: Changesets release flow on push to `main`.
+
+### How the release workflow works
+
+1. PRs add changesets with `pnpm changeset`.
+2. On `main`, the workflow uses `changesets/action` to:
+  - open/update a release PR with version bumps, or
+  - publish packages when a release PR is merged.
+
+
+
+### Required npm setup (Trusted Publishing)
+
+Before automatic publish can work, configure npm Trusted Publishing for this GitHub repository and both packages:
+
+- `@plaisolutions/client`
+- `@plaisolutions/react`
+
+In npm package settings, add this repository as a trusted publisher for GitHub Actions (OIDC).
 
 ## Troubleshooting
 

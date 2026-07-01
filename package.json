@@ -10,6 +10,8 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "format": "biome format --write .",
+    "release:check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "release:publish": "pnpm release:check && pnpm changeset publish",
     "dev:vanilla-chat": "pnpm --filter vanilla-chat dev",
     "dev:react-chat": "pnpm --filter react-chat dev"
   },
