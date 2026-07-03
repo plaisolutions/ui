@@ -15,7 +15,10 @@
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@plaisolutions/client": ["./packages/client/src/index.ts"],
-      "@plaisolutions/react": ["./packages/react/src/index.ts"]
+      "@plaisolutions/react": ["./packages/react/src/index.ts"],
+      "@plaisolutions/react/components": [
+        "./packages/react/src/components/index.ts"
+      ]
     }
   }
 }

@@ -9,6 +9,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
+    "storybook": "turbo run storybook --filter=storybook-react",
+    "storybook:build": "turbo run storybook:build --filter=storybook-react",
     "format": "biome format --write .",
     "release:check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "release:publish": "pnpm release:check && pnpm changeset publish",

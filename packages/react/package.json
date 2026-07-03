@@ -11,13 +11,17 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
   },
-  "files": [
-    "dist"
-  ],
+  "style": "./dist/styles.css",
+  "files": ["dist"],
   "scripts": {
-    "build": "tsdown src/index.ts --format esm --dts --clean --external @plaisolutions/client --external react",
+    "build": "tsdown src/index.ts --format esm --dts --clean --external @plaisolutions/client --external react && tsdown src/components/index.ts --format esm --dts --out-dir dist/components --external @plaisolutions/client --external react && tailwindcss -i src/styles.css -o dist/styles.css --minify",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome lint src"
@@ -29,7 +33,9 @@
     "react": ">=18"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.11",
     "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.11",
     "tsdown": "^0.15.5"
   }
 }

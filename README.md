@@ -14,6 +14,19 @@ pnpm test
 pnpm build
 ```
 
+Run Storybook to develop and validate React components:
+
+```bash
+pnpm storybook
+```
+
+When consuming React components styled with Tailwind utilities, import the
+package stylesheet once in your app entrypoint:
+
+```ts
+import "@plaisolutions/react/styles.css"
+```
+
 ## Manual Publish
 
 If you want to publish manually from your terminal, use a **granular npm access token** with:
