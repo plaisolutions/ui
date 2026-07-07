@@ -1,9 +1,5 @@
 import type { PromptFormProps } from "@plaisolutions/react/components"
-import {
-  Microphone,
-  PromptForm,
-  PromptFormIconButton,
-} from "@plaisolutions/react/components"
+import { PromptForm, SpeechToTextToggle } from "@plaisolutions/react/components"
 import type { Meta, StoryObj } from "@storybook/react"
 import { useState } from "react"
 
@@ -13,7 +9,7 @@ function PromptFormDemo({
   ...props
 }: Omit<
   PromptFormProps,
-  "value" | "onValueChange" | "files" | "onFilesChange"
+  "value" | "onValueChange" | "files" | "onFilesChange" | "rightSlot"
 > & {
   initialValue?: string
   initialFiles?: File[]
@@ -21,22 +17,23 @@ function PromptFormDemo({
   const [value, setValue] = useState(initialValue)
   const [files, setFiles] = useState(initialFiles)
 
+  function handleTranscriptionComplete(text: string) {
+    setValue((current) => (current ? `${current} ${text}` : text))
+  }
+
   return (
     <PromptForm
       value={value}
       onValueChange={setValue}
       files={files}
       onFilesChange={setFiles}
+      rightSlot={
+        <SpeechToTextToggle onTranscriptionComplete={handleTranscriptionComplete} />
+      }
       {...props}
     />
   )
 }
-
-const voiceSlot = (
-  <PromptFormIconButton aria-label="Voice input">
-    <Microphone className="size-4" />
-  </PromptFormIconButton>
-)
 
 const meta: Meta<typeof PromptFormDemo> = {
   title: "Components/PromptForm",
@@ -56,7 +53,6 @@ const meta: Meta<typeof PromptFormDemo> = {
     onSubmit: async () => {},
     onStop: () => {},
     placeholder: "Envía un mensaje...",
-    rightSlot: voiceSlot,
   },
 }
 
@@ -75,7 +71,6 @@ export const WithText: Story = {
 export const WithAttachments: Story = {
   args: {
     initialFiles: [new File(["image"], "doggy.jpeg", { type: "image/jpeg" })],
-    rightSlot: voiceSlot,
   },
 }
 
@@ -85,7 +80,6 @@ export const WithMultipleAttachments: Story = {
       new File(["image"], "doggy.jpeg", { type: "image/jpeg" }),
       new File(["pdf"], "report.pdf", { type: "application/pdf" }),
     ],
-    rightSlot: voiceSlot,
   },
 }
 
@@ -117,6 +111,5 @@ export const CustomLabels: Story = {
     placeholder: "Ask anything...",
     sendLabel: "Ask",
     stopLabel: "Cancel",
-    rightSlot: null,
   },
 }

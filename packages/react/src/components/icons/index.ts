@@ -1,4 +1,5 @@
 export { ArrowUp } from "./arrow"
+export { Loader } from "./loader"
 export { Microphone } from "./microphone"
 export { Paperclip } from "./paperclip"
 export { Stop } from "./stop"

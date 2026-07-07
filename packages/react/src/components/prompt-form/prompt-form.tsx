@@ -2,7 +2,6 @@ import type { ChatStatus } from "@plaisolutions/client"
 import type { ButtonHTMLAttributes, ReactNode } from "react"
 import { useLayoutEffect, useRef, useState } from "react"
 import { ArrowUp } from "../icons/arrow"
-import { Paperclip } from "../icons/paperclip"
 import { Stop } from "../icons/stop"
 import { X } from "../icons/x"
 import { joinClasses } from "../internal/join-classes"
@@ -11,6 +10,7 @@ import {
   partitionPromptFormFiles,
 } from "./file-attachments"
 import type { InvalidPromptFormFile } from "./file-attachments"
+import { PromptFormAttachButton } from "./prompt-form-attach-button"
 
 const actionButtonClassName =
   "inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40"
@@ -110,7 +110,6 @@ export function PromptForm({
   rightSlot,
 }: PromptFormProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [internalFiles, setInternalFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const files = filesProp ?? internalFiles
@@ -197,27 +196,13 @@ export function PromptForm({
         />
         <div className="flex shrink-0 items-center gap-2">
           {enableAttachments ? (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={accept}
-                multiple
-                className="hidden"
-                onChange={(event) => {
-                  addFiles(Array.from(event.target.files ?? []))
-                  event.currentTarget.value = ""
-                }}
-              />
-              <PromptFormIconButton
-                type="button"
-                aria-label={attachLabel}
-                disabled={isInteractionDisabled}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Paperclip className="size-4" />
-              </PromptFormIconButton>
-            </>
+            <PromptFormAttachButton
+              accept={accept}
+              disabled={isInteractionDisabled}
+              label={attachLabel}
+              onFilesSelected={addFiles}
+              onInvalidFiles={onInvalidFiles}
+            />
           ) : null}
           {rightSlot ?? null}
           {isStreaming ? (

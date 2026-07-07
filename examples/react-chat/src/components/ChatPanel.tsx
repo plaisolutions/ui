@@ -1,12 +1,15 @@
 import { PlaiThreadTransport } from "@plaisolutions/client"
 import {
   Message,
-  Microphone,
   PromptForm,
-  PromptFormIconButton,
+  PromptFormAttachButton,
+  SpeechToTextToggle,
   useChat,
 } from "@plaisolutions/react"
-import type { PromptFormSubmitInput } from "@plaisolutions/react"
+import type {
+  InvalidPromptFormFile,
+  PromptFormSubmitInput,
+} from "@plaisolutions/react"
 import { useMemo, useState } from "react"
 import type { ChatSession } from "../api"
 import type { DemoConfig } from "../storage"
@@ -19,6 +22,7 @@ type ChatPanelProps = {
 
 export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
   const [input, setInput] = useState("")
+  const [files, setFiles] = useState<File[]>([])
   const [actionError, setActionError] = useState<string | null>(null)
   const [isCreatingThread, setIsCreatingThread] = useState(false)
 
@@ -56,6 +60,26 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
         err instanceof Error ? err.message : "Failed to send message.",
       )
     }
+  }
+
+  function handleTranscriptionComplete(text: string) {
+    setInput((current) => (current ? `${current} ${text}` : text))
+  }
+
+  function handleTranscriptionError(error: Error) {
+    setActionError(error.message)
+  }
+
+  function handleFilesSelected(nextFiles: File[]) {
+    setFiles((current) => [...current, ...nextFiles])
+  }
+
+  function handleInvalidFiles(invalidFiles: InvalidPromptFormFile[]) {
+    setActionError(
+      invalidFiles
+        .map(({ file, reason }) => `${file.name}: ${reason}`)
+        .join("\n"),
+    )
   }
 
   async function handleNewThread() {
@@ -133,14 +157,30 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
       <PromptForm
         value={input}
         onValueChange={setInput}
+        files={files}
+        onFilesChange={setFiles}
         onSubmit={handleSubmit}
         status={status}
         onStop={stop}
+        enableAttachments={false}
         placeholder="Envía un mensaje..."
         rightSlot={
-          <PromptFormIconButton aria-label="Entrada de voz">
-            <Microphone className="size-4" />
-          </PromptFormIconButton>
+          <>
+            <PromptFormAttachButton
+              onFilesSelected={handleFilesSelected}
+              onInvalidFiles={handleInvalidFiles}
+              disabled={isBusy}
+              label="Adjuntar archivo"
+            />
+            <SpeechToTextToggle
+              onTranscriptionComplete={handleTranscriptionComplete}
+              onTranscriptionError={handleTranscriptionError}
+              disabled={isBusy}
+              label="Entrada de voz"
+              listeningLabel="Detener grabación"
+              loadingLabel="Transcribiendo..."
+            />
+          </>
         }
       />
 
