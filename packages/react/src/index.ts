@@ -1,7 +1,7 @@
 export { useChat } from "./use-chat"
-export { Message } from "./components"
+export { Message, PromptForm, ToolResultCard } from "./components"
 export type { UseChatOptions, UseChatResult } from "./use-chat"
-export type { MessageProps } from "./components"
+export type { MessageProps, PromptFormProps, ToolResultCardProps } from "./components"
 export type {
   ChatStatus,
   PlaiChatError,

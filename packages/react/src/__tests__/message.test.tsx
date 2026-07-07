@@ -39,7 +39,23 @@ describe("Message", () => {
     )
 
     expect(screen.getByText("search_docs")).toBeTruthy()
-    expect(screen.getByText("Status: completed")).toBeTruthy()
+    expect(screen.getByText("completed")).toBeTruthy()
     expect(screen.getByText(/"q": "billing"/)).toBeTruthy()
+  })
+
+  it("collapses long user prompts by default", () => {
+    const text = "x".repeat(800)
+
+    render(
+      <Message
+        message={{
+          id: "msg_3",
+          role: "user",
+          parts: [{ type: "text", text }],
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Read more")).toBeTruthy()
   })
 })

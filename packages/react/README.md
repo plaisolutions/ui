@@ -2,6 +2,9 @@
 
 React hooks for Plai chat, powered by `@plaisolutions/client`.
 
+`useChat` is the main API. Optional UI primitives are also exported for teams
+that don't want to build chat UI from scratch.
+
 ## Install
 
 ```bash
@@ -84,3 +87,14 @@ export function Chat() {
 }
 ```
 
+## Optional UI Primitives
+
+```tsx
+import { Message, PromptForm, ToolResultCard } from "@plaisolutions/react";
+```
+
+Available optional components:
+
+- `Message`
+- `PromptForm`
+- `ToolResultCard`

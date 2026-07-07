@@ -1,9 +1,9 @@
 import { PlaiThreadTransport } from "@plaisolutions/client"
-import { useChat } from "@plaisolutions/react"
+import type { SendMessageInput } from "@plaisolutions/client"
+import { Message, PromptForm, useChat } from "@plaisolutions/react"
 import { useMemo, useState } from "react"
 import type { ChatSession } from "../api"
 import type { DemoConfig } from "../storage"
-import { Messages } from "./Messages"
 
 type ChatPanelProps = {
   session: ChatSession
@@ -33,17 +33,11 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
   const chatError =
     actionError ?? (error ? `${error.type}: ${error.message}` : null)
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const text = input.trim()
-    if (!text) return
-
-    setInput("")
+  async function handleSubmit(inputMessage: SendMessageInput) {
     setActionError(null)
 
     try {
-      await sendMessage({ text })
+      await sendMessage(inputMessage)
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : "Failed to send message.",
@@ -109,29 +103,29 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
 
       {chatError && <p className="error">{chatError}</p>}
 
-      <Messages messages={messages} />
+      <div className="messages" aria-live="polite">
+        {messages.length === 0 ? (
+          <p className="messages-empty">No messages yet. Send the first one.</p>
+        ) : (
+          messages.map((message) => (
+            <Message
+              key={message.id}
+              message={message}
+              className={`message message--${message.role}`}
+            />
+          ))
+        )}
+      </div>
 
-      <form className="chat-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder="Type a message…"
-          autoComplete="off"
-          disabled={isBusy}
-        />
-        <button type="submit" disabled={isBusy}>
-          Send
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          onClick={stop}
-          disabled={!isBusy}
-        >
-          Stop
-        </button>
-      </form>
+      <PromptForm
+        value={input}
+        onValueChange={setInput}
+        onSubmit={handleSubmit}
+        status={status}
+        onStop={stop}
+        className="chat-form"
+        textareaClassName="chat-input"
+      />
 
       <details className="raw-state">
         <summary>Raw state (debug)</summary>

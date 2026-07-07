@@ -305,7 +305,7 @@ button.secondary {
   font-size: 11px;
 }
 
-.chat-form input {
+.chat-input {
   flex: 1;
   min-width: 160px;
   font: inherit;

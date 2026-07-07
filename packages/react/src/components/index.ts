@@ -1,2 +1,6 @@
 export { Message } from "./message"
 export type { MessageProps } from "./message"
+export { PromptForm } from "./prompt-form/prompt-form"
+export type { PromptFormProps } from "./prompt-form/prompt-form"
+export { ToolResultCard } from "./tool-result-card"
+export type { ToolResultCardProps } from "./tool-result-card"

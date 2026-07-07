@@ -1,19 +1,24 @@
 import type { UIMessage, UIMessagePart } from "@plaisolutions/client"
+import { useMemo, useState } from "react"
+import { joinClasses } from "./internal/join-classes"
+import { ToolResultCard } from "./tool-result-card"
 
 export type MessageProps = {
   message: UIMessage
   className?: string
   showRole?: boolean
+  collapseThreshold?: number
 }
 
-function joinClasses(...classes: Array<string | undefined>) {
-  return classes.filter(Boolean).join(" ")
-}
+const DEFAULT_COLLAPSE_THRESHOLD = 600
 
 function renderPart(part: UIMessagePart, index: number) {
   if (part.type === "text") {
     return (
-      <p key={`text-${index}`} className="whitespace-pre-wrap text-sm leading-6">
+      <p
+        key={`text-${index}`}
+        className="whitespace-pre-wrap text-sm leading-6"
+      >
         {part.text}
       </p>
     )
@@ -30,30 +35,32 @@ function renderPart(part: UIMessagePart, index: number) {
     )
   }
 
-  return (
-    <section
-      key={`tool-${part.id}-${index}`}
-      className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
-    >
-      <h4 className="text-sm font-semibold text-slate-900">{part.name}</h4>
-      <p className="text-xs text-slate-600">Status: {part.state}</p>
-      <pre className="overflow-x-auto rounded bg-slate-900 p-2 text-xs text-slate-100">
-        {JSON.stringify(part.input, null, 2)}
-      </pre>
-      {part.result !== undefined ? (
-        <pre className="overflow-x-auto rounded bg-slate-900 p-2 text-xs text-slate-100">
-          {JSON.stringify(part.result, null, 2)}
-        </pre>
-      ) : null}
-      {part.errorDetails ? (
-        <p className="text-xs text-rose-700">{part.errorDetails}</p>
-      ) : null}
-    </section>
-  )
+  return <ToolResultCard key={`tool-${part.id}-${index}`} part={part} />
 }
 
-export function Message({ message, className, showRole = true }: MessageProps) {
+export function Message({
+  message,
+  className,
+  showRole = true,
+  collapseThreshold = DEFAULT_COLLAPSE_THRESHOLD,
+}: MessageProps) {
   const roleLabel = message.role.charAt(0).toUpperCase() + message.role.slice(1)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const textContent = useMemo(() => {
+    return message.parts
+      .filter((part) => part.type === "text")
+      .map((part) => part.text)
+      .join("\n")
+  }, [message.parts])
+
+  const canCollapse =
+    message.role === "user" &&
+    message.parts.every((part) => part.type === "text") &&
+    textContent.length > collapseThreshold
+
+  const previewText = canCollapse
+    ? `${textContent.slice(0, collapseThreshold).trimEnd()}...`
+    : textContent
 
   return (
     <article
@@ -69,8 +76,21 @@ export function Message({ message, className, showRole = true }: MessageProps) {
         </header>
       ) : null}
       <div className="space-y-2">
-        {message.parts.map((part, index) => renderPart(part, index))}
+        {canCollapse && !isExpanded ? (
+          <p className="whitespace-pre-wrap text-sm leading-6">{previewText}</p>
+        ) : (
+          message.parts.map((part, index) => renderPart(part, index))
+        )}
       </div>
+      {canCollapse ? (
+        <button
+          type="button"
+          className="text-left text-xs font-medium text-slate-600 hover:text-slate-900"
+          onClick={() => setIsExpanded((previous) => !previous)}
+        >
+          {isExpanded ? "Read less" : "Read more"}
+        </button>
+      ) : null}
     </article>
   )
 }

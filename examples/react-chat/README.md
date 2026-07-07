@@ -1,6 +1,6 @@
 # React Chat Example
 
-Interactive demo for `[@plaisolutions/react](../../packages/react)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives a small chat UI with the `useChat` hook and `PlaiThreadTransport`.
+Interactive demo for `[@plaisolutions/react](../../packages/react)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives chat state with `useChat` (source of truth) plus optional UI primitives.
 
 ## Run
 
@@ -24,7 +24,7 @@ pnpm dev
 ```tsx
 import { useMemo, useState } from "react";
 import { PlaiThreadTransport } from "@plaisolutions/client";
-import { useChat } from "@plaisolutions/react";
+import { Message, PromptForm, useChat } from "@plaisolutions/react";
 
 const transport = useMemo(
   () =>
@@ -39,7 +39,20 @@ const transport = useMemo(
 
 const { messages, status, error, sendMessage, stop } = useChat({ transport });
 
-await sendMessage({ text: "Hello" });
+return (
+  <>
+    {messages.map((message) => (
+      <Message key={message.id} message={message} />
+    ))}
+    <PromptForm
+      value={input}
+      onValueChange={setInput}
+      onSubmit={sendMessage}
+      status={status}
+      onStop={stop}
+    />
+  </>
+);
 ```
 
 
