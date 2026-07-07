@@ -1,4 +1,8 @@
-import type { UIToolCallPart } from "@plaisolutions/client"
+import type {
+  OfficeDocumentMediaFile,
+  OfficeDocumentsToolMetadata,
+  UIToolCallPart,
+} from "@plaisolutions/client"
 import { joinClasses } from "./internal/join-classes"
 
 export type ToolResultCardProps = {
@@ -17,11 +21,35 @@ function formatJson(value: unknown) {
   return JSON.stringify(value, null, 2)
 }
 
+function getOfficeDocumentMediaFiles(
+  part: UIToolCallPart,
+): OfficeDocumentMediaFile[] {
+  if (part.toolType !== "office_documents") {
+    return []
+  }
+
+  if (!part.metadata || typeof part.metadata !== "object") {
+    return []
+  }
+
+  const metadata = part.metadata as OfficeDocumentsToolMetadata
+  if (!Array.isArray(metadata.media_files)) {
+    return []
+  }
+
+  return metadata.media_files.filter(
+    (file): file is OfficeDocumentMediaFile =>
+      Boolean(file) && typeof file === "object" && typeof file.id === "string",
+  )
+}
+
 export function ToolResultCard({
   part,
   className,
   detailsOpen = true,
 }: ToolResultCardProps) {
+  const officeMediaFiles = getOfficeDocumentMediaFiles(part)
+
   const statusClass =
     part.state === "error"
       ? "border-rose-200 bg-rose-50 text-rose-800"
@@ -70,6 +98,34 @@ export function ToolResultCard({
           <summary className="cursor-pointer text-xs font-semibold text-slate-600">
             Output
           </summary>
+          {officeMediaFiles.length > 0 ? (
+            <div className="space-y-2 rounded border border-slate-200 bg-white p-3">
+              <p className="text-xs font-semibold text-slate-700">
+                Generated files
+              </p>
+              <ul className="space-y-1">
+                {officeMediaFiles.map((file) => {
+                  const label = file.name || file.pathname || file.id
+                  return (
+                    <li key={file.id} className="text-xs text-slate-700">
+                      {file.url ? (
+                        <a
+                          href={file.url}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="hover:underline"
+                        >
+                          {label}
+                        </a>
+                      ) : (
+                        <span>{label}</span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ) : null}
           <pre className="overflow-x-auto rounded bg-slate-900 p-2 text-xs text-slate-100">
             {formatJson(part.result)}
           </pre>

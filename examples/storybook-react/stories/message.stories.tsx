@@ -55,6 +55,31 @@ const assistantMessageWithToolCall: UIMessage = {
   ],
 }
 
+const userMessageWithAttachments: UIMessage = {
+  id: "message_user_attachments_01",
+  role: "user",
+  parts: [
+    {
+      type: "input_image",
+      url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800",
+      title: "diagram.png",
+      metadata: { originalFileName: "diagram.png" },
+    },
+    {
+      type: "input_file",
+      fileUrl:
+        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      title: "manual.pdf",
+      mimeType: "application/pdf",
+      metadata: { originalFileName: "manual.pdf" },
+    },
+    {
+      type: "text",
+      text: "Please summarize the attached files.",
+    },
+  ],
+}
+
 const toolCallMessage: UIMessage = {
   id: "message_assistant_02",
   role: "assistant",
@@ -66,6 +91,37 @@ const toolCallMessage: UIMessage = {
       input: { accountId: "acc_123" },
       state: "completed",
       result: { status: "active", nextBillingDate: "2026-08-01" },
+    },
+  ],
+}
+
+const officeDocumentsToolMessage: UIMessage = {
+  id: "message_assistant_office_01",
+  role: "assistant",
+  parts: [
+    {
+      type: "tool-call",
+      id: "tool_office_01",
+      name: "office_documents",
+      toolType: "office_documents",
+      input: { query: "Create monthly report" },
+      state: "completed",
+      result: { status: "ok" },
+      metadata: {
+        type: "office_documents",
+        media_files: [
+          {
+            id: "mf_1",
+            name: "monthly-report.docx",
+            url: "https://example.com/monthly-report.docx",
+          },
+          {
+            id: "mf_2",
+            name: "monthly-report-summary.pdf",
+            url: "https://example.com/monthly-report-summary.pdf",
+          },
+        ],
+      },
     },
   ],
 }
@@ -91,5 +147,17 @@ export const AssistantWithToolCall: Story = {
 export const ToolCall: Story = {
   args: {
     message: toolCallMessage,
+  },
+}
+
+export const UserWithAttachments: Story = {
+  args: {
+    message: userMessageWithAttachments,
+  },
+}
+
+export const OfficeDocumentsToolCall: Story = {
+  args: {
+    message: officeDocumentsToolMessage,
   },
 }

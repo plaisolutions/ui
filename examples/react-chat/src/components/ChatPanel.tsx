@@ -1,13 +1,12 @@
 import { PlaiThreadTransport } from "@plaisolutions/client"
-import type { SendMessageInput } from "@plaisolutions/client"
 import {
   Message,
   Microphone,
-  Paperclip,
   PromptForm,
   PromptFormIconButton,
   useChat,
 } from "@plaisolutions/react"
+import type { PromptFormSubmitInput } from "@plaisolutions/react"
 import { useMemo, useState } from "react"
 import type { ChatSession } from "../api"
 import type { DemoConfig } from "../storage"
@@ -40,11 +39,18 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
   const chatError =
     actionError ?? (error ? `${error.type}: ${error.message}` : null)
 
-  async function handleSubmit(inputMessage: SendMessageInput) {
+  async function handleSubmit({ text, files }: PromptFormSubmitInput) {
     setActionError(null)
 
+    if (files.length > 0) {
+      setActionError(
+        "File upload is not configured in this demo. Wire upload in your host app and pass documents to sendMessage.",
+      )
+      return
+    }
+
     try {
-      await sendMessage(inputMessage)
+      await sendMessage({ text })
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : "Failed to send message.",
@@ -132,14 +138,9 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
         onStop={stop}
         placeholder="Envía un mensaje..."
         rightSlot={
-          <>
-            <PromptFormIconButton aria-label="Adjuntar archivo">
-              <Paperclip className="size-4" />
-            </PromptFormIconButton>
-            <PromptFormIconButton aria-label="Entrada de voz">
-              <Microphone className="size-4" />
-            </PromptFormIconButton>
-          </>
+          <PromptFormIconButton aria-label="Entrada de voz">
+            <Microphone className="size-4" />
+          </PromptFormIconButton>
         }
       />
 

@@ -17,6 +17,54 @@ export type UITextPart = {
   text: string
 }
 
+export type InputFileMetadata = {
+  sourceUrl?: string
+  wasConverted?: boolean
+  originalFileName?: string
+  convertedFromExtension?: string
+  [key: string]: unknown
+}
+
+export type UIInputFilePart = {
+  type: "input_file"
+  fileUrl: string
+  title?: string
+  mimeType?: string
+  metadata?: InputFileMetadata
+}
+
+export type UIInputImagePart = {
+  type: "input_image"
+  url: string
+  title?: string
+  metadata?: InputFileMetadata
+}
+
+export type OfficeDocumentMediaFile = {
+  id: string
+  name?: string
+  content_type?: string
+  url?: string
+  pathname?: string
+  anthropic_file_id?: string
+  project_id?: string
+  metadata?: Record<string, unknown>
+  created_at?: string
+  updated_at?: string
+}
+
+export type OfficeDocumentsToolMetadata = {
+  type?: "office_documents" | string
+  media_files?: OfficeDocumentMediaFile[]
+  media_file_ids?: string[]
+  anthropic_file_ids?: string[]
+  [key: string]: unknown
+}
+
+export type UIToolCallMetadata =
+  | OfficeDocumentsToolMetadata
+  | Record<string, unknown>
+
 export type UIToolCallPart = {
   type: "tool-call"
   id: string
@@ -27,7 +75,7 @@ export type UIToolCallPart = {
   state: "pending" | "completed" | "error"
   result?: unknown
   errorDetails?: string | null
-  metadata?: Record<string, unknown>
+  metadata?: UIToolCallMetadata
 }
 
 export type UIGuardrailPart = {
@@ -35,7 +83,12 @@ export type UIGuardrailPart = {
   content: string
 }
 
-export type UIMessagePart = UITextPart | UIToolCallPart | UIGuardrailPart
+export type UIMessagePart =
+  | UITextPart
+  | UIInputFilePart
+  | UIInputImagePart
+  | UIToolCallPart
+  | UIGuardrailPart
 
 export type UIMessage = {
   id: string

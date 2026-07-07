@@ -88,6 +88,59 @@ describe("reduceChatState", () => {
     })
   })
 
+  it("preserves office_documents metadata inside tool-call parts", () => {
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", role: "assistant", model: "gpt-5.4-mini" },
+      },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_office_1",
+          name: "office_documents",
+          tool_type: "office_documents",
+          input: { query: "Create a report" },
+          input_schema: {},
+        },
+      },
+      {
+        type: "tool_result",
+        tool_use_id: "toolu_office_1",
+        tool_type: "office_documents",
+        content: { status: "ok" },
+        is_error: false,
+        error_details: null,
+        metadata: {
+          type: "office_documents",
+          media_files: [
+            {
+              id: "mf_1",
+              name: "report.docx",
+              url: "https://example.com/report.docx",
+            },
+          ],
+          media_file_ids: ["mf_1"],
+          anthropic_file_ids: ["file_abc"],
+        },
+      },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+    expect(state.messages[0].parts[0]).toMatchObject({
+      type: "tool-call",
+      toolType: "office_documents",
+      state: "completed",
+      metadata: {
+        type: "office_documents",
+        media_file_ids: ["mf_1"],
+        anthropic_file_ids: ["file_abc"],
+      },
+    })
+  })
+
   it("stores guardrail as separate part", () => {
     const events: PlaiSseEvent[] = [
       {

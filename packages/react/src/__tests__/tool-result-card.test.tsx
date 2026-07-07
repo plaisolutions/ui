@@ -41,4 +41,35 @@ describe("ToolResultCard", () => {
     expect(screen.getByText("error")).toBeTruthy()
     expect(screen.getByText(/Request timeout/)).toBeTruthy()
   })
+
+  it("renders generated office document files from metadata", () => {
+    render(
+      <ToolResultCard
+        part={{
+          type: "tool-call",
+          id: "tool_3",
+          name: "office_documents",
+          toolType: "office_documents",
+          input: { query: "Create monthly report" },
+          state: "completed",
+          result: { status: "ok" },
+          metadata: {
+            type: "office_documents",
+            media_files: [
+              {
+                id: "mf_1",
+                name: "monthly-report.docx",
+                url: "https://example.com/monthly-report.docx",
+              },
+            ],
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Generated files")).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "monthly-report.docx" }),
+    ).toBeTruthy()
+  })
 })

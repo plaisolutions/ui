@@ -12,6 +12,30 @@ export type MessageProps = {
 
 const DEFAULT_COLLAPSE_THRESHOLD = 600
 
+function getFilenameFromUrl(url: string): string | undefined {
+  try {
+    const parsed = new URL(url)
+    const pathname = decodeURIComponent(parsed.pathname)
+    const basename = pathname.split("/").pop()?.trim()
+    return basename || undefined
+  } catch {
+    const cleanedUrl = url.split("?")[0]?.split("#")[0] ?? ""
+    const basename = cleanedUrl.split("/").pop()?.trim()
+    return basename || undefined
+  }
+}
+
+function getDisplayExtension(label?: string) {
+  if (!label) {
+    return undefined
+  }
+  const ext = label.split(".").pop()?.trim().toUpperCase()
+  if (!ext || ext === label.toUpperCase()) {
+    return undefined
+  }
+  return ext
+}
+
 function renderPart(part: UIMessagePart, index: number) {
   if (part.type === "text") {
     return (
@@ -22,6 +46,69 @@ function renderPart(part: UIMessagePart, index: number) {
         {part.text}
       </p>
     )
+  }
+
+  if (part.type === "input_image") {
+    const title =
+      part.metadata?.originalFileName ||
+      part.title ||
+      getFilenameFromUrl(part.url)
+
+    return (
+      <a
+        key={`image-${index}`}
+        href={part.url}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="block w-fit rounded-lg border border-slate-200 bg-white p-2"
+      >
+        <img
+          src={part.url}
+          alt={title || "Uploaded image"}
+          className="max-h-56 rounded-md object-contain"
+        />
+        {title ? (
+          <p className="mt-2 max-w-xs truncate text-xs font-medium text-slate-700">
+            {title}
+          </p>
+        ) : null}
+      </a>
+    )
+  }
+
+  if (part.type === "input_file") {
+    const fileName =
+      part.metadata?.originalFileName ||
+      part.title ||
+      getFilenameFromUrl(part.fileUrl) ||
+      "Document"
+    const extension = getDisplayExtension(fileName)
+
+    return (
+      <a
+        key={`file-${index}`}
+        href={part.fileUrl}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left"
+      >
+        <span className="rounded bg-slate-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+          {extension ?? "File"}
+        </span>
+        <div className="min-w-0">
+          <p className="max-w-xs truncate text-sm font-medium text-slate-900">
+            {fileName}
+          </p>
+          {part.mimeType ? (
+            <p className="text-xs text-slate-500">{part.mimeType}</p>
+          ) : null}
+        </div>
+      </a>
+    )
+  }
+
+  if (part.type === "tool-call") {
+    return <ToolResultCard key={`tool-${part.id}-${index}`} part={part} />
   }
 
   if (part.type === "guardrail") {
@@ -35,7 +122,7 @@ function renderPart(part: UIMessagePart, index: number) {
     )
   }
 
-  return <ToolResultCard key={`tool-${part.id}-${index}`} part={part} />
+  return null
 }
 
 export function Message({

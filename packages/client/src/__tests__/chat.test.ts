@@ -58,6 +58,74 @@ describe("PlaiChat", () => {
     expect(state.status).toBe("ready")
   })
 
+  it("creates user parts from documents before text", async () => {
+    const chat = new PlaiChat({
+      transport: createTransport([{ type: "message_stop" }]),
+      generateId: () => "user_docs_1",
+    })
+
+    await chat.sendMessage({
+      text: "Please review these files",
+      documents: [
+        {
+          url: "https://example.com/files/diagram.png",
+          filename: "diagram.png",
+        },
+        {
+          url: "https://example.com/files/report.docx",
+          filename: "report.docx",
+        },
+      ],
+    })
+
+    const state = chat.getState()
+    expect(state.messages[0].id).toBe("user_docs_1")
+    expect(state.messages[0].parts).toEqual([
+      {
+        type: "input_image",
+        url: "https://example.com/files/diagram.png",
+        title: "diagram.png",
+        metadata: { originalFileName: "diagram.png" },
+      },
+      {
+        type: "input_file",
+        fileUrl: "https://example.com/files/report.docx",
+        title: "report.docx",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        metadata: { originalFileName: "report.docx" },
+      },
+      {
+        type: "text",
+        text: "Please review these files",
+      },
+    ])
+  })
+
+  it("supports sending documents without text", async () => {
+    const chat = new PlaiChat({
+      transport: createTransport([{ type: "message_stop" }]),
+      generateId: () => "user_docs_2",
+    })
+
+    await chat.sendMessage({
+      text: "",
+      documents: [{ url: "https://example.com/files/manual.pdf" }],
+    })
+
+    const state = chat.getState()
+    expect(state.messages[0].id).toBe("user_docs_2")
+    expect(state.messages[0].parts).toEqual([
+      {
+        type: "input_file",
+        fileUrl: "https://example.com/files/manual.pdf",
+        title: "manual.pdf",
+        mimeType: "application/pdf",
+        metadata: { originalFileName: "manual.pdf" },
+      },
+    ])
+  })
+
   it("notifies subscribers on each state change", async () => {
     const chat = new PlaiChat({
       transport: createTransport([

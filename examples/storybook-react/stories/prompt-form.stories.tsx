@@ -1,7 +1,6 @@
 import type { PromptFormProps } from "@plaisolutions/react/components"
 import {
   Microphone,
-  Paperclip,
   PromptForm,
   PromptFormIconButton,
 } from "@plaisolutions/react/components"
@@ -10,14 +9,34 @@ import { useState } from "react"
 
 function PromptFormDemo({
   initialValue = "",
+  initialFiles = [],
   ...props
-}: Omit<PromptFormProps, "value" | "onValueChange"> & {
+}: Omit<
+  PromptFormProps,
+  "value" | "onValueChange" | "files" | "onFilesChange"
+> & {
   initialValue?: string
+  initialFiles?: File[]
 }) {
   const [value, setValue] = useState(initialValue)
+  const [files, setFiles] = useState(initialFiles)
 
-  return <PromptForm value={value} onValueChange={setValue} {...props} />
+  return (
+    <PromptForm
+      value={value}
+      onValueChange={setValue}
+      files={files}
+      onFilesChange={setFiles}
+      {...props}
+    />
+  )
 }
+
+const voiceSlot = (
+  <PromptFormIconButton aria-label="Voice input">
+    <Microphone className="size-4" />
+  </PromptFormIconButton>
+)
 
 const meta: Meta<typeof PromptFormDemo> = {
   title: "Components/PromptForm",
@@ -28,7 +47,7 @@ const meta: Meta<typeof PromptFormDemo> = {
   },
   decorators: [
     (Story) => (
-      <div className="w-full min-w-[36rem] max-w-4xl">
+      <div className="w-full min-w-xl max-w-4xl">
         <Story />
       </div>
     ),
@@ -37,6 +56,7 @@ const meta: Meta<typeof PromptFormDemo> = {
     onSubmit: async () => {},
     onStop: () => {},
     placeholder: "Envía un mensaje...",
+    rightSlot: voiceSlot,
   },
 }
 
@@ -44,35 +64,28 @@ export default meta
 
 type Story = StoryObj<typeof PromptFormDemo>
 
-export const Empty: Story = {
-  args: {
-    initialValue: "",
-    rightSlot: (
-      <>
-        <PromptFormIconButton aria-label="Attach file">
-          <Paperclip className="size-4" />
-        </PromptFormIconButton>
-        <PromptFormIconButton aria-label="Voice input">
-          <Microphone className="size-4" />
-        </PromptFormIconButton>
-      </>
-    ),
-  },
-}
+export const Empty: Story = {}
 
 export const WithText: Story = {
   args: {
     initialValue: "Can you summarize this document for me?",
-    rightSlot: (
-      <>
-        <PromptFormIconButton aria-label="Attach file">
-          <Paperclip className="size-4" />
-        </PromptFormIconButton>
-        <PromptFormIconButton aria-label="Voice input">
-          <Microphone className="size-4" />
-        </PromptFormIconButton>
-      </>
-    ),
+  },
+}
+
+export const WithAttachments: Story = {
+  args: {
+    initialFiles: [new File(["image"], "doggy.jpeg", { type: "image/jpeg" })],
+    rightSlot: voiceSlot,
+  },
+}
+
+export const WithMultipleAttachments: Story = {
+  args: {
+    initialFiles: [
+      new File(["image"], "doggy.jpeg", { type: "image/jpeg" }),
+      new File(["pdf"], "report.pdf", { type: "application/pdf" }),
+    ],
+    rightSlot: voiceSlot,
   },
 }
 
@@ -80,16 +93,6 @@ export const Streaming: Story = {
   args: {
     initialValue: "What is the weather in Madrid?",
     status: "streaming",
-    rightSlot: (
-      <>
-        <PromptFormIconButton aria-label="Attach file">
-          <Paperclip className="size-4" />
-        </PromptFormIconButton>
-        <PromptFormIconButton aria-label="Voice input">
-          <Microphone className="size-4" />
-        </PromptFormIconButton>
-      </>
-    ),
   },
 }
 
@@ -97,16 +100,6 @@ export const Submitted: Story = {
   args: {
     initialValue: "Generate a weekly report",
     status: "submitted",
-    rightSlot: (
-      <>
-        <PromptFormIconButton aria-label="Attach file">
-          <Paperclip className="size-4" />
-        </PromptFormIconButton>
-        <PromptFormIconButton aria-label="Voice input">
-          <Microphone className="size-4" />
-        </PromptFormIconButton>
-      </>
-    ),
   },
 }
 
@@ -114,16 +107,7 @@ export const Disabled: Story = {
   args: {
     initialValue: "This form is disabled",
     disabled: true,
-    rightSlot: (
-      <>
-        <PromptFormIconButton aria-label="Attach file" disabled>
-          <Paperclip className="size-4" />
-        </PromptFormIconButton>
-        <PromptFormIconButton aria-label="Voice input" disabled>
-          <Microphone className="size-4" />
-        </PromptFormIconButton>
-      </>
-    ),
+    initialFiles: [new File(["image"], "doggy.jpeg", { type: "image/jpeg" })],
   },
 }
 
@@ -133,28 +117,6 @@ export const CustomLabels: Story = {
     placeholder: "Ask anything...",
     sendLabel: "Ask",
     stopLabel: "Cancel",
-  },
-}
-
-export const WithSlots: Story = {
-  args: {
-    initialValue: "Attach a file and send",
-    rightSlot: (
-      <>
-        <PromptFormIconButton aria-label="Attach file">
-          <Paperclip className="size-4" />
-        </PromptFormIconButton>
-        <PromptFormIconButton aria-label="Voice input">
-          <Microphone className="size-4" />
-        </PromptFormIconButton>
-      </>
-    ),
-  },
-}
-
-export const NoClearOnSubmit: Story = {
-  args: {
-    initialValue: "Keep this text after sending",
-    clearOnSubmit: false,
+    rightSlot: null,
   },
 }
