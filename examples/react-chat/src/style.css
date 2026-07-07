@@ -158,7 +158,8 @@ code {
   align-items: center;
 }
 
-button {
+.setup-actions button,
+.chat-header-actions button {
   font: inherit;
   cursor: pointer;
   border: none;
@@ -168,12 +169,14 @@ button {
   color: #fff;
 }
 
-button:disabled {
+.setup-actions button:disabled,
+.chat-header-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-button.secondary {
+.setup-actions button.secondary,
+.chat-header-actions button.secondary {
   background: var(--code-bg);
   color: var(--text-h);
   border: 1px solid var(--border);
@@ -303,17 +306,6 @@ button.secondary {
   margin: 8px 0 0;
   overflow-x: auto;
   font-size: 11px;
-}
-
-.chat-input {
-  flex: 1;
-  min-width: 160px;
-  font: inherit;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--text-h);
 }
 
 .raw-state {

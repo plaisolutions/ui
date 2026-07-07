@@ -1,6 +1,6 @@
 import type { SVGProps } from "react"
 
-export function ArrowUp(props: SVGProps<SVGSVGElement>) {
+export function Microphone(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -15,8 +15,9 @@ export function ArrowUp(props: SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="m5 12 7-7 7 7" />
-      <path d="M12 19V5" />
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <path d="M12 19v3" />
     </svg>
   )
 }

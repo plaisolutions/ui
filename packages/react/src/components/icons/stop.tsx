@@ -1,6 +1,6 @@
 import type { SVGProps } from "react"
 
-export function ArrowUp(props: SVGProps<SVGSVGElement>) {
+export function Stop(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -15,8 +15,7 @@ export function ArrowUp(props: SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="m5 12 7-7 7 7" />
-      <path d="M12 19V5" />
+      <rect x="6" y="6" width="12" height="12" rx="1" />
     </svg>
   )
 }

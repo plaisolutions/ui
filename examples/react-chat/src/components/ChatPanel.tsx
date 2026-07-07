@@ -1,6 +1,13 @@
 import { PlaiThreadTransport } from "@plaisolutions/client"
 import type { SendMessageInput } from "@plaisolutions/client"
-import { Message, PromptForm, useChat } from "@plaisolutions/react"
+import {
+  Message,
+  Microphone,
+  Paperclip,
+  PromptForm,
+  PromptFormIconButton,
+  useChat,
+} from "@plaisolutions/react"
 import { useMemo, useState } from "react"
 import type { ChatSession } from "../api"
 import type { DemoConfig } from "../storage"
@@ -123,8 +130,17 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
         onSubmit={handleSubmit}
         status={status}
         onStop={stop}
-        className="chat-form"
-        textareaClassName="chat-input"
+        placeholder="Envía un mensaje..."
+        rightSlot={
+          <>
+            <PromptFormIconButton aria-label="Adjuntar archivo">
+              <Paperclip className="size-4" />
+            </PromptFormIconButton>
+            <PromptFormIconButton aria-label="Entrada de voz">
+              <Microphone className="size-4" />
+            </PromptFormIconButton>
+          </>
+        }
       />
 
       <details className="raw-state">
