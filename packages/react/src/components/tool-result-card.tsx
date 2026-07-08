@@ -3,17 +3,12 @@ import type {
   UIToolCallPart,
 } from "@plaisolutions/client"
 import { joinClasses } from "./internal/join-classes"
+import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 
 export type ToolResultCardProps = {
   part: UIToolCallPart
   className?: string
   detailsOpen?: boolean
-}
-
-function formatStatus(status: UIToolCallPart["state"]) {
-  if (status === "pending") return "pending"
-  if (status === "error") return "error"
-  return "completed"
 }
 
 function formatJson(value: unknown) {
@@ -49,12 +44,23 @@ export function ToolResultCard({
 }: ToolResultCardProps) {
   const officeMediaFiles = getOfficeDocumentMediaFiles(part)
 
+  if (part.toolType === "email_send") {
+    return <ToolResultEmailSendCard part={part} className={className} />
+  }
+
   const statusClass =
     part.state === "error"
       ? "border-rose-200 bg-rose-50 text-rose-800"
       : part.state === "pending"
         ? "border-amber-200 bg-amber-50 text-amber-800"
         : "border-emerald-200 bg-emerald-50 text-emerald-800"
+
+  const statusLabel =
+    part.state === "pending"
+      ? "pending"
+      : part.state === "error"
+        ? "error"
+        : "completed"
 
   return (
     <section
@@ -73,7 +79,7 @@ export function ToolResultCard({
             statusClass,
           )}
         >
-          {formatStatus(part.state)}
+          {statusLabel}
         </span>
       </header>
 

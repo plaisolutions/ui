@@ -55,6 +55,39 @@ const assistantMessageWithToolCall: UIMessage = {
   ],
 }
 
+const assistantMessageWithEmailToolCall: UIMessage = {
+  id: "message_assistant_email_01",
+  role: "assistant",
+  parts: [
+    {
+      type: "text",
+      text: "Done. I sent the weekly update email to your team.",
+    },
+    {
+      type: "tool-call",
+      id: "tool_email_01",
+      name: "send_email",
+      toolType: "email_send",
+      input: {
+        to: ["alex@example.com", "team@example.com"],
+        subject: "Weekly update",
+        text: "Hello team,\n\nHere is this week's status update.",
+      },
+      state: "completed",
+      result: JSON.stringify({
+        status: "SENT",
+        recipients_count: 2,
+        subject: "Weekly update",
+        receipt: {
+          provider: "resend",
+          message_id: "msg_12345",
+          raw_status: "queued",
+        },
+      }),
+    },
+  ],
+}
+
 const userMessageWithAttachments: UIMessage = {
   id: "message_user_attachments_01",
   role: "user",
@@ -141,6 +174,12 @@ export const Assistant: Story = {
 export const AssistantWithToolCall: Story = {
   args: {
     message: assistantMessageWithToolCall,
+  },
+}
+
+export const AssistantWithEmailToolCall: Story = {
+  args: {
+    message: assistantMessageWithEmailToolCall,
   },
 }
 

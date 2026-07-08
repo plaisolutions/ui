@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { ToolResultCard } from "../components"
 
@@ -71,5 +71,56 @@ describe("ToolResultCard", () => {
     expect(
       screen.getByRole("link", { name: "monthly-report.docx" }),
     ).toBeTruthy()
+  })
+
+  it("renders a dedicated card for email_send tool calls", () => {
+    const view = render(
+      <ToolResultCard
+        part={{
+          type: "tool-call",
+          id: "tool_4",
+          name: "email_sender",
+          toolType: "email_send",
+          input: {
+            to: ["alex@example.com", "team@example.com"],
+            subject: "Weekly update",
+            text: "Hello team,\n\nHere is the status report.",
+          },
+          state: "completed",
+          result: JSON.stringify({
+            status: "SENT",
+            recipients_count: 2,
+            receipt: {
+              provider: "resend",
+              message_id: "msg_123",
+            },
+          }),
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Weekly update")).toBeTruthy()
+    expect(screen.getByText("alex@example.com")).toBeTruthy()
+    expect(screen.getByText("team@example.com")).toBeTruthy()
+    const emailCard = view.container.querySelector(
+      '[data-tool-call-id="tool_4"]',
+    )
+    expect(emailCard).toBeTruthy()
+    const emailCardQueries = within(emailCard as HTMLElement)
+    const detailsPanel = emailCardQueries.getByTestId("email-send-details")
+    expect(detailsPanel.className.includes("hidden")).toBe(true)
+    expect(emailCardQueries.queryByText("Input")).toBeNull()
+    expect(emailCardQueries.queryByText("Output")).toBeNull()
+
+    const toggleButton = emailCardQueries.getByRole("button")
+    expect(toggleButton.getAttribute("aria-expanded")).toBe("false")
+    fireEvent.click(toggleButton)
+    expect(toggleButton.getAttribute("aria-expanded")).toBe("true")
+    expect(detailsPanel.className.includes("hidden")).toBe(false)
+
+    expect(emailCardQueries.getByText("Delivery")).toBeTruthy()
+    expect(emailCardQueries.getByText("SENT")).toBeTruthy()
+    expect(emailCardQueries.getByText("resend")).toBeTruthy()
+    expect(emailCardQueries.getByText("msg_123")).toBeTruthy()
   })
 })
