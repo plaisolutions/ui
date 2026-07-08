@@ -1,6 +1,6 @@
 {
   "name": "@plaisolutions/react",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "repository": {
     "type": "git",
@@ -19,7 +19,9 @@
     "./styles.css": "./dist/styles.css"
   },
   "style": "./dist/styles.css",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown src/index.ts --format esm --dts --clean --external @plaisolutions/client --external react && tsdown src/components/index.ts --format esm --dts --out-dir dist/components --external @plaisolutions/client --external react && tailwindcss -i src/styles.css -o dist/styles.css --minify",
     "test": "vitest run",
