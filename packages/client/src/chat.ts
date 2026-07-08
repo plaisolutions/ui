@@ -218,7 +218,6 @@ export class PlaiChat {
       parts,
       metadata: {
         createdAt: new Date(),
-        metadata: input.metadata,
       },
     }
   }

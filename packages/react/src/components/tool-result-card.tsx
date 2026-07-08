@@ -1,6 +1,5 @@
 import type {
   OfficeDocumentMediaFile,
-  OfficeDocumentsToolMetadata,
   UIToolCallPart,
 } from "@plaisolutions/client"
 import { joinClasses } from "./internal/join-classes"
@@ -32,7 +31,7 @@ function getOfficeDocumentMediaFiles(
     return []
   }
 
-  const metadata = part.metadata as OfficeDocumentsToolMetadata
+  const metadata = part.metadata
   if (!Array.isArray(metadata.media_files)) {
     return []
   }

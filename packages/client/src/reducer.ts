@@ -241,7 +241,7 @@ function reduceContentBlockStart(
         type: "tool-call",
         id: event.content_block.id,
         name: event.content_block.name,
-        toolType: event.content_block.tool_type,
+        toolType: event.content_block.tool_type ?? "unknown",
         input: event.content_block.input,
         inputSchema: event.content_block.input_schema,
         state: "pending",

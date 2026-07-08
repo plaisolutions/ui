@@ -65,18 +65,78 @@ export type UIToolCallMetadata =
   | OfficeDocumentsToolMetadata
   | Record<string, unknown>
 
-export type UIToolCallPart = {
+export type UIToolType =
+  | "agent_invocation"
+  | "browser"
+  | "datasource"
+  | "email_send"
+  | "external_datasource"
+  | "firecrawl_search"
+  | "http_request"
+  | "mcp_tool"
+  | "office_documents"
+  | "perplexity"
+  | "structured_datasource"
+  | "workflow_dispatch"
+  | "unknown"
+
+export type UIBaseToolCallPart<
+  TToolType extends UIToolType | null = UIToolType | null,
+  TMetadata extends UIToolCallMetadata = UIToolCallMetadata,
+> = {
   type: "tool-call"
   id: string
   name: string
-  toolType?: string | null
+  toolType: TToolType
   input: unknown
   inputSchema?: unknown
   state: "pending" | "completed" | "error"
   result?: unknown
   errorDetails?: string | null
-  metadata?: UIToolCallMetadata
+  metadata?: TMetadata
 }
+
+export type UIAgentInvocationToolCallPart =
+  UIBaseToolCallPart<"agent_invocation">
+export type UIBrowserToolCallPart = UIBaseToolCallPart<"browser">
+export type UIDatasourceToolCallPart = UIBaseToolCallPart<"datasource">
+export type UIEmailSendToolCallPart = UIBaseToolCallPart<"email_send">
+export type UIExternalDatasourceToolCallPart =
+  UIBaseToolCallPart<"external_datasource">
+export type UIFirecrawlSearchToolCallPart =
+  UIBaseToolCallPart<"firecrawl_search">
+export type UIHttpRequestToolCallPart = UIBaseToolCallPart<"http_request">
+export type UIMcpToolCallPart = UIBaseToolCallPart<"mcp_tool">
+export type UIOfficeDocumentsToolCallPart = UIBaseToolCallPart<
+  "office_documents",
+  OfficeDocumentsToolMetadata
+>
+export type UIPerplexityToolCallPart = UIBaseToolCallPart<"perplexity">
+export type UIStructuredDatasourceToolCallPart =
+  UIBaseToolCallPart<"structured_datasource">
+export type UIWorkflowDispatchToolCallPart =
+  UIBaseToolCallPart<"workflow_dispatch">
+export type UIUnknownToolCallPart = Omit<
+  UIBaseToolCallPart<"unknown" | null>,
+  "toolType"
+> & {
+  toolType?: "unknown" | null
+}
+
+export type UIToolCallPart =
+  | UIAgentInvocationToolCallPart
+  | UIBrowserToolCallPart
+  | UIDatasourceToolCallPart
+  | UIEmailSendToolCallPart
+  | UIExternalDatasourceToolCallPart
+  | UIFirecrawlSearchToolCallPart
+  | UIHttpRequestToolCallPart
+  | UIMcpToolCallPart
+  | UIOfficeDocumentsToolCallPart
+  | UIPerplexityToolCallPart
+  | UIStructuredDatasourceToolCallPart
+  | UIWorkflowDispatchToolCallPart
+  | UIUnknownToolCallPart
 
 export type UIGuardrailPart = {
   type: "guardrail"
@@ -125,7 +185,6 @@ export type SendMessageInput = {
   text: string
   enabledTools?: string[]
   documents?: Array<{ url: string; filename?: string | null }>
-  metadata?: Record<string, unknown>
 }
 
 export type ChatTransportRequest = {
@@ -162,7 +221,7 @@ export type ContentBlockStartToolUseEvent = {
     type: "tool_use"
     id: string
     name: string
-    tool_type?: string | null
+    tool_type?: UIToolType | null
     input: unknown
     input_schema?: unknown
   }
@@ -199,7 +258,7 @@ export type ContentBlockStopEvent = {
 export type ToolResultEvent = {
   type: "tool_result"
   tool_use_id: string
-  tool_type?: string | null
+  tool_type?: UIToolType | null
   content: unknown
   is_error: boolean
   error_details: string | null

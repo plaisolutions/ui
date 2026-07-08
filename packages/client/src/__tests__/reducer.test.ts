@@ -65,7 +65,7 @@ describe("reduceChatState", () => {
           type: "tool_use",
           id: "toolu_1",
           name: "knowledge_search",
-          tool_type: "vector_search",
+          tool_type: "datasource",
           input: { query: "hello" },
           input_schema: {},
         },
@@ -73,7 +73,7 @@ describe("reduceChatState", () => {
       {
         type: "tool_result",
         tool_use_id: "toolu_1",
-        tool_type: "vector_search",
+        tool_type: "datasource",
         content: { result: "ok" },
         is_error: false,
         error_details: null,
@@ -85,6 +85,33 @@ describe("reduceChatState", () => {
     expect(state.messages[0].parts[0]).toMatchObject({
       type: "tool-call",
       state: "completed",
+    })
+  })
+
+  it("defaults missing tool_type to unknown", () => {
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", role: "assistant", model: "gpt-5.4-mini" },
+      },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_unknown_1",
+          name: "some_tool",
+          input: { q: "hello" },
+          input_schema: {},
+        },
+      },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+    expect(state.messages[0].parts[0]).toMatchObject({
+      type: "tool-call",
+      toolType: "unknown",
+      state: "pending",
     })
   })
 

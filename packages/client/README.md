@@ -165,7 +165,9 @@ Tool call part:
   type: "tool-call",
   id: string,
   name: string,
-  toolType?: string | null,
+  // Discriminant. Concrete part types exist per tool:
+  // UIAgentInvocationToolCallPart | UIDatasourceToolCallPart | ... | UIUnknownToolCallPart
+  toolType?: "unknown" | null | "agent_invocation" | "browser" | "datasource" | "email_send" | "external_datasource" | "firecrawl_search" | "http_request" | "mcp_tool" | "office_documents" | "perplexity" | "structured_datasource" | "workflow_dispatch",
   input: unknown,
   inputSchema?: unknown,
   state: "pending" | "completed" | "error",
@@ -209,8 +211,7 @@ Guardrail part:
 {
   text: string,
   enabledTools?: string[],
-  documents?: Array<{ url: string, filename?: string | null }>,
-  metadata?: Record<string, unknown>
+  documents?: Array<{ url: string, filename?: string | null }>
 }
 ```
 
