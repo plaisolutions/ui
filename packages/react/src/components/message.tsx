@@ -8,6 +8,7 @@ export type MessageProps = {
   className?: string
   showRole?: boolean
   collapseThreshold?: number
+  datasourceToolResultsPosition?: "inline" | "before-content"
 }
 
 const DEFAULT_COLLAPSE_THRESHOLD = 600
@@ -125,11 +126,40 @@ function renderPart(part: UIMessagePart, index: number) {
   return null
 }
 
+function orderMessageParts(
+  parts: UIMessagePart[],
+  datasourceToolResultsPosition: NonNullable<
+    MessageProps["datasourceToolResultsPosition"]
+  >,
+) {
+  const indexedParts = parts.map((part, index) => ({ part, index }))
+  if (datasourceToolResultsPosition === "inline") {
+    return indexedParts
+  }
+
+  const datasourceParts: typeof indexedParts = []
+  const remainingParts: typeof indexedParts = []
+
+  for (const indexedPart of indexedParts) {
+    if (
+      indexedPart.part.type === "tool-call" &&
+      indexedPart.part.toolType === "datasource"
+    ) {
+      datasourceParts.push(indexedPart)
+    } else {
+      remainingParts.push(indexedPart)
+    }
+  }
+
+  return [...datasourceParts, ...remainingParts]
+}
+
 export function Message({
   message,
   className,
   showRole = true,
   collapseThreshold = DEFAULT_COLLAPSE_THRESHOLD,
+  datasourceToolResultsPosition = "inline",
 }: MessageProps) {
   const roleLabel = message.role.charAt(0).toUpperCase() + message.role.slice(1)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -148,6 +178,10 @@ export function Message({
   const previewText = canCollapse
     ? `${textContent.slice(0, collapseThreshold).trimEnd()}...`
     : textContent
+  const orderedParts = useMemo(
+    () => orderMessageParts(message.parts, datasourceToolResultsPosition),
+    [message.parts, datasourceToolResultsPosition],
+  )
 
   return (
     <article
@@ -166,7 +200,7 @@ export function Message({
         {canCollapse && !isExpanded ? (
           <p className="whitespace-pre-wrap text-sm leading-6">{previewText}</p>
         ) : (
-          message.parts.map((part, index) => renderPart(part, index))
+          orderedParts.map(({ part, index }) => renderPart(part, index))
         )}
       </div>
       {canCollapse ? (

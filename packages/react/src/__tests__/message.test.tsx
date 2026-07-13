@@ -93,4 +93,38 @@ describe("Message", () => {
 
     expect(screen.getByText("Read more")).toBeTruthy()
   })
+
+  it("can render datasource tool results before the agent content", () => {
+    const view = render(
+      <Message
+        showRole={false}
+        datasourceToolResultsPosition="before-content"
+        message={{
+          id: "msg_datasource_first",
+          role: "assistant",
+          parts: [
+            { type: "text", text: "First agent paragraph" },
+            {
+              type: "tool-call",
+              id: "tool_datasource_first",
+              name: "search_courses",
+              toolType: "datasource",
+              input: { query: "Storyline" },
+              state: "completed",
+              result: { count: 2 },
+            },
+            { type: "text", text: "Final agent paragraph" },
+          ],
+        }}
+      />,
+    )
+
+    const messageContent = view.container.textContent ?? ""
+    expect(messageContent.indexOf("search_courses")).toBeLessThan(
+      messageContent.indexOf("First agent paragraph"),
+    )
+    expect(messageContent.indexOf("First agent paragraph")).toBeLessThan(
+      messageContent.indexOf("Final agent paragraph"),
+    )
+  })
 })

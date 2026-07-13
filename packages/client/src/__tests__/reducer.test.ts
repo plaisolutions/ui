@@ -168,6 +168,91 @@ describe("reduceChatState", () => {
     })
   })
 
+  it("preserves datasource resources inside tool-call metadata", () => {
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", role: "assistant", model: "gpt-5.4-mini" },
+      },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_datasource_1",
+          name: "actua_learn_content",
+          tool_type: "datasource",
+          input: { question: "Storyline" },
+          input_schema: {},
+        },
+      },
+      {
+        type: "tool_result",
+        tool_use_id: "toolu_datasource_1",
+        tool_type: "datasource",
+        content: "found it",
+        is_error: false,
+        error_details: null,
+        metadata: {
+          documents_metadata: [{ id: "chunk-1", resource_id: "resource-1" }],
+          chunk_ids: null,
+          relevance_scores: null,
+          resources: [{ id: "resource-1", name: "Storyline course" }],
+        },
+      },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+    expect(state.messages[0].parts[0]).toMatchObject({
+      type: "tool-call",
+      toolType: "datasource",
+      state: "completed",
+      metadata: {
+        resources: [{ id: "resource-1", name: "Storyline course" }],
+      },
+    })
+  })
+
+  it("preserves structured tool error details", () => {
+    const errorDetails = {
+      error_type: "ProgrammingError",
+      error_message: 'column "app_id" does not exist',
+    }
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", role: "assistant", model: "gpt-4.1" },
+      },
+      {
+        type: "content_block_start",
+        index: 0,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_error_1",
+          name: "actua_learn_content",
+          tool_type: "datasource",
+          input: { question: "Storyline" },
+        },
+      },
+      {
+        type: "tool_result",
+        tool_use_id: "toolu_error_1",
+        tool_type: "datasource",
+        content: "Knowledge base search failed.",
+        is_error: true,
+        error_details: errorDetails,
+        metadata: {},
+      },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+    expect(state.messages[0].parts[0]).toMatchObject({
+      type: "tool-call",
+      state: "error",
+      errorDetails,
+    })
+  })
+
   it("stores guardrail as separate part", () => {
     const events: PlaiSseEvent[] = [
       {

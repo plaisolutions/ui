@@ -61,8 +61,77 @@ export type OfficeDocumentsToolMetadata = {
   [key: string]: unknown
 }
 
+export type DocumentMetadata = {
+  id?: string
+  resource_id?: string
+  datasource_id?: string
+  [key: string]: unknown
+}
+
+export type FolderReadModel = {
+  id: string
+  name: string
+  parent_id: string | null
+  datasource_id: string
+  extra_info: Record<string, unknown>
+  created_at: string
+  updated_at: string
+  parent: FolderReadModel | null
+}
+
+export type DatasourceReadModel = {
+  id: string
+  name: string
+  description: string | null
+  summary: string | null
+  type: string
+  source: string
+  metadata_schema: Record<string, unknown> | null
+  created_at: string
+  updated_at: string
+}
+
+export type ResourceReadModel = {
+  id: string
+  name: string
+  type: string
+  status: string
+  url: string | null
+  content: string | null
+  metadata: Record<string, string | number | boolean>
+  extra_info: Record<string, unknown>
+  folder: FolderReadModel | null
+  datasource: DatasourceReadModel | null
+  external_url: string | null
+  external_resource_id: string | null
+  store: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type DatasourceToolResultMetadata = {
+  documents_metadata: DocumentMetadata[]
+  chunk_ids: string[] | null
+  relevance_scores: number[] | null
+  resources: ResourceReadModel[]
+  [key: string]: unknown
+}
+
+export type ToolErrorDetails = string | Record<string, unknown>
+
+export type DatasourceToolErrorMetadata = {
+  type?: string
+  error_details?: ToolErrorDetails | null
+  documents_metadata?: never
+  chunk_ids?: never
+  relevance_scores?: never
+  resources?: never
+  [key: string]: unknown
+}
+
 export type UIToolCallMetadata =
   | OfficeDocumentsToolMetadata
+  | DatasourceToolResultMetadata
   | Record<string, unknown>
 
 export type UIToolType =
@@ -92,14 +161,17 @@ export type UIBaseToolCallPart<
   inputSchema?: unknown
   state: "pending" | "completed" | "error"
   result?: unknown
-  errorDetails?: string | null
+  errorDetails?: ToolErrorDetails | null
   metadata?: TMetadata
 }
 
 export type UIAgentInvocationToolCallPart =
   UIBaseToolCallPart<"agent_invocation">
 export type UIBrowserToolCallPart = UIBaseToolCallPart<"browser">
-export type UIDatasourceToolCallPart = UIBaseToolCallPart<"datasource">
+export type UIDatasourceToolCallPart = UIBaseToolCallPart<
+  "datasource",
+  DatasourceToolResultMetadata | DatasourceToolErrorMetadata
+>
 export type UIEmailSendToolCallPart = UIBaseToolCallPart<"email_send">
 export type UIExternalDatasourceToolCallPart =
   UIBaseToolCallPart<"external_datasource">
@@ -261,7 +333,7 @@ export type ToolResultEvent = {
   tool_type?: UIToolType | null
   content: unknown
   is_error: boolean
-  error_details: string | null
+  error_details: ToolErrorDetails | null
   metadata: Record<string, unknown>
 }
 

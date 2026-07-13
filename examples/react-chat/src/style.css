@@ -87,7 +87,7 @@ code {
 }
 
 #app {
-  width: 720px;
+  width: 960px;
   max-width: 100%;
   margin: 0 auto;
   padding: 24px 20px 40px;
@@ -276,6 +276,9 @@ code {
 
 .message--assistant {
   align-self: flex-start;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--bg);
   border: 1px solid var(--border);
 }

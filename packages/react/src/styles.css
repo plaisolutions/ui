@@ -1,3 +1,83 @@
 @import "tailwindcss";
 
 @source "./**/*.{ts,tsx}";
+
+@keyframes plai-sheet-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes plai-sheet-overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes plai-sheet-content-in {
+  from {
+    opacity: 0;
+    transform: translate(
+      var(--plai-sheet-translate-x),
+      var(--plai-sheet-translate-y)
+    );
+  }
+}
+
+@keyframes plai-sheet-content-out {
+  to {
+    opacity: 0;
+    transform: translate(
+      var(--plai-sheet-translate-x),
+      var(--plai-sheet-translate-y)
+    );
+  }
+}
+
+.plai-sheet-overlay::backdrop {
+  background: transparent;
+}
+
+.plai-sheet-overlay[data-state="open"] {
+  animation: plai-sheet-overlay-in 150ms ease-out;
+}
+
+.plai-sheet-overlay[data-state="closed"] {
+  animation: plai-sheet-overlay-out 150ms ease-in forwards;
+}
+
+.plai-sheet-content[data-state="open"] {
+  animation: plai-sheet-content-in 200ms ease-in-out;
+}
+
+.plai-sheet-content[data-state="closed"] {
+  animation: plai-sheet-content-out 200ms ease-in-out forwards;
+}
+
+.plai-sheet-content {
+  --plai-sheet-translate-x: 0;
+  --plai-sheet-translate-y: 0;
+}
+
+.plai-sheet-content[data-side="right"] {
+  --plai-sheet-translate-x: 2.5rem;
+}
+
+.plai-sheet-content[data-side="left"] {
+  --plai-sheet-translate-x: -2.5rem;
+}
+
+.plai-sheet-content[data-side="top"] {
+  --plai-sheet-translate-y: -2.5rem;
+}
+
+.plai-sheet-content[data-side="bottom"] {
+  --plai-sheet-translate-y: 2.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plai-sheet-overlay,
+  .plai-sheet-content {
+    animation-duration: 1ms;
+  }
+}

@@ -1,7 +1,13 @@
 import type {
   OfficeDocumentMediaFile,
+  ResourceReadModel,
   UIToolCallPart,
 } from "@plaisolutions/client"
+import {
+  DatasourceToolResources,
+  isDatasourceResource,
+} from "./datasource-tool-resources"
+import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
 import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 
@@ -37,15 +43,35 @@ function getOfficeDocumentMediaFiles(
   )
 }
 
+function getDatasourceResources(part: UIToolCallPart): ResourceReadModel[] {
+  if (part.toolType !== "datasource" || !part.metadata) {
+    return []
+  }
+
+  const resources = part.metadata.resources
+  return Array.isArray(resources) ? resources.filter(isDatasourceResource) : []
+}
+
 export function ToolResultCard({
   part,
   className,
   detailsOpen = true,
 }: ToolResultCardProps) {
   const officeMediaFiles = getOfficeDocumentMediaFiles(part)
+  const datasourceResources = getDatasourceResources(part)
+  const errorDetails = formatToolErrorDetails(part.errorDetails)
 
   if (part.toolType === "email_send") {
     return <ToolResultEmailSendCard part={part} className={className} />
+  }
+
+  if (datasourceResources.length > 0) {
+    return (
+      <DatasourceToolResources
+        resources={datasourceResources}
+        className={className}
+      />
+    )
   }
 
   const statusClass =
@@ -137,10 +163,9 @@ export function ToolResultCard({
         </details>
       ) : null}
 
-      {part.errorDetails ? (
+      {errorDetails ? (
         <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-          <span className="font-semibold">Error details:</span>{" "}
-          {part.errorDetails}
+          <span className="font-semibold">Error details:</span> {errorDetails}
         </p>
       ) : null}
     </section>

@@ -1,4 +1,4 @@
-import type { UIMessage } from "@plaisolutions/client"
+import type { ResourceReadModel, UIMessage } from "@plaisolutions/client"
 import { Message } from "@plaisolutions/react/components"
 import type { Meta, StoryObj } from "@storybook/react"
 
@@ -84,6 +84,122 @@ const assistantMessageWithEmailToolCall: UIMessage = {
           raw_status: "queued",
         },
       }),
+    },
+  ],
+}
+
+function createCourseResource(
+  id: string,
+  name: string,
+  url: string,
+): ResourceReadModel {
+  return {
+    id,
+    name,
+    type: "SCORM",
+    status: "DONE",
+    url: null,
+    content: null,
+    metadata: {},
+    extra_info: {},
+    folder: {
+      id: "folder-course",
+      name: "Programa en Diseño Elearning e Innovación",
+      parent_id: null,
+      datasource_id: "datasource-course",
+      extra_info: {
+        type: "COURSE",
+        description:
+          "En este curso aprenderás los principios básicos de diseño.",
+      },
+      created_at: "2026-07-01T10:00:00Z",
+      updated_at: "2026-07-01T10:00:00Z",
+      parent: null,
+    },
+    datasource: {
+      id: "datasource-course",
+      name: "Courses",
+      description: "Course resources",
+      summary: null,
+      type: "UNSTRUCTURED",
+      source: "MANUAL",
+      metadata_schema: null,
+      created_at: "2026-07-01T10:00:00Z",
+      updated_at: "2026-07-01T10:00:00Z",
+    },
+    external_url: url,
+    external_resource_id: null,
+    store: true,
+    created_at: "2026-07-01T10:00:00Z",
+    updated_at: "2026-07-01T10:00:00Z",
+  }
+}
+
+const assistantMessageWithDatasourceResults: UIMessage = {
+  id: "message_assistant_datasource_01",
+  role: "assistant",
+  parts: [
+    {
+      type: "text",
+      text: "Las capas en Storyline enriquecen la interactividad de un curso eLearning.",
+    },
+    {
+      type: "tool-call",
+      id: "tool_datasource_01",
+      name: "search_courses",
+      toolType: "datasource",
+      input: { query: "capas en Storyline" },
+      state: "completed",
+      result: { count: 2 },
+      metadata: {
+        documents_metadata: [],
+        chunk_ids: null,
+        relevance_scores: null,
+        resources: [
+          createCourseResource(
+            "resource-course-1",
+            "15. Conceptos clave de Storyline 360",
+            "https://example.com/resource-1",
+          ),
+          createCourseResource(
+            "resource-course-2",
+            "18. Componentes básicos de Storyline 360",
+            "https://example.com/resource-2",
+          ),
+        ],
+      },
+    },
+  ],
+}
+
+const datasourceErrorDetails = {
+  error_type: "ProgrammingError",
+  error_message: 'column "app_id" of relation "usage_records" does not exist',
+  tool_name: "actua_learn_content",
+  tool_type: "datasource",
+  traceback: "Internal traceback omitted from this fixture.",
+}
+
+const assistantMessageWithDatasourceError: UIMessage = {
+  id: "message_assistant_datasource_error_01",
+  role: "assistant",
+  parts: [
+    {
+      type: "tool-call",
+      id: "call_btYGpAwxAcZNz6XzKXyy6kwX",
+      name: "actua_learn_content",
+      toolType: "datasource",
+      input: {
+        question: "Qué son las capas de Storyline y para qué sirven",
+      },
+      state: "error",
+      result:
+        "I encountered an issue while searching the knowledge base. Please try rephrasing your question or try again later.",
+      errorDetails: datasourceErrorDetails,
+      metadata: {
+        type: "datasource_error",
+        error_details: datasourceErrorDetails,
+      },
     },
   ],
 }
@@ -180,6 +296,20 @@ export const AssistantWithToolCall: Story = {
 export const AssistantWithEmailToolCall: Story = {
   args: {
     message: assistantMessageWithEmailToolCall,
+  },
+}
+
+export const AssistantWithDatasourceResultsFirst: Story = {
+  args: {
+    message: assistantMessageWithDatasourceResults,
+    datasourceToolResultsPosition: "before-content",
+  },
+}
+
+export const AssistantWithDatasourceError: Story = {
+  args: {
+    message: assistantMessageWithDatasourceError,
+    datasourceToolResultsPosition: "before-content",
   },
 }
 

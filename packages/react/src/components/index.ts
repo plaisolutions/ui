@@ -1,5 +1,33 @@
 export { Message } from "./message"
 export type { MessageProps } from "./message"
+export { DatasourceToolResultCard } from "./datasource-tool-result-card"
+export type { DatasourceToolResultCardProps } from "./datasource-tool-result-card"
+export { DatasourceFolderCard } from "./datasource-folder-card"
+export type { DatasourceFolderCardProps } from "./datasource-folder-card"
+export { DatasourceToolResources } from "./datasource-tool-resources"
+export type { DatasourceToolResourcesProps } from "./datasource-tool-resources"
+export { ResourceCard } from "./resource-card"
+export type { ResourceCardProps } from "./resource-card"
+export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./sheet"
+export type {
+  SheetCloseProps,
+  SheetContentProps,
+  SheetDescriptionProps,
+  SheetFooterProps,
+  SheetHeaderProps,
+  SheetProps,
+  SheetTitleProps,
+  SheetTriggerProps,
+} from "./sheet"
 export { ArrowUp, Loader, Microphone, Paperclip, Stop, X } from "./icons"
 export {
   PromptForm,

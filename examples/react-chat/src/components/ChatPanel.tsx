@@ -149,6 +149,7 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
               key={message.id}
               message={message}
               className={`message message--${message.role}`}
+              datasourceToolResultsPosition="before-content"
             />
           ))
         )}

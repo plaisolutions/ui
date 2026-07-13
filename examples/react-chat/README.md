@@ -42,7 +42,11 @@ const { messages, status, error, sendMessage, stop } = useChat({ transport });
 return (
   <>
     {messages.map((message) => (
-      <Message key={message.id} message={message} />
+      <Message
+        key={message.id}
+        message={message}
+        datasourceToolResultsPosition="before-content"
+      />
     ))}
     <PromptForm
       value={input}

@@ -42,6 +42,32 @@ describe("ToolResultCard", () => {
     expect(screen.getByText(/Request timeout/)).toBeTruthy()
   })
 
+  it("renders structured error details without crashing", () => {
+    const view = render(
+      <ToolResultCard
+        part={{
+          type: "tool-call",
+          id: "tool_structured_error",
+          name: "actua_learn_content",
+          toolType: "datasource",
+          input: { question: "Storyline" },
+          state: "error",
+          result: "I encountered an issue while searching the knowledge base.",
+          errorDetails: {
+            error_type: "ProgrammingError",
+            error_message:
+              'column "app_id" of relation "usage_records" does not exist',
+            traceback: "internal traceback",
+          },
+        }}
+      />,
+    )
+
+    const card = within(view.container)
+    expect(card.getByText("error")).toBeTruthy()
+    expect(card.getByText(/column "app_id"/)).toBeTruthy()
+  })
+
   it("renders generated office document files from metadata", () => {
     render(
       <ToolResultCard

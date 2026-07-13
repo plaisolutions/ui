@@ -128,13 +128,15 @@ export function reduceChatState(
         )
       }
 
-      const nextPart: UIToolCallPart = {
+      // The API correlates tool_type with its metadata contract. ToolResultEvent
+      // stays generic because it represents every tool result on the wire.
+      const nextPart = {
         ...part,
         state: event.is_error ? "error" : "completed",
         result: event.content,
         errorDetails: event.is_error ? event.error_details : null,
         metadata: event.metadata,
-      }
+      } as UIToolCallPart
 
       const nextParts = [...message.parts]
       nextParts[partIndex] = nextPart

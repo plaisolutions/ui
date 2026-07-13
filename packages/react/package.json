@@ -29,7 +29,8 @@
     "lint": "biome lint src"
   },
   "dependencies": {
-    "@plaisolutions/client": "workspace:*"
+    "@plaisolutions/client": "workspace:*",
+    "lucide-react": "^1.24.0"
   },
   "peerDependencies": {
     "react": ">=18"

@@ -1,5 +1,6 @@
 import type { UIEmailSendToolCallPart } from "@plaisolutions/client"
 import { useState } from "react"
+import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
 
 export type ToolResultEmailSendCardProps = {
@@ -116,6 +117,7 @@ export function ToolResultEmailSendCard({
   const [isExpanded, setIsExpanded] = useState(false)
   const emailInput = parseEmailSendInput(part)
   const emailResult = parseEmailSendResult(part)
+  const errorDetails = formatToolErrorDetails(part.errorDetails)
 
   const statusClass =
     part.state === "error"
@@ -208,7 +210,9 @@ export function ToolResultEmailSendCard({
             ) : null}
             {emailResult.recipientsCount !== null ? (
               <p className="text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Recipients:</span>{" "}
+                <span className="font-semibold text-slate-900">
+                  Recipients:
+                </span>{" "}
                 {emailResult.recipientsCount}
               </p>
             ) : null}
@@ -220,13 +224,17 @@ export function ToolResultEmailSendCard({
             ) : null}
             {emailResult.receiptMessageId ? (
               <p className="break-all text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Message ID:</span>{" "}
+                <span className="font-semibold text-slate-900">
+                  Message ID:
+                </span>{" "}
                 {emailResult.receiptMessageId}
               </p>
             ) : null}
             {emailResult.receiptRawStatus ? (
               <p className="text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Raw status:</span>{" "}
+                <span className="font-semibold text-slate-900">
+                  Raw status:
+                </span>{" "}
                 {emailResult.receiptRawStatus}
               </p>
             ) : null}
@@ -239,10 +247,9 @@ export function ToolResultEmailSendCard({
         ) : null}
       </div>
 
-      {part.errorDetails ? (
+      {errorDetails ? (
         <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-          <span className="font-semibold">Error details:</span>{" "}
-          {part.errorDetails}
+          <span className="font-semibold">Error details:</span> {errorDetails}
         </p>
       ) : null}
     </section>
