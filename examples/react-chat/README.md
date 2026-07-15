@@ -21,6 +21,10 @@ pnpm dev
 
 ## What it demonstrates
 
+When the configured agent invokes `perplexity` or `firecrawl_search`, the
+streamed result is rendered by `ToolResultWebSearchCard` through `Message` and
+`ToolResultCard`. The application contains no mock tool results.
+
 ```tsx
 import { useMemo, useState } from "react";
 import { PlaiThreadTransport } from "@plaisolutions/client";

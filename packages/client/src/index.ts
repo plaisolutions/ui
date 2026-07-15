@@ -24,6 +24,7 @@ export type {
   DatasourceToolErrorMetadata,
   DatasourceToolResultMetadata,
   DocumentMetadata,
+  FirecrawlSearchToolResultMetadata,
   FolderReadModel,
   InternalChatState,
   InputFileMetadata,
@@ -32,6 +33,7 @@ export type {
   MessageStopEvent,
   OfficeDocumentMediaFile,
   OfficeDocumentsToolMetadata,
+  PerplexityToolResultMetadata,
   PlaiChatError,
   PlaiChatOptions,
   PlaiSseEvent,
@@ -66,4 +68,5 @@ export type {
   UIWorkflowDispatchToolCallPart,
   Usage,
   UsageEvent,
+  WebSearchResult,
 } from "./types"

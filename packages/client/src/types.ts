@@ -129,9 +129,42 @@ export type DatasourceToolErrorMetadata = {
   [key: string]: unknown
 }
 
+export type WebSearchResult = {
+  title: string
+  url: string
+  date?: string | null
+  last_updated?: string | null
+  snippet?: string | null
+  source?: string | null
+  markdown?: string | null
+  image_url?: string | null
+}
+
+export type PerplexityToolResultMetadata = {
+  type?: "perplexity"
+  search_results?: WebSearchResult[] | null
+  prompt_tokens?: number
+  completion_tokens?: number
+  citation_tokens?: number | null
+  num_search_queries?: number | null
+  citations?: string[]
+  [key: string]: unknown
+}
+
+export type FirecrawlSearchToolResultMetadata = {
+  type?: "firecrawl_search"
+  search_results?: WebSearchResult[]
+  credits?: number | null
+  results_count?: number | null
+  sources?: string[]
+  [key: string]: unknown
+}
+
 export type UIToolCallMetadata =
   | OfficeDocumentsToolMetadata
   | DatasourceToolResultMetadata
+  | PerplexityToolResultMetadata
+  | FirecrawlSearchToolResultMetadata
   | Record<string, unknown>
 
 export type UIToolType =
@@ -175,15 +208,20 @@ export type UIDatasourceToolCallPart = UIBaseToolCallPart<
 export type UIEmailSendToolCallPart = UIBaseToolCallPart<"email_send">
 export type UIExternalDatasourceToolCallPart =
   UIBaseToolCallPart<"external_datasource">
-export type UIFirecrawlSearchToolCallPart =
-  UIBaseToolCallPart<"firecrawl_search">
+export type UIFirecrawlSearchToolCallPart = UIBaseToolCallPart<
+  "firecrawl_search",
+  FirecrawlSearchToolResultMetadata
+>
 export type UIHttpRequestToolCallPart = UIBaseToolCallPart<"http_request">
 export type UIMcpToolCallPart = UIBaseToolCallPart<"mcp_tool">
 export type UIOfficeDocumentsToolCallPart = UIBaseToolCallPart<
   "office_documents",
   OfficeDocumentsToolMetadata
 >
-export type UIPerplexityToolCallPart = UIBaseToolCallPart<"perplexity">
+export type UIPerplexityToolCallPart = UIBaseToolCallPart<
+  "perplexity",
+  PerplexityToolResultMetadata
+>
 export type UIStructuredDatasourceToolCallPart =
   UIBaseToolCallPart<"structured_datasource">
 export type UIWorkflowDispatchToolCallPart =

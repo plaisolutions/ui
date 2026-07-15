@@ -123,6 +123,8 @@ interface DatasourceReadModel {
 }
 ```
 
+
+
 ## Where to Read It
 
 During SSE streaming, datasource tool data is available in the `tool_result`
@@ -143,6 +145,8 @@ message.content_parts[].metadata.resources;
 message.content_blocks[].tool_info.metadata.documents_metadata;
 message.content_blocks[].tool_info.metadata.resources;
 ```
+
+
 
 ## UI Integration
 
