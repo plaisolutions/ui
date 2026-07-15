@@ -33,7 +33,7 @@ por ello tener todavía una UI especializada.
 | `office_documents` | Parcial | El fallback lista `metadata.media_files` como archivos generados, además del JSON bruto. | `OfficeDocumentsToolResultCard`: resumen de operación, archivos, tipo de documento y acciones de descarga/abrir. |
 | `perplexity` | Implementado | `ToolResultWebSearchCard` muestra el preview `WEB` / `Internet search results` / número de fuentes y abre un sheet con las fuentes. | Mantener el contrato de metadata y revisar mejoras visuales compartidas cuando exista el panel de detalles común. |
 | `firecrawl_search` | Implementado | Reutiliza el mismo preview y sheet; los ítems muestran bucket (`web`, `news` o `images`), snippets e imágenes cuando existan. | Mantener el contrato de metadata y revisar mejoras visuales compartidas cuando exista el panel de detalles común. |
-| `external_datasource` | Pendiente | Fallback JSON. | `ExternalDatasourceToolResultCard`: resultado tabular/consulta, columnas, filas, paginación o detalle. |
+| `external_datasource` | Implementado | `ToolResultExternalDatasourceCard` usa un trigger compacto y un sheet con la consulta SQL y los resultados tabulares. | Mantener la normalización de tablas y evaluar acciones opcionales de copiado/exportación cuando estén justificadas. |
 | `structured_datasource` | Pendiente | Fallback JSON. | Card para resultados estructurados; decidir si comparte tabla y estados con `external_datasource`. |
 | `http_request` | Pendiente | Fallback JSON. | `HttpRequestToolResultCard`: método, URL, código HTTP, cabeceras y cuerpo resumido. |
 | `mcp_tool` | Pendiente | Fallback JSON. | `McpToolResultCard`: servidor/tool, estado y salida normalizada; preservar el JSON cuando el esquema sea desconocido. |
@@ -47,8 +47,9 @@ por ello tener todavía una UI especializada.
 El orden se basa en la posibilidad de reutilizar UI y en el valor de sustituir
 JSON por información escaneable:
 
-1. **Resultados de datos**: `external_datasource` y `structured_datasource`,
-   compartiendo tabla, estado vacío y detalle de la consulta.
+1. **Resultados de datos**: `structured_datasource`, reutilizando tabla, estado
+   vacío y detalle de la consulta de `external_datasource` cuando el contrato lo
+   permita.
 2. **Office documents**: reemplazar el tratamiento parcial actual por una card
    dedicada de archivos generados.
 3. **Integraciones operativas**: `http_request`, `workflow_dispatch` y
@@ -79,6 +80,15 @@ El parser SSE valida el tipo de evento y que el payload sea JSON, pero no hace
 validación profunda del metadata en runtime. La card filtra cada resultado antes
 de renderizarlo y conserva el fallback de citas históricas; los tipos describen
 el contrato de backend, no sustituyen esa protección en el borde de red.
+
+## Contrato validado: datasource externo
+
+Verificado contra `app/tools/external_datasource.py` el 2026-07-15. El backend
+emite `sql_query`, `prompt_tokens`, `completion_tokens` y `json_table` dentro
+de metadata. `json_table` suele ser un objeto columnar de pandas
+(`{ columna: { índice: valor } }`), aunque la card también acepta la forma
+explícita `{ columns, rows }`, arrays de objetos y JSON serializado para
+resultados almacenados de versiones anteriores.
 
 ## Criterio de finalización para cada card
 

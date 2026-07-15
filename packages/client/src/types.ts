@@ -160,9 +160,24 @@ export type FirecrawlSearchToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type ExternalDatasourceJsonTable =
+  | string
+  | Record<string, unknown>
+  | Array<Record<string, unknown>>
+
+export type ExternalDatasourceToolResultMetadata = {
+  type?: "external_datasource"
+  sql_query?: string
+  json_table?: ExternalDatasourceJsonTable | null
+  prompt_tokens?: number
+  completion_tokens?: number
+  [key: string]: unknown
+}
+
 export type UIToolCallMetadata =
   | OfficeDocumentsToolMetadata
   | DatasourceToolResultMetadata
+  | ExternalDatasourceToolResultMetadata
   | PerplexityToolResultMetadata
   | FirecrawlSearchToolResultMetadata
   | Record<string, unknown>
@@ -206,8 +221,10 @@ export type UIDatasourceToolCallPart = UIBaseToolCallPart<
   DatasourceToolResultMetadata | DatasourceToolErrorMetadata
 >
 export type UIEmailSendToolCallPart = UIBaseToolCallPart<"email_send">
-export type UIExternalDatasourceToolCallPart =
-  UIBaseToolCallPart<"external_datasource">
+export type UIExternalDatasourceToolCallPart = UIBaseToolCallPart<
+  "external_datasource",
+  ExternalDatasourceToolResultMetadata
+>
 export type UIFirecrawlSearchToolCallPart = UIBaseToolCallPart<
   "firecrawl_search",
   FirecrawlSearchToolResultMetadata

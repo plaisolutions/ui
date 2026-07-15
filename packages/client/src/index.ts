@@ -24,6 +24,8 @@ export type {
   DatasourceToolErrorMetadata,
   DatasourceToolResultMetadata,
   DocumentMetadata,
+  ExternalDatasourceJsonTable,
+  ExternalDatasourceToolResultMetadata,
   FirecrawlSearchToolResultMetadata,
   FolderReadModel,
   InternalChatState,

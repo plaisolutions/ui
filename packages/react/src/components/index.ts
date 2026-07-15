@@ -55,5 +55,7 @@ export {
 } from "./prompt-form/file-attachments"
 export { ToolResultCard } from "./tool-result-card"
 export type { ToolResultCardProps } from "./tool-result-card"
+export { ToolResultExternalDatasourceCard } from "./tool-result-external-datasource-card"
+export type { ToolResultExternalDatasourceCardProps } from "./tool-result-external-datasource-card"
 export { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 export type { ToolResultWebSearchCardProps } from "./tool-result-web-search-card"
