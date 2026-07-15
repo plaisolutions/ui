@@ -30,11 +30,11 @@ por ello tener todavía una UI especializada.
 | --- | --- | --- | --- |
 | `datasource` | Implementado | `DatasourceToolResources` agrupa `metadata.resources` por carpeta y usa `DatasourceToolResultCard`, `DatasourceFolderCard` y `ResourceCard`. | Cubrir de forma especializada los resultados sin `resources`, si el contrato de producto los requiere. |
 | `email_send` | Implementado | `ToolResultEmailSendCard` muestra asunto, destinatarios, cuerpo desplegable, entrega y recibo. | Exportar la card como API pública y añadir story/test directo si se desea que se consuma fuera del router. |
-| `office_documents` | Parcial | El fallback lista `metadata.media_files` como archivos generados, además del JSON bruto. | `OfficeDocumentsToolResultCard`: resumen de operación, archivos, tipo de documento y acciones de descarga/abrir. |
+| `office_documents` | Implementado | `ToolResultOfficeDocumentsCard` usa un trigger compacto y un sheet de archivos generados con enlaces de descarga. | Añadir acciones específicas por formato si el producto las requiere. |
 | `perplexity` | Implementado | `ToolResultWebSearchCard` muestra el preview `WEB` / `Internet search results` / número de fuentes y abre un sheet con las fuentes. | Mantener el contrato de metadata y revisar mejoras visuales compartidas cuando exista el panel de detalles común. |
 | `firecrawl_search` | Implementado | Reutiliza el mismo preview y sheet; los ítems muestran bucket (`web`, `news` o `images`), snippets e imágenes cuando existan. | Mantener el contrato de metadata y revisar mejoras visuales compartidas cuando exista el panel de detalles común. |
 | `external_datasource` | Implementado | `ToolResultExternalDatasourceCard` usa un trigger compacto y un sheet con la consulta SQL y los resultados tabulares. | Mantener la normalización de tablas y evaluar acciones opcionales de copiado/exportación cuando estén justificadas. |
-| `structured_datasource` | Pendiente | Fallback JSON. | Card para resultados estructurados; decidir si comparte tabla y estados con `external_datasource`. |
+| `structured_datasource` | Pendiente | Fallback JSON. | Se mantiene con el fallback genérico; no requiere card dedicada mientras el backend solo exponga una respuesta textual. |
 | `http_request` | Pendiente | Fallback JSON. | `HttpRequestToolResultCard`: método, URL, código HTTP, cabeceras y cuerpo resumido. |
 | `mcp_tool` | Pendiente | Fallback JSON. | `McpToolResultCard`: servidor/tool, estado y salida normalizada; preservar el JSON cuando el esquema sea desconocido. |
 | `workflow_dispatch` | Pendiente | Fallback JSON. | `WorkflowDispatchToolResultCard`: workflow, ejecución, estado, identificador y enlace de seguimiento si existe. |
@@ -47,14 +47,11 @@ por ello tener todavía una UI especializada.
 El orden se basa en la posibilidad de reutilizar UI y en el valor de sustituir
 JSON por información escaneable:
 
-1. **Resultados de datos**: `structured_datasource`, reutilizando tabla, estado
-   vacío y detalle de la consulta de `external_datasource` cuando el contrato lo
-   permita.
-2. **Office documents**: reemplazar el tratamiento parcial actual por una card
+1. **Office documents**: reemplazar el tratamiento parcial actual por una card
    dedicada de archivos generados.
-3. **Integraciones operativas**: `http_request`, `workflow_dispatch` y
+2. **Integraciones operativas**: `http_request`, `workflow_dispatch` y
    `mcp_tool`.
-4. **Ejecución delegada**: `agent_invocation` y `browser`, una vez definidos
+3. **Ejecución delegada**: `agent_invocation` y `browser`, una vez definidos
    los enlaces o artefactos que cada backend expone.
 
 ## Contrato validado: búsqueda web
@@ -89,6 +86,7 @@ de metadata. `json_table` suele ser un objeto columnar de pandas
 (`{ columna: { índice: valor } }`), aunque la card también acepta la forma
 explícita `{ columns, rows }`, arrays de objetos y JSON serializado para
 resultados almacenados de versiones anteriores.
+
 
 ## Criterio de finalización para cada card
 

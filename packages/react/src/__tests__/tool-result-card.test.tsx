@@ -93,9 +93,11 @@ describe("ToolResultCard", () => {
       />,
     )
 
-    expect(screen.getByText("Generated files")).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Office documents: 1 file" }),
+    )
     expect(
-      screen.getByRole("link", { name: "monthly-report.docx" }),
+      screen.getByRole("link", { name: /monthly-report\.docx/ }),
     ).toBeTruthy()
   })
 
