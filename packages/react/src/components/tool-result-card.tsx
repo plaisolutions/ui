@@ -11,6 +11,7 @@ import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
 import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 import { ToolResultAgentInvocationCard } from "./tool-result-agent-invocation-card"
+import { ToolResultBrowserCard } from "./tool-result-browser-card"
 import { ToolResultExternalDatasourceCard } from "./tool-result-external-datasource-card"
 import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 import { ToolResultMcpCard } from "./tool-result-mcp-card"
@@ -82,6 +83,10 @@ export function ToolResultCard({
         onOpenThread={onOpenAgentThread}
       />
     )
+  }
+
+  if (part.toolType === "browser") {
+    return <ToolResultBrowserCard part={part} className={className} />
   }
 
   if (part.toolType === "external_datasource") {

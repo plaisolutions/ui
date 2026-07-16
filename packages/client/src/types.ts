@@ -205,6 +205,14 @@ export type AgentInvocationToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type BrowserToolResultMetadata = {
+  type?: "browser"
+  scraper_api_tokens?: number | null
+  firecrawl_credits?: number | null
+  scraper_type?: "beautifulsoup" | "firecrawl" | "scraperapi"
+  [key: string]: unknown
+}
+
 export type WorkflowDispatchToolResultMetadata = {
   type?: "workflow_dispatch"
   [key: string]: unknown
@@ -212,6 +220,7 @@ export type WorkflowDispatchToolResultMetadata = {
 
 export type UIToolCallMetadata =
   | AgentInvocationToolResultMetadata
+  | BrowserToolResultMetadata
   | OfficeDocumentsToolMetadata
   | DatasourceToolResultMetadata
   | ExternalDatasourceToolResultMetadata
@@ -255,7 +264,10 @@ export type UIBaseToolCallPart<
 
 export type UIAgentInvocationToolCallPart =
   UIBaseToolCallPart<"agent_invocation", AgentInvocationToolResultMetadata>
-export type UIBrowserToolCallPart = UIBaseToolCallPart<"browser">
+export type UIBrowserToolCallPart = UIBaseToolCallPart<
+  "browser",
+  BrowserToolResultMetadata
+>
 export type UIDatasourceToolCallPart = UIBaseToolCallPart<
   "datasource",
   DatasourceToolResultMetadata | DatasourceToolErrorMetadata

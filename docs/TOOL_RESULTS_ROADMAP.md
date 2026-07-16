@@ -39,7 +39,7 @@ por ello tener todavía una UI especializada.
 | `mcp_tool` | Implementado | `ToolResultMcpCard` muestra servidor, tool y salida en un sheet; admite los nombres actuales y heredados del metadata. | Mantener la compatibilidad mientras el backend unifica nombres. |
 | `workflow_dispatch` | Implementado | `ToolResultWorkflowDispatchCard` muestra workflow, estado e identificadores de ejecución en un sheet. | Añadir enlace de seguimiento cuando el backend exponga una URL de ejecución. |
 | `agent_invocation` | Implementado | `ToolResultAgentInvocationCard` muestra el agente, resultado, ejecución y sub-thread en un sheet. | El host puede abrir la sub-conversación mediante `onOpenAgentThread`; la librería no asume rutas ni autenticación. |
-| `browser` | Pendiente | Fallback JSON. | `BrowserToolResultCard`: acción, URL, título, extracto/captura y posibles enlaces. |
+| `browser` | Implementado | `ToolResultBrowserCard` conserva el resultado expandible de Next, con URL enlazable, contenido resumido y créditos del scraper. | El backend aún no aporta título, extracto estructurado ni capturas. |
 | `unknown` o `null` | Implementado (fallback) | Fallback genérico sin asumir contrato. | No requiere card propia; actualizar `UIToolType` y este mapa al aparecer un nuevo tipo estable. |
 
 ## Orden propuesto de implementación

@@ -49,6 +49,7 @@ export type {
   UIAgentInvocationToolCallPart,
   UIBaseToolCallPart,
   UIBrowserToolCallPart,
+  BrowserToolResultMetadata,
   UIDatasourceToolCallPart,
   UIEmailSendToolCallPart,
   UIExternalDatasourceToolCallPart,
