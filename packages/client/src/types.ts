@@ -195,12 +195,23 @@ export type McpToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type AgentInvocationToolResultMetadata = {
+  type?: "agent_invocation"
+  agent_id?: string
+  agent_name?: string
+  thread_id?: string
+  tracked_execution_id?: string
+  is_core_agent?: boolean
+  [key: string]: unknown
+}
+
 export type WorkflowDispatchToolResultMetadata = {
   type?: "workflow_dispatch"
   [key: string]: unknown
 }
 
 export type UIToolCallMetadata =
+  | AgentInvocationToolResultMetadata
   | OfficeDocumentsToolMetadata
   | DatasourceToolResultMetadata
   | ExternalDatasourceToolResultMetadata
@@ -243,7 +254,7 @@ export type UIBaseToolCallPart<
 }
 
 export type UIAgentInvocationToolCallPart =
-  UIBaseToolCallPart<"agent_invocation">
+  UIBaseToolCallPart<"agent_invocation", AgentInvocationToolResultMetadata>
 export type UIBrowserToolCallPart = UIBaseToolCallPart<"browser">
 export type UIDatasourceToolCallPart = UIBaseToolCallPart<
   "datasource",

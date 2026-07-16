@@ -10,6 +10,7 @@ import {
 import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
 import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
+import { ToolResultAgentInvocationCard } from "./tool-result-agent-invocation-card"
 import { ToolResultExternalDatasourceCard } from "./tool-result-external-datasource-card"
 import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 import { ToolResultMcpCard } from "./tool-result-mcp-card"
@@ -21,6 +22,7 @@ export type ToolResultCardProps = {
   part: UIToolCallPart
   className?: string
   detailsOpen?: boolean
+  onOpenAgentThread?: (threadId: string) => void
 }
 
 function formatJson(value: unknown) {
@@ -62,6 +64,7 @@ export function ToolResultCard({
   part,
   className,
   detailsOpen = true,
+  onOpenAgentThread,
 }: ToolResultCardProps) {
   const officeMediaFiles = getOfficeDocumentMediaFiles(part)
   const datasourceResources = getDatasourceResources(part)
@@ -69,6 +72,16 @@ export function ToolResultCard({
 
   if (part.toolType === "email_send") {
     return <ToolResultEmailSendCard part={part} className={className} />
+  }
+
+  if (part.toolType === "agent_invocation") {
+    return (
+      <ToolResultAgentInvocationCard
+        part={part}
+        className={className}
+        onOpenThread={onOpenAgentThread}
+      />
+    )
   }
 
   if (part.toolType === "external_datasource") {

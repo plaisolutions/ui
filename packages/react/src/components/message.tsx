@@ -9,6 +9,7 @@ export type MessageProps = {
   showRole?: boolean
   collapseThreshold?: number
   datasourceToolResultsPosition?: "inline" | "before-content"
+  onOpenAgentThread?: (threadId: string) => void
 }
 
 const DEFAULT_COLLAPSE_THRESHOLD = 600
@@ -37,7 +38,11 @@ function getDisplayExtension(label?: string) {
   return ext
 }
 
-function renderPart(part: UIMessagePart, index: number) {
+function renderPart(
+  part: UIMessagePart,
+  index: number,
+  onOpenAgentThread?: (threadId: string) => void,
+) {
   if (part.type === "text") {
     return (
       <p
@@ -109,7 +114,13 @@ function renderPart(part: UIMessagePart, index: number) {
   }
 
   if (part.type === "tool-call") {
-    return <ToolResultCard key={`tool-${part.id}-${index}`} part={part} />
+    return (
+      <ToolResultCard
+        key={`tool-${part.id}-${index}`}
+        part={part}
+        onOpenAgentThread={onOpenAgentThread}
+      />
+    )
   }
 
   if (part.type === "guardrail") {
@@ -160,6 +171,7 @@ export function Message({
   showRole = true,
   collapseThreshold = DEFAULT_COLLAPSE_THRESHOLD,
   datasourceToolResultsPosition = "inline",
+  onOpenAgentThread,
 }: MessageProps) {
   const roleLabel = message.role.charAt(0).toUpperCase() + message.role.slice(1)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -200,7 +212,9 @@ export function Message({
         {canCollapse && !isExpanded ? (
           <p className="whitespace-pre-wrap text-sm leading-6">{previewText}</p>
         ) : (
-          orderedParts.map(({ part, index }) => renderPart(part, index))
+          orderedParts.map(({ part, index }) =>
+            renderPart(part, index, onOpenAgentThread),
+          )
         )}
       </div>
       {canCollapse ? (

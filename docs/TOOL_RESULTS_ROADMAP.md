@@ -38,7 +38,7 @@ por ello tener todavía una UI especializada.
 | `http_request` | Implementado | `ToolResultHttpRequestCard` muestra método, URL, código HTTP, cuerpo y headers en un sheet. | Mantener el contrato enriquecido del backend. |
 | `mcp_tool` | Implementado | `ToolResultMcpCard` muestra servidor, tool y salida en un sheet; admite los nombres actuales y heredados del metadata. | Mantener la compatibilidad mientras el backend unifica nombres. |
 | `workflow_dispatch` | Implementado | `ToolResultWorkflowDispatchCard` muestra workflow, estado e identificadores de ejecución en un sheet. | Añadir enlace de seguimiento cuando el backend exponga una URL de ejecución. |
-| `agent_invocation` | Pendiente | Fallback JSON. | `AgentInvocationToolResultCard`: agente invocado, resultado/resumen y acceso a la sub-conversación si el backend lo facilita. |
+| `agent_invocation` | Implementado | `ToolResultAgentInvocationCard` muestra el agente, resultado, ejecución y sub-thread en un sheet. | El host puede abrir la sub-conversación mediante `onOpenAgentThread`; la librería no asume rutas ni autenticación. |
 | `browser` | Pendiente | Fallback JSON. | `BrowserToolResultCard`: acción, URL, título, extracto/captura y posibles enlaces. |
 | `unknown` o `null` | Implementado (fallback) | Fallback genérico sin asumir contrato. | No requiere card propia; actualizar `UIToolType` y este mapa al aparecer un nuevo tipo estable. |
 
