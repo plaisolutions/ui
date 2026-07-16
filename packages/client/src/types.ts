@@ -174,10 +174,23 @@ export type ExternalDatasourceToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type HttpRequestToolResultMetadata = {
+  type?: "http_request"
+  url?: string
+  method?: string
+  content_type?: string | null
+  status_code?: number | null
+  status_reason?: string | null
+  response_url?: string | null
+  response_headers?: Record<string, string> | null
+  [key: string]: unknown
+}
+
 export type UIToolCallMetadata =
   | OfficeDocumentsToolMetadata
   | DatasourceToolResultMetadata
   | ExternalDatasourceToolResultMetadata
+  | HttpRequestToolResultMetadata
   | PerplexityToolResultMetadata
   | FirecrawlSearchToolResultMetadata
   | Record<string, unknown>
@@ -229,7 +242,10 @@ export type UIFirecrawlSearchToolCallPart = UIBaseToolCallPart<
   "firecrawl_search",
   FirecrawlSearchToolResultMetadata
 >
-export type UIHttpRequestToolCallPart = UIBaseToolCallPart<"http_request">
+export type UIHttpRequestToolCallPart = UIBaseToolCallPart<
+  "http_request",
+  HttpRequestToolResultMetadata
+>
 export type UIMcpToolCallPart = UIBaseToolCallPart<"mcp_tool">
 export type UIOfficeDocumentsToolCallPart = UIBaseToolCallPart<
   "office_documents",

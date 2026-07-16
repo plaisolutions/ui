@@ -35,7 +35,7 @@ por ello tener todavía una UI especializada.
 | `firecrawl_search` | Implementado | Reutiliza el mismo preview y sheet; los ítems muestran bucket (`web`, `news` o `images`), snippets e imágenes cuando existan. | Mantener el contrato de metadata y revisar mejoras visuales compartidas cuando exista el panel de detalles común. |
 | `external_datasource` | Implementado | `ToolResultExternalDatasourceCard` usa un trigger compacto y un sheet con la consulta SQL y los resultados tabulares. | Mantener la normalización de tablas y evaluar acciones opcionales de copiado/exportación cuando estén justificadas. |
 | `structured_datasource` | Pendiente | Fallback JSON. | Se mantiene con el fallback genérico; no requiere card dedicada mientras el backend solo exponga una respuesta textual. |
-| `http_request` | Pendiente | Fallback JSON. | `HttpRequestToolResultCard`: método, URL, código HTTP, cabeceras y cuerpo resumido. |
+| `http_request` | Implementado | `ToolResultHttpRequestCard` muestra método, URL, código HTTP, cuerpo y headers en un sheet. | Mantener el contrato enriquecido del backend. |
 | `mcp_tool` | Pendiente | Fallback JSON. | `McpToolResultCard`: servidor/tool, estado y salida normalizada; preservar el JSON cuando el esquema sea desconocido. |
 | `workflow_dispatch` | Pendiente | Fallback JSON. | `WorkflowDispatchToolResultCard`: workflow, ejecución, estado, identificador y enlace de seguimiento si existe. |
 | `agent_invocation` | Pendiente | Fallback JSON. | `AgentInvocationToolResultCard`: agente invocado, resultado/resumen y acceso a la sub-conversación si el backend lo facilita. |

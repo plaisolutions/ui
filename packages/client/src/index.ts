@@ -30,6 +30,7 @@ export type {
   FolderReadModel,
   InternalChatState,
   InputFileMetadata,
+  HttpRequestToolResultMetadata,
   MessageIdEvent,
   MessageStartEvent,
   MessageStopEvent,

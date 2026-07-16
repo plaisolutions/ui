@@ -11,6 +11,7 @@ import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
 import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 import { ToolResultExternalDatasourceCard } from "./tool-result-external-datasource-card"
+import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 import { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 
@@ -76,6 +77,10 @@ export function ToolResultCard({
 
   if (part.toolType === "office_documents") {
     return <ToolResultOfficeDocumentsCard part={part} className={className} />
+  }
+
+  if (part.toolType === "http_request") {
+    return <ToolResultHttpRequestCard part={part} className={className} />
   }
 
   if (part.toolType === "perplexity" || part.toolType === "firecrawl_search") {
