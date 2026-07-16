@@ -59,6 +59,8 @@ export { ToolResultExternalDatasourceCard } from "./tool-result-external-datasou
 export type { ToolResultExternalDatasourceCardProps } from "./tool-result-external-datasource-card"
 export { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 export type { ToolResultHttpRequestCardProps } from "./tool-result-http-request-card"
+export { ToolResultMcpCard } from "./tool-result-mcp-card"
+export type { ToolResultMcpCardProps } from "./tool-result-mcp-card"
 export { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
 export type { ToolResultOfficeDocumentsCardProps } from "./tool-result-office-documents-card"
 export { ToolResultWebSearchCard } from "./tool-result-web-search-card"

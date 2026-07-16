@@ -34,6 +34,7 @@ export type {
   MessageIdEvent,
   MessageStartEvent,
   MessageStopEvent,
+  McpToolResultMetadata,
   OfficeDocumentMediaFile,
   OfficeDocumentsToolMetadata,
   PerplexityToolResultMetadata,

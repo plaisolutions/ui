@@ -186,11 +186,21 @@ export type HttpRequestToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type McpToolResultMetadata = {
+  type?: "mcp_tool"
+  mcp_server_url?: string
+  mcp_tool_name?: string
+  server_name?: string
+  tool_name?: string
+  [key: string]: unknown
+}
+
 export type UIToolCallMetadata =
   | OfficeDocumentsToolMetadata
   | DatasourceToolResultMetadata
   | ExternalDatasourceToolResultMetadata
   | HttpRequestToolResultMetadata
+  | McpToolResultMetadata
   | PerplexityToolResultMetadata
   | FirecrawlSearchToolResultMetadata
   | Record<string, unknown>
@@ -246,7 +256,7 @@ export type UIHttpRequestToolCallPart = UIBaseToolCallPart<
   "http_request",
   HttpRequestToolResultMetadata
 >
-export type UIMcpToolCallPart = UIBaseToolCallPart<"mcp_tool">
+export type UIMcpToolCallPart = UIBaseToolCallPart<"mcp_tool", McpToolResultMetadata>
 export type UIOfficeDocumentsToolCallPart = UIBaseToolCallPart<
   "office_documents",
   OfficeDocumentsToolMetadata
