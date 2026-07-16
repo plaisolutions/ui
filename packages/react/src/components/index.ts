@@ -65,3 +65,5 @@ export { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-ca
 export type { ToolResultOfficeDocumentsCardProps } from "./tool-result-office-documents-card"
 export { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 export type { ToolResultWebSearchCardProps } from "./tool-result-web-search-card"
+export { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
+export type { ToolResultWorkflowDispatchCardProps } from "./tool-result-workflow-dispatch-card"

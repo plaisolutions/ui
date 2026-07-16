@@ -70,6 +70,7 @@ export type {
   UIToolType,
   UIUnknownToolCallPart,
   UIWorkflowDispatchToolCallPart,
+  WorkflowDispatchToolResultMetadata,
   Usage,
   UsageEvent,
   WebSearchResult,

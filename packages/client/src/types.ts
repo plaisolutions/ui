@@ -195,12 +195,18 @@ export type McpToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type WorkflowDispatchToolResultMetadata = {
+  type?: "workflow_dispatch"
+  [key: string]: unknown
+}
+
 export type UIToolCallMetadata =
   | OfficeDocumentsToolMetadata
   | DatasourceToolResultMetadata
   | ExternalDatasourceToolResultMetadata
   | HttpRequestToolResultMetadata
   | McpToolResultMetadata
+  | WorkflowDispatchToolResultMetadata
   | PerplexityToolResultMetadata
   | FirecrawlSearchToolResultMetadata
   | Record<string, unknown>
@@ -268,7 +274,7 @@ export type UIPerplexityToolCallPart = UIBaseToolCallPart<
 export type UIStructuredDatasourceToolCallPart =
   UIBaseToolCallPart<"structured_datasource">
 export type UIWorkflowDispatchToolCallPart =
-  UIBaseToolCallPart<"workflow_dispatch">
+  UIBaseToolCallPart<"workflow_dispatch", WorkflowDispatchToolResultMetadata>
 export type UIUnknownToolCallPart = Omit<
   UIBaseToolCallPart<"unknown" | null>,
   "toolType"

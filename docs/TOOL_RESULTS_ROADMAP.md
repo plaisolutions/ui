@@ -37,7 +37,7 @@ por ello tener todavía una UI especializada.
 | `structured_datasource` | Pendiente | Fallback JSON. | Se mantiene con el fallback genérico; no requiere card dedicada mientras el backend solo exponga una respuesta textual. |
 | `http_request` | Implementado | `ToolResultHttpRequestCard` muestra método, URL, código HTTP, cuerpo y headers en un sheet. | Mantener el contrato enriquecido del backend. |
 | `mcp_tool` | Implementado | `ToolResultMcpCard` muestra servidor, tool y salida en un sheet; admite los nombres actuales y heredados del metadata. | Mantener la compatibilidad mientras el backend unifica nombres. |
-| `workflow_dispatch` | Pendiente | Fallback JSON. | `WorkflowDispatchToolResultCard`: workflow, ejecución, estado, identificador y enlace de seguimiento si existe. |
+| `workflow_dispatch` | Implementado | `ToolResultWorkflowDispatchCard` muestra workflow, estado e identificadores de ejecución en un sheet. | Añadir enlace de seguimiento cuando el backend exponga una URL de ejecución. |
 | `agent_invocation` | Pendiente | Fallback JSON. | `AgentInvocationToolResultCard`: agente invocado, resultado/resumen y acceso a la sub-conversación si el backend lo facilita. |
 | `browser` | Pendiente | Fallback JSON. | `BrowserToolResultCard`: acción, URL, título, extracto/captura y posibles enlaces. |
 | `unknown` o `null` | Implementado (fallback) | Fallback genérico sin asumir contrato. | No requiere card propia; actualizar `UIToolType` y este mapa al aparecer un nuevo tipo estable. |

@@ -15,6 +15,7 @@ import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 import { ToolResultMcpCard } from "./tool-result-mcp-card"
 import { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
+import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
 
 export type ToolResultCardProps = {
   part: UIToolCallPart
@@ -85,6 +86,10 @@ export function ToolResultCard({
   }
   if (part.toolType === "mcp_tool") {
     return <ToolResultMcpCard part={part} className={className} />
+  }
+
+  if (part.toolType === "workflow_dispatch") {
+    return <ToolResultWorkflowDispatchCard part={part} className={className} />
   }
 
   if (part.toolType === "perplexity" || part.toolType === "firecrawl_search") {
