@@ -1,13 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react"
 import { useState } from "react"
-import { SpeechToTextToggle } from "@plaisolutions/react/components"
+import {
+  dummyTranscribeAudio,
+  SpeechToTextToggle,
+} from "@plaisolutions/react/components"
 
-function SpeechToTextToggleDemo() {
+function SpeechToTextToggleDemo({ disabled = false }: { disabled?: boolean }) {
   const [transcript, setTranscript] = useState("")
 
   return (
     <div className="flex flex-col gap-4">
       <SpeechToTextToggle
+        disabled={disabled}
+        transcribe={dummyTranscribeAudio}
         onTranscriptionComplete={setTranscript}
       />
       <p className="text-sm text-neutral-600">
@@ -31,3 +36,7 @@ export default meta
 type Story = StoryObj<typeof SpeechToTextToggleDemo>
 
 export const Default: Story = {}
+
+export const Disabled: Story = {
+  args: { disabled: true },
+}

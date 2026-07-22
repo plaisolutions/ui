@@ -37,3 +37,23 @@ export const CustomIcon: Story = {
     url: "https://example.com/video",
   },
 }
+
+export const OpenGraphContent: Story = {
+  args: {
+    icon: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=80",
+    type: "ARTICLE",
+    title: "Design systems for learning products",
+    description:
+      "How reusable patterns improve consistency across educational interfaces.",
+    url: "https://example.com/design-systems",
+  },
+}
+
+export const WithoutUrl: Story = {
+  args: {
+    type: "DOCUMENT",
+    title: "Internal product brief",
+    description: "This resource is visible but does not have a public link.",
+    url: null,
+  },
+}

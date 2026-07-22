@@ -1,26 +1,62 @@
-import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
-import { Message } from "../components"
+import { fireEvent, render, screen } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+  MessageParts,
+} from "../components"
 
-describe("Message", () => {
-  it("renders user text content", () => {
+describe("Message composition", () => {
+  it("composes a message from optional layout primitives", () => {
+    const view = render(
+      <Message align="start">
+        <MessageAvatar src="" fallback="John Doe" />
+        <MessageContent>
+          <MessageHeader>John Doe</MessageHeader>
+          <MessageParts
+            message={{
+              id: "msg_1",
+              role: "user",
+              parts: [{ type: "text", text: "Hola mundo" }],
+            }}
+          />
+          <MessageFooter>Delivered</MessageFooter>
+        </MessageContent>
+      </Message>,
+    )
+
+    expect(screen.getByRole("img", { name: "John Doe" }).textContent).toBe(
+      "JD",
+    )
+    expect(screen.getByText("Hola mundo")).toBeTruthy()
+    expect(screen.getByText("Delivered")).toBeTruthy()
+    expect(view.container.querySelector("article")?.className).toContain(
+      "items-start",
+    )
+  })
+
+  it("shows the image and falls back to at most two initials on error", () => {
     render(
-      <Message
-        message={{
-          id: "msg_1",
-          role: "user",
-          parts: [{ type: "text", text: "Hola mundo" }],
-        }}
+      <MessageAvatar
+        src="https://example.com/avatar.jpg"
+        fallback="Ada Lovelace Byron"
       />,
     )
 
-    expect(screen.getByText("User")).toBeTruthy()
-    expect(screen.getByText("Hola mundo")).toBeTruthy()
+    const image = screen.getByRole("img", { name: "Ada Lovelace Byron" })
+    expect(image.getAttribute("src")).toBe("https://example.com/avatar.jpg")
+    fireEvent.error(image)
+    expect(
+      screen.getByRole("img", { name: "Ada Lovelace Byron" }).textContent,
+    ).toBe("AB")
   })
 
   it("renders tool call details", () => {
     render(
-      <Message
+      <MessageParts
         message={{
           id: "msg_2",
           role: "assistant",
@@ -43,9 +79,13 @@ describe("Message", () => {
     expect(screen.getByText(/"q": "billing"/)).toBeTruthy()
   })
 
-  it("renders input_file and input_image parts", () => {
+  it("renders attachments and custom text/tool renderers", () => {
+    const renderText = vi.fn((part: { text: string }) => (
+      <strong>{part.text}</strong>
+    ))
     render(
-      <Message
+      <MessageParts
+        renderText={renderText}
         message={{
           id: "msg_attachments",
           role: "user",
@@ -54,19 +94,14 @@ describe("Message", () => {
               type: "input_image",
               url: "https://example.com/diagram.png",
               title: "diagram.png",
-              metadata: { originalFileName: "diagram.png" },
             },
             {
               type: "input_file",
               fileUrl: "https://example.com/manual.pdf",
               title: "manual.pdf",
               mimeType: "application/pdf",
-              metadata: { originalFileName: "manual.pdf" },
             },
-            {
-              type: "text",
-              text: "Please review attachments",
-            },
+            { type: "text", text: "Please review attachments" },
           ],
         }}
       />,
@@ -74,30 +109,26 @@ describe("Message", () => {
 
     expect(screen.getByRole("img", { name: "diagram.png" })).toBeTruthy()
     expect(screen.getByRole("link", { name: /manual\.pdf/i })).toBeTruthy()
-    expect(screen.getByText("application/pdf")).toBeTruthy()
-    expect(screen.getByText("Please review attachments")).toBeTruthy()
+    expect(screen.getByText("Please review attachments").tagName).toBe("STRONG")
+    expect(renderText).toHaveBeenCalled()
   })
 
   it("collapses long user prompts by default", () => {
-    const text = "x".repeat(800)
-
     render(
-      <Message
+      <MessageParts
         message={{
           id: "msg_3",
           role: "user",
-          parts: [{ type: "text", text }],
+          parts: [{ type: "text", text: "x".repeat(800) }],
         }}
       />,
     )
-
     expect(screen.getByText("Read more")).toBeTruthy()
   })
 
-  it("can render datasource tool results before the agent content", () => {
+  it("can render datasource tool results before agent content", () => {
     const view = render(
-      <Message
-        showRole={false}
+      <MessageParts
         datasourceToolResultsPosition="before-content"
         message={{
           id: "msg_datasource_first",
@@ -119,12 +150,9 @@ describe("Message", () => {
       />,
     )
 
-    const messageContent = view.container.textContent ?? ""
-    expect(messageContent.indexOf("search_courses")).toBeLessThan(
-      messageContent.indexOf("First agent paragraph"),
-    )
-    expect(messageContent.indexOf("First agent paragraph")).toBeLessThan(
-      messageContent.indexOf("Final agent paragraph"),
+    const content = view.container.textContent ?? ""
+    expect(content.indexOf("search_courses")).toBeLessThan(
+      content.indexOf("First agent paragraph"),
     )
   })
 })

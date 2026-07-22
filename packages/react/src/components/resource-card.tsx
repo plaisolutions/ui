@@ -2,16 +2,22 @@ import { File } from "lucide-react"
 
 export type ResourceCardProps = {
   icon?: string
+  type?: string
   title: string
-  description: string
+  description?: string
   url: string | null
 }
 
 function ResourceCardContent({
   icon,
+  type,
   title,
   description,
 }: Omit<ResourceCardProps, "url">) {
+  const heading = type ?? title
+  const bodyTitle = type ? title : description
+  const bodyDescription = type ? description : undefined
+
   return (
     <>
       <header className="flex min-w-0 items-center gap-3">
@@ -26,9 +32,18 @@ function ResourceCardContent({
         ) : (
           <File className="h-5 w-5 shrink-0" aria-hidden="true" />
         )}
-        <p className="min-w-0 truncate text-base leading-5">{title}</p>
+        <p className="min-w-0 truncate text-base leading-5">{heading}</p>
       </header>
-      <p className="mt-2 line-clamp-2 text-sm leading-5">{description}</p>
+      {bodyTitle ? (
+        <p className="mt-2 line-clamp-2 text-sm font-medium leading-5">
+          {bodyTitle}
+        </p>
+      ) : null}
+      {bodyDescription ? (
+        <p className="mt-2 line-clamp-2 text-xs leading-4 text-neutral-600">
+          {bodyDescription}
+        </p>
+      ) : null}
     </>
   )
 }

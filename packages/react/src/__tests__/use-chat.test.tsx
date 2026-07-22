@@ -28,6 +28,7 @@ describe("useChat", () => {
     expect(result.current.status).toBe("ready")
     expect(result.current.messages).toEqual([])
     expect(result.current.error).toBeNull()
+    expect(result.current.uploadState.status).toBe("idle")
   })
 
   it("updates messages through sendMessage", async () => {
@@ -208,5 +209,95 @@ describe("useChat", () => {
     })
 
     expect(onError).toHaveBeenCalled()
+  })
+
+  it("exposes rateMessage from the chat instance", async () => {
+    const rateMessage = vi.fn().mockResolvedValue(undefined)
+    const transport: ChatTransport = {
+      ...createTransport([]),
+      rateMessage,
+    }
+    const { result } = renderHook(() => useChat({ transport }))
+
+    await act(async () => {
+      await result.current.rateMessage({
+        messageId: "message_1",
+        rating: "NEGATIVE",
+      })
+    })
+
+    expect(rateMessage).toHaveBeenCalledWith({
+      messageId: "message_1",
+      rating: "NEGATIVE",
+    })
+  })
+
+  it("exposes transcribeAudio from the chat instance", async () => {
+    const transcribeAudio = vi.fn().mockResolvedValue("Hola desde voz")
+    const transport: ChatTransport = {
+      ...createTransport([]),
+      transcribeAudio,
+    }
+    const { result } = renderHook(() => useChat({ transport }))
+    const audio = new Blob(["audio"], { type: "audio/webm" })
+    const signal = new AbortController().signal
+
+    await expect(result.current.transcribeAudio(audio, signal)).resolves.toBe(
+      "Hola desde voz",
+    )
+    expect(transcribeAudio).toHaveBeenCalledWith(audio, signal)
+  })
+
+  it("exposes uploadFile and reactive uploadState", async () => {
+    let finishUpload: (() => void) | undefined
+    const uploadFile: NonNullable<ChatTransport["uploadFile"]> = async ({
+      onProgress,
+      onUploaded,
+    }) => {
+      onProgress({ loadedBytes: 25, totalBytes: 100, progress: 25 })
+      await new Promise<void>((resolve) => {
+        finishUpload = resolve
+      })
+      onUploaded()
+      return {
+        id: "media_1",
+        name: "report.pdf",
+        pathname: "report.pdf",
+        contentType: "application/pdf",
+        url: "https://files.example.com/report.pdf",
+        projectId: "project_1",
+        threadId: "thread_1",
+        derivedFromMediaFileId: null,
+        anthropicFileId: null,
+        metadata: {},
+      }
+    }
+    const transport: ChatTransport = {
+      ...createTransport([]),
+      uploadFile,
+    }
+    const { result } = renderHook(() => useChat({ transport }))
+    let uploading: Promise<unknown> | undefined
+
+    act(() => {
+      uploading = result.current.uploadFile(
+        new File(["report"], "report.pdf", { type: "application/pdf" }),
+      )
+    })
+
+    await waitFor(() => {
+      expect(result.current.uploadState).toMatchObject({
+        status: "uploading",
+        fileName: "report.pdf",
+        progress: 25,
+      })
+    })
+
+    await act(async () => {
+      finishUpload?.()
+      await uploading
+    })
+
+    expect(result.current.uploadState.status).toBe("idle")
   })
 })

@@ -28,7 +28,13 @@ streamed result is rendered by `ToolResultWebSearchCard` through `Message` and
 ```tsx
 import { useMemo, useState } from "react";
 import { PlaiThreadTransport } from "@plaisolutions/client";
-import { Message, PromptForm, useChat } from "@plaisolutions/react";
+import {
+  Message,
+  MessageContent,
+  MessageParts,
+  PromptForm,
+  useChat,
+} from "@plaisolutions/react";
 
 const transport = useMemo(
   () =>
@@ -46,11 +52,14 @@ const { messages, status, error, sendMessage, stop } = useChat({ transport });
 return (
   <>
     {messages.map((message) => (
-      <Message
-        key={message.id}
-        message={message}
-        datasourceToolResultsPosition="before-content"
-      />
+      <Message key={message.id} align={message.role === "user" ? "end" : "start"}>
+        <MessageContent>
+          <MessageParts
+            message={message}
+            datasourceToolResultsPosition="before-content"
+          />
+        </MessageContent>
+      </Message>
     ))}
     <PromptForm
       value={input}

@@ -1,5 +1,9 @@
 import type { PromptFormProps } from "@plaisolutions/react/components"
-import { PromptForm, SpeechToTextToggle } from "@plaisolutions/react/components"
+import {
+  dummyTranscribeAudio,
+  PromptForm,
+  SpeechToTextToggle,
+} from "@plaisolutions/react/components"
 import type { Meta, StoryObj } from "@storybook/react"
 import { useState } from "react"
 
@@ -28,7 +32,10 @@ function PromptFormDemo({
       files={files}
       onFilesChange={setFiles}
       rightSlot={
-        <SpeechToTextToggle onTranscriptionComplete={handleTranscriptionComplete} />
+        <SpeechToTextToggle
+          transcribe={dummyTranscribeAudio}
+          onTranscriptionComplete={handleTranscriptionComplete}
+        />
       }
       {...props}
     />
@@ -94,6 +101,44 @@ export const Submitted: Story = {
   args: {
     initialValue: "Generate a weekly report",
     status: "submitted",
+  },
+}
+
+export const UploadingAttachment: Story = {
+  args: {
+    initialValue: "Review this report",
+    initialFiles: [
+      new File(["pdf"], "quarterly-report.pdf", {
+        type: "application/pdf",
+      }),
+    ],
+    uploadState: {
+      status: "uploading",
+      fileName: "quarterly-report.pdf",
+      loadedBytes: 42,
+      totalBytes: 100,
+      progress: 42,
+      error: null,
+    },
+  },
+}
+
+export const ProcessingAttachment: Story = {
+  args: {
+    initialValue: "Review this report",
+    initialFiles: [
+      new File(["pdf"], "quarterly-report.pdf", {
+        type: "application/pdf",
+      }),
+    ],
+    uploadState: {
+      status: "processing",
+      fileName: "quarterly-report.pdf",
+      loadedBytes: 100,
+      totalBytes: 100,
+      progress: 100,
+      error: null,
+    },
   },
 }
 

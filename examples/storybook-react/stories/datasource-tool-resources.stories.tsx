@@ -80,3 +80,35 @@ export const GroupedByFolder: Story = {
     ],
   },
 }
+
+export const UngroupedResources: Story = {
+  args: {
+    resources: [
+      {
+        ...baseResource,
+        id: "resource-ungrouped-1",
+        folder: null,
+        extra_info: {
+          opengraph: {
+            title: "Accessibility checklist",
+            description: "A practical WCAG checklist for course authors.",
+            type: "GUIDE",
+            image: "/favicon.svg",
+            url: "https://example.com/accessibility",
+          },
+        },
+      },
+      {
+        ...baseResource,
+        id: "resource-ungrouped-2",
+        folder: null,
+        name: "Storyline shortcuts",
+        external_url: null,
+      },
+    ],
+  },
+}
+
+export const Empty: Story = {
+  args: { resources: [] },
+}

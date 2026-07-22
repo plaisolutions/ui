@@ -1,6 +1,8 @@
 import { PlaiThreadTransport } from "@plaisolutions/client"
 import {
   Message,
+  MessageContent,
+  MessageParts,
   PromptForm,
   PromptFormAttachButton,
   SpeechToTextToggle,
@@ -37,24 +39,41 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
     [config.api, session.id, session.thread_id, session.chat_token],
   )
 
-  const { messages, status, error, sendMessage, stop } = useChat({ transport })
+  const {
+    messages,
+    status,
+    error,
+    uploadState,
+    sendMessage,
+    transcribeAudio,
+    uploadFile,
+    stop,
+  } = useChat({ transport })
 
-  const isBusy = status === "submitted" || status === "streaming"
+  const isBusy =
+    status === "submitted" ||
+    status === "streaming" ||
+    uploadState.status === "uploading" ||
+    uploadState.status === "processing"
   const chatError =
     actionError ?? (error ? `${error.type}: ${error.message}` : null)
 
   async function handleSubmit({ text, files }: PromptFormSubmitInput) {
     setActionError(null)
 
-    if (files.length > 0) {
-      setActionError(
-        "File upload is not configured in this demo. Wire upload in your host app and pass documents to sendMessage.",
-      )
-      return
-    }
-
     try {
-      await sendMessage({ text })
+      const documents = []
+      for (const file of files) {
+        const mediaFile = await uploadFile(file)
+        documents.push({
+          mediaFileId: mediaFile.id,
+          url: mediaFile.url,
+          filename: mediaFile.name || file.name,
+        })
+      }
+      setInput("")
+      setFiles([])
+      await sendMessage({ text, documents })
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : "Failed to send message.",
@@ -147,10 +166,16 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
           messages.map((message) => (
             <Message
               key={message.id}
-              message={message}
+              align={message.role === "user" ? "end" : "start"}
               className={`message message--${message.role}`}
-              datasourceToolResultsPosition="before-content"
-            />
+            >
+              <MessageContent>
+                <MessageParts
+                  message={message}
+                  datasourceToolResultsPosition="before-content"
+                />
+              </MessageContent>
+            </Message>
           ))
         )}
       </div>
@@ -161,7 +186,9 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
         files={files}
         onFilesChange={setFiles}
         onSubmit={handleSubmit}
+        clearOnSubmit={false}
         status={status}
+        uploadState={uploadState}
         onStop={stop}
         enableAttachments={false}
         placeholder="Envía un mensaje..."
@@ -174,6 +201,7 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
               label="Adjuntar archivo"
             />
             <SpeechToTextToggle
+              transcribe={transcribeAudio}
               onTranscriptionComplete={handleTranscriptionComplete}
               onTranscriptionError={handleTranscriptionError}
               disabled={isBusy}

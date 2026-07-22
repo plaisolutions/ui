@@ -4,12 +4,13 @@ import { SpeechToTextToggle } from "../components"
 
 const start = vi.fn()
 const stop = vi.fn()
+const cancel = vi.fn()
 
 vi.mock("../components/speech-to-text-toggle/use-voice-recording", () => ({
   useVoiceRecording: () => ({
     start,
     stop,
-    cancel: vi.fn(),
+    cancel,
   }),
 }))
 
@@ -17,6 +18,7 @@ afterEach(() => {
   cleanup()
   start.mockReset()
   stop.mockReset()
+  cancel.mockReset()
 })
 
 describe("SpeechToTextToggle", () => {

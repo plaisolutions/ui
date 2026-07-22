@@ -13,16 +13,20 @@ import {
 } from "./sheet"
 
 export type DatasourceFolderCardProps = {
+  icon?: string
   title: string
   description: string
   type: string
+  url?: string | null
   resources: ResourceCardProps[]
 }
 
 export function DatasourceFolderCard({
+  icon,
   title,
   description,
   type,
+  url,
   resources,
 }: DatasourceFolderCardProps) {
   return (
@@ -32,6 +36,7 @@ export function DatasourceFolderCard({
         className="min-h-[183px] w-[186px] rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
       >
         <DatasourceToolResultCardContent
+          icon={icon}
           title={title}
           description={description}
           type={type}
@@ -43,7 +48,11 @@ export function DatasourceFolderCard({
         <SheetHeader className="pr-10">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0">
-              <DatasourceIcon />
+              {icon ? (
+                <img src={icon} alt="" className="size-5 object-contain" />
+              ) : (
+                <DatasourceIcon />
+              )}
             </span>
             <SheetTitle>{title}</SheetTitle>
           </div>
@@ -51,6 +60,16 @@ export function DatasourceFolderCard({
             <SheetDescription className="line-clamp-2 text-xs leading-4">
               {description}
             </SheetDescription>
+          ) : null}
+          {url ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-xs font-medium text-neutral-700 underline underline-offset-2"
+            >
+              View
+            </a>
           ) : null}
         </SheetHeader>
 

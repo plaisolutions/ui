@@ -1,6 +1,17 @@
 import type { ResourceReadModel, UIMessage } from "@plaisolutions/client"
-import { Message } from "@plaisolutions/react/components"
+import {
+  Clipboard,
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+  MessageParts,
+  ThumbDown,
+  ThumbUp,
+} from "@plaisolutions/react/components"
 import type { Meta, StoryObj } from "@storybook/react"
+import { useState } from "react"
 
 const meta: Meta<typeof Message> = {
   title: "Components/Message",
@@ -34,6 +45,35 @@ const assistantMessage: UIMessage = {
       text: "Sure! Could you tell me your account ID?",
     },
   ],
+}
+
+function MessageWithActionsExample() {
+  const [rating, setRating] = useState<"POSITIVE" | "NEGATIVE" | null>(null)
+  const text = assistantMessage.parts
+    .filter((part) => part.type === "text")
+    .map((part) => (part.type === "text" ? part.text : ""))
+    .join("\n")
+
+  return (
+    <Message>
+      <MessageAvatar src="" fallback="PLai Assistant" />
+      <MessageContent className="rounded-xl bg-white p-4 shadow-sm">
+        <MessageHeader>PLai Assistant</MessageHeader>
+        <MessageParts message={assistantMessage} />
+        <MessageFooter className="mt-3">
+          <Clipboard text={text} copyLabel="Copy message" />
+          <ThumbUp
+            aria-pressed={rating === "POSITIVE"}
+            onClick={() => setRating("POSITIVE")}
+          />
+          <ThumbDown
+            aria-pressed={rating === "NEGATIVE"}
+            onClick={() => setRating("NEGATIVE")}
+          />
+        </MessageFooter>
+      </MessageContent>
+    </Message>
+  )
 }
 
 const assistantMessageWithToolCall: UIMessage = {
@@ -101,7 +141,19 @@ function createCourseResource(
     url: null,
     content: null,
     metadata: {},
-    extra_info: {},
+    extra_info: {
+      opengraph: {
+        translations: {
+          es: {
+            title: `OpenGraph: ${name}`,
+            description: "Descripción localizada desde OpenGraph.",
+            type: "LECCIÓN",
+            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=80",
+            url,
+          },
+        },
+      },
+    },
     folder: {
       id: "folder-course",
       name: "Programa en Diseño Elearning e Innovación",
@@ -111,6 +163,17 @@ function createCourseResource(
         type: "COURSE",
         description:
           "En este curso aprenderás los principios básicos de diseño.",
+        opengraph: {
+          translations: {
+            es: {
+              title: "Programa localizado con OpenGraph",
+              description: "Descripción localizada de la carpeta.",
+              type: "CURSO",
+              image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=80",
+              url: "https://example.com/course",
+            },
+          },
+        },
       },
       created_at: "2026-07-01T10:00:00Z",
       updated_at: "2026-07-01T10:00:00Z",
@@ -275,58 +338,132 @@ const officeDocumentsToolMessage: UIMessage = {
   ],
 }
 
+type ComposedMessageOptions = {
+  message: UIMessage
+  align?: "start" | "end"
+  avatar?: { src: string; fallback: string }
+  header?: string
+  footer?: string
+  datasourceToolResultsPosition?: "inline" | "before-content"
+  locale?: string
+}
+
+function composedMessage({
+  message,
+  align = "start",
+  avatar,
+  header,
+  footer,
+  datasourceToolResultsPosition,
+  locale,
+}: ComposedMessageOptions) {
+  return (
+    <Message align={align}>
+      {avatar ? (
+        <MessageAvatar src={avatar.src} fallback={avatar.fallback} />
+      ) : null}
+      <MessageContent
+        className={
+          align === "end"
+            ? "max-w-[80%] flex-none rounded-xl bg-white p-4 shadow-sm"
+            : "rounded-xl bg-white p-4 shadow-sm"
+        }
+      >
+        {header ? <MessageHeader>{header}</MessageHeader> : null}
+        <MessageParts
+          message={message}
+          locale={locale}
+          datasourceToolResultsPosition={datasourceToolResultsPosition}
+        />
+        {footer ? <MessageFooter>{footer}</MessageFooter> : null}
+      </MessageContent>
+    </Message>
+  )
+}
+
 export const User: Story = {
-  args: {
-    message: userMessage,
-  },
+  args: { align: "end" },
+  render: (args) =>
+    composedMessage({
+      message: userMessage,
+      align: args.align,
+      avatar: { src: "", fallback: "John Doe" },
+    }),
 }
 
 export const Assistant: Story = {
-  args: {
-    message: assistantMessage,
-  },
+  render: () =>
+    composedMessage({
+      message: assistantMessage,
+      avatar: {
+        src: "https://images.unsplash.com/photo-1531299983330-093763e1d963?w=160",
+        fallback: "PLai Assistant",
+      },
+      header: "PLai Assistant",
+    }),
+}
+
+export const AvatarFallback: Story = {
+  render: () =>
+    composedMessage({
+      message: assistantMessage,
+      avatar: {
+        src: "https://invalid.example/avatar-does-not-exist.jpg",
+        fallback: "John Doe",
+      },
+      header: "Broken image renders JD",
+    }),
+}
+
+export const HeaderAndFooter: Story = {
+  render: () =>
+    composedMessage({
+      message: assistantMessage,
+      avatar: { src: "", fallback: "PLai Assistant" },
+      header: "PLai Assistant",
+      footer: "Delivered · just now",
+    }),
+}
+
+export const WithMessageActions: Story = {
+  render: () => <MessageWithActionsExample />,
 }
 
 export const AssistantWithToolCall: Story = {
-  args: {
-    message: assistantMessageWithToolCall,
-  },
+  render: () => composedMessage({ message: assistantMessageWithToolCall }),
 }
 
 export const AssistantWithEmailToolCall: Story = {
-  args: {
-    message: assistantMessageWithEmailToolCall,
-  },
+  render: () =>
+    composedMessage({ message: assistantMessageWithEmailToolCall }),
 }
 
 export const AssistantWithDatasourceResultsFirst: Story = {
-  args: {
-    message: assistantMessageWithDatasourceResults,
-    datasourceToolResultsPosition: "before-content",
-  },
+  render: () =>
+    composedMessage({
+      message: assistantMessageWithDatasourceResults,
+      locale: "es-ES",
+      datasourceToolResultsPosition: "before-content",
+    }),
 }
 
 export const AssistantWithDatasourceError: Story = {
-  args: {
-    message: assistantMessageWithDatasourceError,
-    datasourceToolResultsPosition: "before-content",
-  },
+  render: () =>
+    composedMessage({
+      message: assistantMessageWithDatasourceError,
+      datasourceToolResultsPosition: "before-content",
+    }),
 }
 
 export const ToolCall: Story = {
-  args: {
-    message: toolCallMessage,
-  },
+  render: () => composedMessage({ message: toolCallMessage }),
 }
 
 export const UserWithAttachments: Story = {
-  args: {
-    message: userMessageWithAttachments,
-  },
+  render: () =>
+    composedMessage({ message: userMessageWithAttachments, align: "end" }),
 }
 
 export const OfficeDocumentsToolCall: Story = {
-  args: {
-    message: officeDocumentsToolMessage,
-  },
+  render: () => composedMessage({ message: officeDocumentsToolMessage }),
 }

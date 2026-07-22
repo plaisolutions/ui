@@ -35,6 +35,23 @@ await chat.sendMessage({
     { url: "https://example.com/manual.pdf", filename: "manual.pdf" },
   ],
 });
+
+await chat.rateMessage({
+  messageId: "persisted_message_123",
+  rating: "POSITIVE",
+});
+
+const transcription = await chat.transcribeAudio(audioBlob);
+
+const mediaFile = await chat.uploadFile(file);
+await chat.sendMessage({
+  text: "Review this file",
+  documents: [{
+    mediaFileId: mediaFile.id,
+    url: mediaFile.url,
+    filename: mediaFile.name,
+  }],
+});
 ```
 
 ## PlaiChat API
@@ -47,10 +64,29 @@ await chat.sendMessage({
   Registers a listener and returns `unsubscribe`.
 - `sendMessage(input): Promise<void>`
   Sends a user message and starts streaming the assistant response.
+- `rateMessage(input): Promise<void>`
+  Rates a persisted message as `POSITIVE` or `NEGATIVE` in the transport's
+  chat session.
+- `transcribeAudio(audio, signal?): Promise<string>`
+  Transcribes an audio blob using the transport's chat session and
+  authentication headers.
+- `uploadFile(file, options?): Promise<MediaFile>`
+  Uploads a file to the current chat thread and updates `uploadState` with
+  byte progress and server-processing status.
 - `stop(): void`
   Aborts the current stream (if any) and returns to `ready`.
 - `reset(): void`
   Calls `stop()` and restores the initial state (`initialMessages`, empty error/usage).
+- `hydrate(messages): void`
+  Replaces persisted history while idle, for example after switching threads.
+- `clearError(): void`
+  Returns an errored chat to `ready` without discarding its messages.
+
+## Persisted thread history
+
+`normalizePlaiThreadMessages(messages)` converts messages returned by PLai thread
+and snapshot endpoints (including legacy content blocks, content parts and tool
+messages) into `UIMessage[]` for `initialMessages` or `hydrate()`.
 
 ## `subscribe` State Shape
 
@@ -217,6 +253,59 @@ Guardrail part:
 
 When `documents` is present, `PlaiChat` creates user message parts in this order:
 documents first, then text (if non-empty). Sending documents without text is supported.
+
+## `rateMessage` Input
+
+```js
+{
+  messageId: string,
+  rating: "POSITIVE" | "NEGATIVE"
+}
+```
+
+`PlaiThreadTransport` posts this as `{ message_id, rating }` to
+`/chat_sessions/{chatSessionId}/rate-message`. It resolves dynamic `headers`
+for every rating request, so refreshed session tokens are used automatically.
+Non-2xx responses, including `404`, reject with `HttpStatusError`.
+
+## Audio transcription
+
+```ts
+const text = await chat.transcribeAudio(audioBlob, abortController.signal);
+```
+
+`PlaiThreadTransport` posts the audio as multipart form data to
+`/chat_sessions/{chatSessionId}/transcriptions`. It resolves dynamic `headers`
+for every request and leaves the multipart boundary to the runtime. The
+endpoint's JSON string is returned directly. Non-2xx responses reject with
+`HttpStatusError`; an unexpected success body rejects with `ProtocolError`.
+
+## Thread media uploads
+
+```ts
+const mediaFile = await chat.uploadFile(file, {
+  signal: abortController.signal,
+});
+
+await chat.sendMessage({
+  text: "Summarize this file",
+  documents: [{
+    mediaFileId: mediaFile.id,
+    url: mediaFile.url,
+    filename: mediaFile.name,
+  }],
+});
+```
+
+`PlaiThreadTransport` uploads multipart data to
+`/chat_sessions/{chatSessionId}/threads/{threadId}/media-files`. Upload byte
+progress is tracked with `XMLHttpRequest`; dynamic authentication headers are
+resolved for every file. `url` is retained for the optimistic local preview,
+while the invoke request sends `media_file_id` and `filename`.
+
+`chat.getState().uploadState.status` is `idle`, `uploading`, `processing`, or
+`error`. It is the only source of truth for upload activity. `stop()` also
+aborts the active upload.
 
 ## Tips
 

@@ -1,13 +1,47 @@
-export { Message } from "./message"
-export type { MessageProps } from "./message"
+export {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+  MessageParts,
+} from "./message"
+export type {
+  MessageAvatarProps,
+  MessageContentProps,
+  MessageFooterProps,
+  MessageHeaderProps,
+  MessagePartsProps,
+  MessageProps,
+} from "./message"
 export { DatasourceToolResultCard } from "./datasource-tool-result-card"
 export type { DatasourceToolResultCardProps } from "./datasource-tool-result-card"
+export { Clipboard } from "./clipboard"
+export type { ClipboardProps, ClipboardState } from "./clipboard"
+export { ThumbDown, ThumbUp } from "./thumbs"
+export type { ThumbDownProps, ThumbUpProps } from "./thumbs"
 export { DatasourceFolderCard } from "./datasource-folder-card"
 export type { DatasourceFolderCardProps } from "./datasource-folder-card"
 export { DatasourceToolResources } from "./datasource-tool-resources"
 export type { DatasourceToolResourcesProps } from "./datasource-tool-resources"
 export { ResourceCard } from "./resource-card"
 export type { ResourceCardProps } from "./resource-card"
+export {
+  getLocalizedOpenGraphValue,
+  getResourceDescription,
+  getResourceIcon,
+  getResourceOpenGraphImage,
+  getResourceOpenGraphType,
+  getResourceTitle,
+  getResourceType,
+  getResourceUrl,
+} from "./opengraph"
+export type {
+  LocalizedOpenGraph,
+  OpenGraphContainer,
+  OpenGraphField,
+  OpenGraphTranslation,
+} from "./opengraph"
 export {
   Sheet,
   SheetClose,
@@ -37,10 +71,7 @@ export { PromptFormAttachButton } from "./prompt-form/prompt-form-attach-button"
 export type { PromptFormAttachButtonProps } from "./prompt-form/prompt-form-attach-button"
 export { SpeechToTextToggle } from "./speech-to-text-toggle"
 export type { SpeechToTextToggleProps } from "./speech-to-text-toggle"
-export {
-  dummyTranscribeAudio,
-  transcribeAudioViaEndpoint,
-} from "./speech-to-text-toggle/transcribe-audio"
+export { dummyTranscribeAudio } from "./speech-to-text-toggle/transcribe-audio"
 export type { TranscribeAudioFn } from "./speech-to-text-toggle/transcribe-audio"
 export type {
   PromptFormIconButtonProps,

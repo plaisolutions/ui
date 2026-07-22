@@ -23,6 +23,7 @@ export type ToolResultCardProps = {
   part: UIToolCallPart
   className?: string
   detailsOpen?: boolean
+  locale?: string | null
   onOpenAgentThread?: (threadId: string) => void
 }
 
@@ -65,6 +66,7 @@ export function ToolResultCard({
   part,
   className,
   detailsOpen = true,
+  locale,
   onOpenAgentThread,
 }: ToolResultCardProps) {
   const officeMediaFiles = getOfficeDocumentMediaFiles(part)
@@ -118,6 +120,7 @@ export function ToolResultCard({
     return (
       <DatasourceToolResources
         resources={datasourceResources}
+        locale={locale}
         className={className}
       />
     )

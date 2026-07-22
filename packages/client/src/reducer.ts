@@ -19,6 +19,14 @@ export function createInitialInternalState(
     status: "ready",
     error: null,
     usage: null,
+    uploadState: {
+      status: "idle",
+      fileName: null,
+      loadedBytes: 0,
+      totalBytes: 0,
+      progress: 0,
+      error: null,
+    },
     activeAssistantMessageId: undefined,
     blockIndexToPartIndex: {},
     toolUseIdToPartIndex: {},
@@ -32,6 +40,7 @@ export function toPublicChatState(state: InternalChatState): ChatState {
     status: state.status,
     error: state.error,
     usage: state.usage,
+    uploadState: state.uploadState,
   }
 }
 

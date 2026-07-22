@@ -11,6 +11,17 @@ const folder: FolderReadModel = {
   extra_info: {
     type: "COURSE",
     description: "En este curso aprenderás los principios básicos de diseño.",
+    opengraph: {
+      translations: {
+        es: {
+          type: "CURSO",
+          title: "Programa localizado",
+          description: "Descripción localizada de la carpeta.",
+          image: "https://example.com/folder-es.png",
+          url: "https://example.com/folder-es",
+        },
+      },
+    },
   },
   created_at: "2026-07-01T10:00:00Z",
   updated_at: "2026-07-01T10:00:00Z",
@@ -57,6 +68,19 @@ describe("DatasourceToolResources", () => {
       id: "resource-1",
       name: "15. Conceptos clave de Storyline 360",
       external_url: "https://example.com/resource-1",
+      extra_info: {
+        opengraph: {
+          translations: {
+            es: {
+              type: "LECCIÓN",
+              title: "Conceptos localizados",
+              description: "Descripción localizada del recurso.",
+              image: "https://example.com/resource-es.png",
+              url: "https://example.com/resource-es",
+            },
+          },
+        },
+      },
     })
     const secondResource = createResource({
       id: "resource-2",
@@ -73,6 +97,7 @@ describe("DatasourceToolResources", () => {
 
     render(
       <ToolResultCard
+        locale="es-ES"
         part={{
           type: "tool-call",
           id: "tool-datasource",
@@ -92,7 +117,7 @@ describe("DatasourceToolResources", () => {
     )
 
     const trigger = screen.getByRole("button", {
-      name: "COURSE: Programa en Diseño Elearning e Innovación",
+      name: "CURSO: Programa localizado",
     })
     expect(screen.getByText("2 Recursos")).toBeTruthy()
     expect(
@@ -103,16 +128,19 @@ describe("DatasourceToolResources", () => {
     fireEvent.click(trigger)
 
     const sheet = screen.getByRole("dialog", {
-      name: "Programa en Diseño Elearning e Innovación",
+      name: "Programa localizado",
     })
     expect(sheet.getAttribute("data-state")).toBe("open")
     const sheetQueries = within(sheet)
     expect(sheetQueries.getByText("Ver")).toBeTruthy()
     expect(
       sheetQueries.getByRole("link", {
-        name: "SCORM 15. Conceptos clave de Storyline 360",
+        name: "LECCIÓN Conceptos localizados Descripción localizada del recurso.",
       }),
     ).toBeTruthy()
+    expect(
+      sheetQueries.getByRole("link", { name: "View" }).getAttribute("href"),
+    ).toBe("https://example.com/folder-es")
     expect(
       sheetQueries.getByRole("link", {
         name: "SCORM 18. Componentes básicos de Storyline 360",

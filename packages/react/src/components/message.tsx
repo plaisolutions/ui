@@ -1,15 +1,144 @@
-import type { UIMessage, UIMessagePart } from "@plaisolutions/client"
+import type {
+  UIMessage,
+  UIMessagePart,
+  UIToolCallPart,
+} from "@plaisolutions/client"
+import type { HTMLAttributes, ReactNode } from "react"
 import { useMemo, useState } from "react"
 import { joinClasses } from "./internal/join-classes"
 import { ToolResultCard } from "./tool-result-card"
 
-export type MessageProps = {
+export type MessageProps = HTMLAttributes<HTMLElement> & {
+  align?: "start" | "end"
+}
+
+export function Message({
+  align = "start",
+  className,
+  ...props
+}: MessageProps) {
+  return (
+    <article
+      className={joinClasses(
+        "flex w-full items-start gap-3",
+        align === "end" ? "flex-row-reverse" : undefined,
+        className,
+      )}
+      data-align={align}
+      {...props}
+    />
+  )
+}
+
+export type MessageAvatarProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "children"
+> & {
+  src: string
+  fallback: string
+  alt?: string
+  imageClassName?: string
+}
+
+function getFallbackInitials(fallback: string) {
+  const words = fallback.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return "?"
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase()
+}
+
+export function MessageAvatar({
+  src,
+  fallback,
+  alt = fallback,
+  className,
+  imageClassName,
+  ...props
+}: MessageAvatarProps) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+  const showImage = src.trim().length > 0 && failedSrc !== src
+  const initials = getFallbackInitials(fallback)
+
+  return (
+    <div
+      className={joinClasses(
+        "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs font-semibold uppercase text-neutral-700",
+        className,
+      )}
+      {...props}
+    >
+      {showImage ? (
+        <img
+          src={src}
+          alt={alt}
+          className={joinClasses(
+            "size-full rounded-full object-cover",
+            imageClassName,
+          )}
+          onError={() => setFailedSrc(src)}
+        />
+      ) : (
+        <span role="img" aria-label={alt}>
+          {initials}
+        </span>
+      )}
+    </div>
+  )
+}
+
+export type MessageContentProps = HTMLAttributes<HTMLDivElement>
+
+export function MessageContent({ className, ...props }: MessageContentProps) {
+  return (
+    <div
+      className={joinClasses("min-w-0 max-w-full flex-1 space-y-2", className)}
+      {...props}
+    />
+  )
+}
+
+export type MessageHeaderProps = HTMLAttributes<HTMLElement>
+
+export function MessageHeader({ className, ...props }: MessageHeaderProps) {
+  return (
+    <header
+      className={joinClasses(
+        "text-xs font-semibold uppercase tracking-wide text-neutral-500",
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+export type MessageFooterProps = HTMLAttributes<HTMLElement>
+
+export function MessageFooter({ className, ...props }: MessageFooterProps) {
+  return (
+    <footer
+      className={joinClasses("flex items-center gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
   message: UIMessage
-  className?: string
-  showRole?: boolean
   collapseThreshold?: number
   datasourceToolResultsPosition?: "inline" | "before-content"
   onOpenAgentThread?: (threadId: string) => void
+  locale?: string | null
+  renderText?: (
+    part: Extract<UIMessagePart, { type: "text" }>,
+    context: { message: UIMessage; isStreaming: boolean },
+  ) => ReactNode
+  renderToolCall?: (
+    part: UIToolCallPart,
+    context: { message: UIMessage },
+  ) => ReactNode
+  isStreaming?: boolean
+  readMoreLabel?: string
+  readLessLabel?: string
 }
 
 const DEFAULT_COLLAPSE_THRESHOLD = 600
@@ -28,22 +157,30 @@ function getFilenameFromUrl(url: string): string | undefined {
 }
 
 function getDisplayExtension(label?: string) {
-  if (!label) {
-    return undefined
-  }
+  if (!label) return undefined
   const ext = label.split(".").pop()?.trim().toUpperCase()
-  if (!ext || ext === label.toUpperCase()) {
-    return undefined
-  }
+  if (!ext || ext === label.toUpperCase()) return undefined
   return ext
 }
 
 function renderPart(
   part: UIMessagePart,
   index: number,
+  message: UIMessage,
+  isStreaming: boolean,
   onOpenAgentThread?: (threadId: string) => void,
+  locale?: string | null,
+  renderText?: MessagePartsProps["renderText"],
+  renderToolCall?: MessagePartsProps["renderToolCall"],
 ) {
   if (part.type === "text") {
+    if (renderText) {
+      return (
+        <div key={`text-${index}`}>
+          {renderText(part, { message, isStreaming })}
+        </div>
+      )
+    }
     return (
       <p
         key={`text-${index}`}
@@ -114,10 +251,18 @@ function renderPart(
   }
 
   if (part.type === "tool-call") {
+    if (renderToolCall) {
+      return (
+        <div key={`tool-${part.id}-${index}`}>
+          {renderToolCall(part, { message })}
+        </div>
+      )
+    }
     return (
       <ToolResultCard
         key={`tool-${part.id}-${index}`}
         part={part}
+        locale={locale}
         onOpenAgentThread={onOpenAgentThread}
       />
     )
@@ -139,18 +284,13 @@ function renderPart(
 
 function orderMessageParts(
   parts: UIMessagePart[],
-  datasourceToolResultsPosition: NonNullable<
-    MessageProps["datasourceToolResultsPosition"]
-  >,
+  position: NonNullable<MessagePartsProps["datasourceToolResultsPosition"]>,
 ) {
   const indexedParts = parts.map((part, index) => ({ part, index }))
-  if (datasourceToolResultsPosition === "inline") {
-    return indexedParts
-  }
+  if (position === "inline") return indexedParts
 
   const datasourceParts: typeof indexedParts = []
   const remainingParts: typeof indexedParts = []
-
   for (const indexedPart of indexedParts) {
     if (
       indexedPart.part.type === "tool-call" &&
@@ -161,32 +301,36 @@ function orderMessageParts(
       remainingParts.push(indexedPart)
     }
   }
-
   return [...datasourceParts, ...remainingParts]
 }
 
-export function Message({
+export function MessageParts({
   message,
-  className,
-  showRole = true,
   collapseThreshold = DEFAULT_COLLAPSE_THRESHOLD,
   datasourceToolResultsPosition = "inline",
   onOpenAgentThread,
-}: MessageProps) {
-  const roleLabel = message.role.charAt(0).toUpperCase() + message.role.slice(1)
+  locale,
+  renderText,
+  renderToolCall,
+  isStreaming = false,
+  readMoreLabel = "Read more",
+  readLessLabel = "Read less",
+  className,
+  ...props
+}: MessagePartsProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const textContent = useMemo(() => {
-    return message.parts
-      .filter((part) => part.type === "text")
-      .map((part) => part.text)
-      .join("\n")
-  }, [message.parts])
-
+  const textContent = useMemo(
+    () =>
+      message.parts
+        .filter((part) => part.type === "text")
+        .map((part) => part.text)
+        .join("\n"),
+    [message.parts],
+  )
   const canCollapse =
     message.role === "user" &&
     message.parts.every((part) => part.type === "text") &&
     textContent.length > collapseThreshold
-
   const previewText = canCollapse
     ? `${textContent.slice(0, collapseThreshold).trimEnd()}...`
     : textContent
@@ -196,36 +340,36 @@ export function Message({
   )
 
   return (
-    <article
-      className={joinClasses(
-        "space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm",
-        className,
-      )}
+    <div
+      className={joinClasses("space-y-2", className)}
       data-message-role={message.role}
+      {...props}
     >
-      {showRole ? (
-        <header className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {roleLabel}
-        </header>
-      ) : null}
-      <div className="space-y-2">
-        {canCollapse && !isExpanded ? (
-          <p className="whitespace-pre-wrap text-sm leading-6">{previewText}</p>
-        ) : (
-          orderedParts.map(({ part, index }) =>
-            renderPart(part, index, onOpenAgentThread),
-          )
-        )}
-      </div>
+      {canCollapse && !isExpanded ? (
+        <p className="whitespace-pre-wrap text-sm leading-6">{previewText}</p>
+      ) : (
+        orderedParts.map(({ part, index }) =>
+          renderPart(
+            part,
+            index,
+            message,
+            isStreaming,
+            onOpenAgentThread,
+            locale,
+            renderText,
+            renderToolCall,
+          ),
+        )
+      )}
       {canCollapse ? (
         <button
           type="button"
           className="text-left text-xs font-medium text-slate-600 hover:text-slate-900"
           onClick={() => setIsExpanded((previous) => !previous)}
         >
-          {isExpanded ? "Read less" : "Read more"}
+          {isExpanded ? readLessLabel : readMoreLabel}
         </button>
       ) : null}
-    </article>
+    </div>
   )
 }

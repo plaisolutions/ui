@@ -1,21 +1,16 @@
 import type { ButtonHTMLAttributes } from "react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Loader } from "../icons/loader"
 import { Microphone } from "../icons/microphone"
 import { joinClasses } from "../internal/join-classes"
 import { PromptFormIconButton } from "../prompt-form/prompt-form"
-import {
-  dummyTranscribeAudio,
-  transcribeAudioViaEndpoint,
-} from "./transcribe-audio"
 import type { TranscribeAudioFn } from "./transcribe-audio"
 import { useVoiceRecording } from "./use-voice-recording"
 
 export type SpeechToTextToggleProps = {
   onTranscriptionComplete: (text: string) => void
   onTranscriptionError?: (error: Error) => void
-  transcribe?: TranscribeAudioFn
-  transcriptionEndpoint?: string
+  transcribe: TranscribeAudioFn
   label?: string
   listeningLabel?: string
   loadingLabel?: string
@@ -25,7 +20,6 @@ export function SpeechToTextToggle({
   onTranscriptionComplete,
   onTranscriptionError,
   transcribe,
-  transcriptionEndpoint,
   disabled = false,
   label = "Voice input",
   listeningLabel = "Stop recording",
@@ -36,14 +30,14 @@ export function SpeechToTextToggle({
   const [isListening, setIsListening] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
-  const { start, stop } = useVoiceRecording()
+  const { start, stop, cancel } = useVoiceRecording()
 
-  const transcribeAudio =
-    transcribe ??
-    (transcriptionEndpoint
-      ? (audio: Blob, signal?: AbortSignal) =>
-          transcribeAudioViaEndpoint(audio, transcriptionEndpoint, signal)
-      : dummyTranscribeAudio)
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+      cancel()
+    }
+  }, [cancel])
 
   async function handleToggle() {
     if (disabled || isTranscribing) {
@@ -72,7 +66,7 @@ export function SpeechToTextToggle({
 
     try {
       const audio = await stop()
-      const text = await transcribeAudio(audio, abortController.signal)
+      const text = await transcribe(audio, abortController.signal)
       if (text.trim()) {
         onTranscriptionComplete(text)
       }

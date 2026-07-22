@@ -7,6 +7,7 @@ export {
 } from "./reducer"
 export { parseSseStream } from "./sse"
 export { PlaiThreadTransport } from "./transport"
+export { normalizePlaiThreadMessages } from "./history"
 export type { PlaiThreadTransportOptions } from "./transport"
 export type {
   ChatState,
@@ -26,6 +27,8 @@ export type {
   DocumentMetadata,
   ExternalDatasourceJsonTable,
   ExternalDatasourceToolResultMetadata,
+  FileUploadState,
+  FileUploadStatus,
   FirecrawlSearchToolResultMetadata,
   FolderReadModel,
   InternalChatState,
@@ -35,13 +38,22 @@ export type {
   MessageStartEvent,
   MessageStopEvent,
   McpToolResultMetadata,
+  MediaFile,
   OfficeDocumentMediaFile,
   OfficeDocumentsToolMetadata,
   PerplexityToolResultMetadata,
   PlaiChatError,
   PlaiChatOptions,
+  MessageRating,
+  RateMessageInput,
+  TranscribeAudioFn,
+  UploadFileFn,
+  UploadFileOptions,
+  UploadFileProgress,
+  UploadFileTransportRequest,
   PlaiSseEvent,
   ResourceReadModel,
+  SendMessageDocument,
   SendMessageInput,
   StreamErrorEvent,
   ToolErrorDetails,

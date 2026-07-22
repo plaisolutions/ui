@@ -94,6 +94,7 @@ export type DatasourceReadModel = {
 export type ResourceReadModel = {
   id: string
   name: string
+  summary?: string | null
   type: string
   status: string
   url: string | null
@@ -354,19 +355,97 @@ export type PlaiChatError = {
   cause?: unknown
 }
 
+export type FileUploadStatus =
+  | "idle"
+  | "uploading"
+  | "processing"
+  | "error"
+
+export type FileUploadState = {
+  status: FileUploadStatus
+  fileName: string | null
+  loadedBytes: number
+  totalBytes: number
+  progress: number
+  error: PlaiChatError | null
+}
+
+export type UploadFileProgress = {
+  loadedBytes: number
+  totalBytes: number
+  progress: number
+}
+
+export type MediaFile = {
+  id: string
+  name: string
+  pathname: string
+  contentType: string
+  url: string
+  projectId: string
+  threadId: string | null
+  derivedFromMediaFileId: string | null
+  anthropicFileId: string | null
+  metadata: Record<string, unknown>
+  createdAt?: string
+  updatedAt?: string
+}
+
 export type ChatState = {
   messages: UIMessage[]
   status: ChatStatus
   error: PlaiChatError | null
   usage: Usage | null
+  uploadState: FileUploadState
 }
 
 export type ChatStateListener = (state: ChatState) => void
 
+export type SendMessageDocument =
+  | {
+      url: string
+      mediaFileId?: never
+      filename?: string | null
+    }
+  | {
+      mediaFileId: string
+      /** Optional local preview URL. The transport only sends media_file_id. */
+      url?: string
+      filename?: string | null
+    }
+
 export type SendMessageInput = {
   text: string
   enabledTools?: string[]
-  documents?: Array<{ url: string; filename?: string | null }>
+  documents?: SendMessageDocument[]
+}
+
+export type MessageRating = "POSITIVE" | "NEGATIVE"
+
+export type RateMessageInput = {
+  messageId: string
+  rating: MessageRating
+}
+
+export type TranscribeAudioFn = (
+  audio: Blob,
+  signal?: AbortSignal,
+) => Promise<string>
+
+export type UploadFileOptions = {
+  signal?: AbortSignal
+}
+
+export type UploadFileFn = (
+  file: File,
+  options?: UploadFileOptions,
+) => Promise<MediaFile>
+
+export type UploadFileTransportRequest = {
+  file: File
+  signal: AbortSignal
+  onProgress: (progress: UploadFileProgress) => void
+  onUploaded: () => void
 }
 
 export type ChatTransportRequest = {
@@ -377,6 +456,9 @@ export type ChatTransportRequest = {
 
 export interface ChatTransport {
   stream(request: ChatTransportRequest): AsyncIterable<PlaiSseEvent>
+  rateMessage?(input: RateMessageInput): Promise<void>
+  transcribeAudio?: TranscribeAudioFn
+  uploadFile?(request: UploadFileTransportRequest): Promise<MediaFile>
 }
 
 export type MessageStartEvent = {

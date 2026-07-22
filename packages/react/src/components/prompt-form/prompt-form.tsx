@@ -1,4 +1,4 @@
-import type { ChatStatus } from "@plaisolutions/client"
+import type { ChatStatus, FileUploadState } from "@plaisolutions/client"
 import type { ButtonHTMLAttributes, ReactNode } from "react"
 import { useLayoutEffect, useRef, useState } from "react"
 import { ArrowUp } from "../icons/arrow"
@@ -57,6 +57,7 @@ export type PromptFormProps = {
   onValueChange: (value: string) => void
   onSubmit: (input: PromptFormSubmitInput) => void | Promise<void>
   status?: ChatStatus
+  uploadState?: FileUploadState
   onStop?: () => void
   disabled?: boolean
   clearOnSubmit?: boolean
@@ -66,6 +67,9 @@ export type PromptFormProps = {
   stopLabel?: string
   attachLabel?: string
   removeFileLabel?: string
+  uploadingLabel?: string
+  processingUploadLabel?: string
+  uploadErrorLabel?: string
   enableAttachments?: boolean
   files?: File[]
   onFilesChange?: (files: File[]) => void
@@ -74,11 +78,15 @@ export type PromptFormProps = {
   className?: string
   textareaClassName?: string
   attachmentsClassName?: string
+  uploadProgressClassName?: string
   maxRows?: number
   submitButtonClassName?: string
   stopButtonClassName?: string
   leftSlot?: ReactNode
   rightSlot?: ReactNode
+  /** Submit on Enter while preserving Shift+Enter for a newline. */
+  submitOnEnter?: boolean
+  onTextareaKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void
 }
 
 export function PromptForm({
@@ -86,6 +94,7 @@ export function PromptForm({
   onValueChange,
   onSubmit,
   status = "ready",
+  uploadState,
   onStop,
   disabled = false,
   clearOnSubmit = true,
@@ -95,6 +104,9 @@ export function PromptForm({
   stopLabel = "Stop",
   attachLabel = "Attach file",
   removeFileLabel = "Remove file",
+  uploadingLabel = "Uploading",
+  processingUploadLabel = "Processing upload",
+  uploadErrorLabel = "Upload failed",
   enableAttachments = true,
   files: filesProp,
   onFilesChange,
@@ -103,11 +115,14 @@ export function PromptForm({
   className,
   textareaClassName,
   attachmentsClassName,
+  uploadProgressClassName,
   maxRows = defaultMaxRows,
   submitButtonClassName,
   stopButtonClassName,
   leftSlot,
   rightSlot,
+  submitOnEnter = true,
+  onTextareaKeyDown,
 }: PromptFormProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [internalFiles, setInternalFiles] = useState<File[]>([])
@@ -115,9 +130,13 @@ export function PromptForm({
   const files = filesProp ?? internalFiles
   const setFiles = onFilesChange ?? setInternalFiles
   const isStreaming = status === "streaming" || status === "submitted"
+  const isUploading =
+    uploadState?.status === "uploading" ||
+    uploadState?.status === "processing"
   const hasContent = value.trim().length > 0 || files.length > 0
-  const canSubmit = !disabled && !isSubmitting && !isStreaming && hasContent
-  const isInteractionDisabled = disabled || isSubmitting
+  const canSubmit =
+    !disabled && !isSubmitting && !isStreaming && !isUploading && hasContent
+  const isInteractionDisabled = disabled || isSubmitting || isUploading
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current
@@ -191,6 +210,19 @@ export function PromptForm({
             onValueChange(event.target.value)
             resizeTextarea(event.currentTarget, maxRows)
           }}
+          onKeyDown={(event) => {
+            onTextareaKeyDown?.(event)
+            if (
+              submitOnEnter &&
+              !event.defaultPrevented &&
+              event.key === "Enter" &&
+              !event.shiftKey &&
+              !event.nativeEvent.isComposing
+            ) {
+              event.preventDefault()
+              event.currentTarget.form?.requestSubmit()
+            }
+          }}
           placeholder={placeholder}
           disabled={isInteractionDisabled}
         />
@@ -229,27 +261,65 @@ export function PromptForm({
       {files.length > 0 ? (
         <div
           className={joinClasses(
-            "flex flex-wrap gap-2 border-t border-neutral-200 px-4 py-2",
+            "border-t border-neutral-200",
             attachmentsClassName,
           )}
         >
-          {files.map((file, index) => (
-            <div
-              key={`${file.name}-${file.lastModified}-${index}`}
-              className="flex max-w-full items-center gap-1.5 rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-700"
-            >
-              <span className="max-w-[150px] truncate">{file.name}</span>
-              <button
-                type="button"
-                className="text-neutral-500 transition-colors hover:text-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label={`${removeFileLabel}: ${file.name}`}
-                disabled={isInteractionDisabled}
-                onClick={() => removeFile(index)}
+          <div className="flex flex-wrap gap-2 px-4 py-2">
+            {files.map((file, index) => (
+              <div
+                key={`${file.name}-${file.lastModified}-${index}`}
+                className="flex max-w-full items-center gap-1.5 rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-700"
               >
-                <X className="size-3.5" />
-              </button>
+                <span className="max-w-[150px] truncate">{file.name}</span>
+                <button
+                  type="button"
+                  className="text-neutral-500 transition-colors hover:text-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label={`${removeFileLabel}: ${file.name}`}
+                  disabled={isInteractionDisabled}
+                  onClick={() => removeFile(index)}
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+          {isUploading && uploadState ? (
+            <div className="space-y-1.5 px-4 pb-3">
+              <div className="flex items-center justify-between gap-3 text-xs text-neutral-500">
+                <span className="truncate">
+                  {uploadState.status === "processing"
+                    ? processingUploadLabel
+                    : uploadingLabel}
+                  {uploadState.fileName ? `: ${uploadState.fileName}` : ""}
+                </span>
+                <span>{Math.round(uploadState.progress)}%</span>
+              </div>
+              <div
+                role="progressbar"
+                tabIndex={0}
+                aria-label={
+                  uploadState.status === "processing"
+                    ? processingUploadLabel
+                    : uploadingLabel
+                }
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(uploadState.progress)}
+                className={joinClasses(
+                  "h-1.5 overflow-hidden rounded-full bg-neutral-200",
+                  uploadProgressClassName,
+                )}
+              >
+                <div
+                  className="h-full rounded-full bg-neutral-900 transition-[width] duration-150"
+                  style={{ width: `${uploadState.progress}%` }}
+                />
+              </div>
             </div>
-          ))}
+          ) : uploadState?.status === "error" ? (
+            <p className="px-4 pb-3 text-xs text-red-600">{uploadErrorLabel}</p>
+          ) : null}
         </div>
       ) : null}
     </form>

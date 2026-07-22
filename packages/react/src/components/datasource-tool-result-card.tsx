@@ -5,6 +5,7 @@ export type DatasourceToolResultCardProps = {
 }
 
 type DatasourceToolResultCardContentProps = DatasourceToolResultCardProps & {
+  icon?: string
   resourceCount?: number
 }
 
@@ -41,12 +42,17 @@ export function DatasourceToolResultCardContent({
   title,
   description,
   type,
+  icon,
   resourceCount,
 }: DatasourceToolResultCardContentProps) {
   return (
     <>
       <header className="flex items-center gap-3">
-        <DatasourceIcon />
+        {icon ? (
+          <img src={icon} alt="" className="size-5 shrink-0 object-contain" />
+        ) : (
+          <DatasourceIcon />
+        )}
         <p className="min-w-0 truncate text-base leading-5">{type}</p>
       </header>
 
@@ -67,7 +73,7 @@ export function DatasourceToolResultCard(props: DatasourceToolResultCardProps) {
   return (
     <article
       aria-label={`${props.type}: ${props.title}`}
-      className="w-[186px] rounded-lg bg-neutral-100 p-4 text-neutral-950"
+      className="w-46.5 rounded-lg bg-neutral-100 p-4 text-neutral-950"
     >
       <DatasourceToolResultCardContent {...props} />
     </article>

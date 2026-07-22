@@ -13,6 +13,9 @@ function createTransport(events: PlaiSseEvent[], delayMs = 0): ChatTransport {
         if (delayMs > 0) {
           await new Promise((resolve) => setTimeout(resolve, delayMs))
         }
+        if (signal.aborted) {
+          throw new DOMException("Aborted", "AbortError")
+        }
         yield event
       }
     },
@@ -181,7 +184,7 @@ describe("PlaiChat", () => {
     })
 
     const sendPromise = chat.sendMessage({ text: "Hi" })
-    await new Promise((resolve) => setTimeout(resolve, 45))
+    await new Promise((resolve) => setTimeout(resolve, 70))
     chat.stop()
     await sendPromise
 
@@ -254,5 +257,197 @@ describe("PlaiChat", () => {
     )
 
     await sending
+  })
+
+  it("reports a recoverable protocol error when the stream ends without message_stop", async () => {
+    const chat = new PlaiChat({
+      transport: createTransport([
+        {
+          type: "message_start",
+          message: { id: "msg_a", role: "assistant", model: "gpt-4o" },
+        },
+      ]),
+    })
+
+    await chat.sendMessage({ text: "Hello" })
+    expect(chat.getState().error?.type).toBe("protocol_error")
+
+    chat.clearError()
+    expect(chat.getState().status).toBe("ready")
+  })
+
+  it("delegates message ratings to its session-aware transport", async () => {
+    const rateMessage = vi.fn().mockResolvedValue(undefined)
+    const chat = new PlaiChat({
+      transport: {
+        ...createTransport([]),
+        rateMessage,
+      },
+    })
+
+    await chat.rateMessage({
+      messageId: "message_1",
+      rating: "POSITIVE",
+    })
+
+    expect(rateMessage).toHaveBeenCalledWith({
+      messageId: "message_1",
+      rating: "POSITIVE",
+    })
+  })
+
+  it("reports when the configured transport cannot rate messages", async () => {
+    const chat = new PlaiChat({ transport: createTransport([]) })
+
+    await expect(
+      chat.rateMessage({
+        messageId: "message_1",
+        rating: "NEGATIVE",
+      }),
+    ).rejects.toThrow(/does not support message ratings/)
+  })
+
+  it("delegates audio transcription to its session-aware transport", async () => {
+    const transcribeAudio = vi.fn().mockResolvedValue("Hola desde voz")
+    const chat = new PlaiChat({
+      transport: {
+        ...createTransport([]),
+        transcribeAudio,
+      },
+    })
+    const audio = new Blob(["audio"], { type: "audio/webm" })
+    const signal = new AbortController().signal
+
+    await expect(chat.transcribeAudio(audio, signal)).resolves.toBe(
+      "Hola desde voz",
+    )
+    expect(transcribeAudio).toHaveBeenCalledWith(audio, signal)
+  })
+
+  it("reports when the configured transport cannot transcribe audio", async () => {
+    const chat = new PlaiChat({ transport: createTransport([]) })
+
+    await expect(chat.transcribeAudio(new Blob(["audio"]))).rejects.toThrow(
+      /does not support audio transcription/,
+    )
+  })
+
+  it("tracks upload progress and processing in public chat state", async () => {
+    const uploadFile: NonNullable<ChatTransport["uploadFile"]> = vi
+      .fn()
+      .mockImplementation(async ({ onProgress, onUploaded }) => {
+        onProgress({ loadedBytes: 4, totalBytes: 10, progress: 40 })
+        onUploaded()
+        return {
+          id: "media_1",
+          name: "report.pdf",
+          pathname: "report.pdf",
+          contentType: "application/pdf",
+          url: "https://files.example.com/report.pdf",
+          projectId: "project_1",
+          threadId: "thread_1",
+          derivedFromMediaFileId: null,
+          anthropicFileId: null,
+          metadata: {},
+        }
+      })
+    const chat = new PlaiChat({
+      transport: { ...createTransport([]), uploadFile },
+    })
+    const observedStatuses: string[] = []
+    chat.subscribe((state) => observedStatuses.push(state.uploadState.status))
+    const file = new File(["report"], "report.pdf", {
+      type: "application/pdf",
+    })
+
+    const mediaFile = await chat.uploadFile(file)
+
+    expect(mediaFile.id).toBe("media_1")
+    expect(observedStatuses).toEqual([
+      "uploading",
+      "uploading",
+      "processing",
+      "idle",
+    ])
+    expect(chat.getState().uploadState).toMatchObject({
+      status: "idle",
+      progress: 0,
+      error: null,
+    })
+  })
+
+  it("keeps upload errors separate from the message status", async () => {
+    const chat = new PlaiChat({
+      transport: {
+        ...createTransport([]),
+        async uploadFile() {
+          throw new TypeError("Upload network failed")
+        },
+      },
+    })
+
+    await expect(
+      chat.uploadFile(new File(["report"], "report.pdf")),
+    ).rejects.toThrow("Upload network failed")
+    expect(chat.getState().status).toBe("ready")
+    expect(chat.getState().error).toBeNull()
+    expect(chat.getState().uploadState).toMatchObject({
+      status: "error",
+      fileName: "report.pdf",
+      error: { type: "network_error" },
+    })
+  })
+
+  it("aborts an active upload through stop", async () => {
+    const chat = new PlaiChat({
+      transport: {
+        ...createTransport([]),
+        uploadFile: ({ signal }) =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener(
+              "abort",
+              () => reject(new DOMException("Aborted", "AbortError")),
+              { once: true },
+            )
+          }),
+      },
+    })
+    const uploading = chat.uploadFile(new File(["report"], "report.pdf"))
+
+    chat.stop()
+
+    await expect(uploading).rejects.toThrow(/Aborted/)
+    expect(chat.getState().uploadState.status).toBe("idle")
+  })
+
+  it("reports when the configured transport cannot upload files", async () => {
+    const chat = new PlaiChat({ transport: createTransport([]) })
+
+    await expect(
+      chat.uploadFile(new File(["report"], "report.pdf")),
+    ).rejects.toThrow(/does not support file uploads/)
+  })
+
+  it("renders uploaded media references in the optimistic user message", async () => {
+    const chat = new PlaiChat({
+      transport: createTransport([{ type: "message_stop" }]),
+    })
+
+    await chat.sendMessage({
+      text: "Review this",
+      documents: [
+        {
+          mediaFileId: "media_1",
+          url: "https://files.example.com/chart.png",
+          filename: "chart.png",
+        },
+      ],
+    })
+
+    expect(chat.getState().messages[0].parts[0]).toMatchObject({
+      type: "input_image",
+      url: "https://files.example.com/chart.png",
+      metadata: { mediaFileId: "media_1" },
+    })
   })
 })
