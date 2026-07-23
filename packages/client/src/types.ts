@@ -263,8 +263,10 @@ export type UIBaseToolCallPart<
   metadata?: TMetadata
 }
 
-export type UIAgentInvocationToolCallPart =
-  UIBaseToolCallPart<"agent_invocation", AgentInvocationToolResultMetadata>
+export type UIAgentInvocationToolCallPart = UIBaseToolCallPart<
+  "agent_invocation",
+  AgentInvocationToolResultMetadata
+>
 export type UIBrowserToolCallPart = UIBaseToolCallPart<
   "browser",
   BrowserToolResultMetadata
@@ -286,7 +288,10 @@ export type UIHttpRequestToolCallPart = UIBaseToolCallPart<
   "http_request",
   HttpRequestToolResultMetadata
 >
-export type UIMcpToolCallPart = UIBaseToolCallPart<"mcp_tool", McpToolResultMetadata>
+export type UIMcpToolCallPart = UIBaseToolCallPart<
+  "mcp_tool",
+  McpToolResultMetadata
+>
 export type UIOfficeDocumentsToolCallPart = UIBaseToolCallPart<
   "office_documents",
   OfficeDocumentsToolMetadata
@@ -297,8 +302,10 @@ export type UIPerplexityToolCallPart = UIBaseToolCallPart<
 >
 export type UIStructuredDatasourceToolCallPart =
   UIBaseToolCallPart<"structured_datasource">
-export type UIWorkflowDispatchToolCallPart =
-  UIBaseToolCallPart<"workflow_dispatch", WorkflowDispatchToolResultMetadata>
+export type UIWorkflowDispatchToolCallPart = UIBaseToolCallPart<
+  "workflow_dispatch",
+  WorkflowDispatchToolResultMetadata
+>
 export type UIUnknownToolCallPart = Omit<
   UIBaseToolCallPart<"unknown" | null>,
   "toolType"
@@ -355,11 +362,7 @@ export type PlaiChatError = {
   cause?: unknown
 }
 
-export type FileUploadStatus =
-  | "idle"
-  | "uploading"
-  | "processing"
-  | "error"
+export type FileUploadStatus = "idle" | "uploading" | "processing" | "error"
 
 export type FileUploadState = {
   status: FileUploadStatus

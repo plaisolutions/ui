@@ -41,7 +41,8 @@ export class PlaiThreadTransport implements ChatTransport {
 
     const payload = this.options.body?.(request) ?? {
       prompt: request.message.text,
-      ...(request.message.enabledTools && request.message.enabledTools.length > 0
+      ...(request.message.enabledTools &&
+      request.message.enabledTools.length > 0
         ? { enabled_tools: request.message.enabledTools }
         : {}),
       ...(request.message.documents && request.message.documents.length > 0
@@ -244,7 +245,7 @@ export class PlaiThreadTransport implements ChatTransport {
     }
 
     const base = api.endsWith("/") ? api.slice(0, -1) : api
-    return `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/rate-message`
+    return `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/feedback`
   }
 
   private resolveTranscriptionEndpoint(): string {

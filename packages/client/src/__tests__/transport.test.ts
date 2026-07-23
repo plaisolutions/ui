@@ -41,7 +41,10 @@ function createXhrMock({
     listener: EventListenerOrEventListenerObject,
   ) => {
     if (typeof listener !== "function") return
-    target.set(type, [...(target.get(type) ?? []), listener as (event: unknown) => void])
+    target.set(type, [
+      ...(target.get(type) ?? []),
+      listener as (event: unknown) => void,
+    ])
   }
   const emit = (
     target: Map<string, Array<(event: unknown) => void>>,
@@ -165,10 +168,17 @@ describe("PlaiThreadTransport", () => {
   })
 
   it("omits empty optional backend fields", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      makeStreamResponse('event: message_stop\ndata: {"type":"message_stop"}\n\n'),
-    )
-    const transport = new PlaiThreadTransport({ api: "https://api.plaisolutions.com/invoke", fetch: fetchMock })
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        makeStreamResponse(
+          'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+        ),
+      )
+    const transport = new PlaiThreadTransport({
+      api: "https://api.plaisolutions.com/invoke",
+      fetch: fetchMock,
+    })
 
     for await (const _event of transport.stream({
       messages: [],
@@ -234,7 +244,9 @@ describe("PlaiThreadTransport", () => {
 
   it("rates a message with the current session token", async () => {
     let token = "token-one"
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 204 }))
     const transport = new PlaiThreadTransport({
       api: "https://api.plaisolutions.com/",
       chatSessionId: "session/1",
@@ -264,7 +276,7 @@ describe("PlaiThreadTransport", () => {
     ]
 
     expect(firstUrl).toBe(
-      "https://api.plaisolutions.com/chat_sessions/session%2F1/rate-message",
+      "https://api.plaisolutions.com/chat_sessions/session%2F1/feedback",
     )
     expect(firstInit.method).toBe("POST")
     expect(firstInit.headers.get("Authorization")).toBe("Bearer token-one")
