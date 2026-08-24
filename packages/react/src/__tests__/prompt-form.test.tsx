@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { PromptForm } from "../components"
 
@@ -92,6 +98,23 @@ describe("PromptForm", () => {
     expect(onSubmit).toHaveBeenCalledWith({ text: "", files: [file] })
   })
 
+  it("submits empty text when an external input is pending", () => {
+    const onSubmit = vi.fn()
+
+    render(
+      <PromptForm
+        value=""
+        onValueChange={vi.fn()}
+        onSubmit={onSubmit}
+        hasPendingInput
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Send" }))
+
+    expect(onSubmit).toHaveBeenCalledWith({ text: "", files: [] })
+  })
+
   it("reports invalid files", () => {
     const onInvalidFiles = vi.fn()
     const invalidFile = new File(["hello"], "script.exe", {
@@ -107,7 +130,8 @@ describe("PromptForm", () => {
       />,
     )
 
-    const input = within(container).getByLabelText("Attach file")
+    const input = within(container)
+      .getByLabelText("Attach file")
       .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
     selectFiles(input, [invalidFile])
 
@@ -118,7 +142,9 @@ describe("PromptForm", () => {
 
   it("submits on Enter and keeps Shift+Enter for a newline", () => {
     const onSubmit = vi.fn()
-    render(<PromptForm value="hola" onValueChange={vi.fn()} onSubmit={onSubmit} />)
+    render(
+      <PromptForm value="hola" onValueChange={vi.fn()} onSubmit={onSubmit} />,
+    )
     const textarea = screen.getByPlaceholderText("Type a message...")
 
     fireEvent.keyDown(textarea, { key: "Enter" })

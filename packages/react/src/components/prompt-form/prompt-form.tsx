@@ -60,6 +60,8 @@ export type PromptFormProps = {
   uploadState?: FileUploadState
   onStop?: () => void
   disabled?: boolean
+  /** Treat external input such as an active voice recording as submittable. */
+  hasPendingInput?: boolean
   clearOnSubmit?: boolean
   enabledTools?: string[]
   placeholder?: string
@@ -97,6 +99,7 @@ export function PromptForm({
   uploadState,
   onStop,
   disabled = false,
+  hasPendingInput = false,
   clearOnSubmit = true,
   enabledTools,
   placeholder = "Type a message...",
@@ -131,9 +134,9 @@ export function PromptForm({
   const setFiles = onFilesChange ?? setInternalFiles
   const isStreaming = status === "streaming" || status === "submitted"
   const isUploading =
-    uploadState?.status === "uploading" ||
-    uploadState?.status === "processing"
-  const hasContent = value.trim().length > 0 || files.length > 0
+    uploadState?.status === "uploading" || uploadState?.status === "processing"
+  const hasContent =
+    value.trim().length > 0 || files.length > 0 || hasPendingInput
   const canSubmit =
     !disabled && !isSubmitting && !isStreaming && !isUploading && hasContent
   const isInteractionDisabled = disabled || isSubmitting || isUploading

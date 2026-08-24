@@ -3,6 +3,7 @@ import {
   dummyTranscribeAudio,
   PromptForm,
   SpeechToTextToggle,
+  useSpeechToText,
 } from "@plaisolutions/react/components"
 import type { Meta, StoryObj } from "@storybook/react"
 import { useState } from "react"
@@ -21,23 +22,39 @@ function PromptFormDemo({
   const [value, setValue] = useState(initialValue)
   const [files, setFiles] = useState(initialFiles)
 
-  function handleTranscriptionComplete(text: string) {
-    setValue((current) => (current ? `${current} ${text}` : text))
-  }
+  const speechToText = useSpeechToText({
+    transcribe: dummyTranscribeAudio,
+    onTranscriptionComplete: (text) =>
+      setValue((current) => (current ? `${current} ${text}` : text)),
+  })
+
+  const hasPendingVoiceInput =
+    speechToText.status === "recording" ||
+    speechToText.status === "transcribing"
 
   return (
     <PromptForm
+      {...props}
       value={value}
       onValueChange={setValue}
       files={files}
       onFilesChange={setFiles}
+      hasPendingInput={hasPendingVoiceInput}
+      onSubmit={async (input) => {
+        const transcription = hasPendingVoiceInput
+          ? await speechToText.finish()
+          : null
+        const text = [input.text, transcription]
+          .filter((part): part is string => Boolean(part?.trim()))
+          .join(" ")
+        await props.onSubmit({ ...input, text })
+      }}
       rightSlot={
         <SpeechToTextToggle
-          transcribe={dummyTranscribeAudio}
-          onTranscriptionComplete={handleTranscriptionComplete}
+          controller={speechToText}
+          cancelOnClickWhileRecording
         />
       }
-      {...props}
     />
   )
 }

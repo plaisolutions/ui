@@ -169,12 +169,23 @@ transcription remains a transport capability:
 
 ```tsx
 const { transcribeAudio } = useChat({ transport });
+const speechToText = useSpeechToText({
+  transcribe: transcribeAudio,
+  onTranscriptionComplete: (text) => setInput(text),
+});
 
 <SpeechToTextToggle
-  transcribe={transcribeAudio}
-  onTranscriptionComplete={(text) => setInput(text)}
+  controller={speechToText}
+  cancelOnClickWhileRecording
 />
 ```
+
+`speechToText.finish()` stops an active recording and resolves with its
+transcription. Concurrent calls share the same promise, so a prompt submit can
+safely finish a recording while the microphone control is also processing it.
+Pass `hasPendingInput={speechToText.status === "recording" ||
+speechToText.status === "transcribing"}` to `PromptForm` to keep its submit
+action enabled while voice input is pending.
 
 `transcribe` is required. Storybook and demos can pass the exported
 `dummyTranscribeAudio` explicitly.

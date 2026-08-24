@@ -3,18 +3,24 @@ import { useState } from "react"
 import {
   dummyTranscribeAudio,
   SpeechToTextToggle,
+  useSpeechToText,
 } from "@plaisolutions/react/components"
 
 function SpeechToTextToggleDemo({ disabled = false }: { disabled?: boolean }) {
   const [transcript, setTranscript] = useState("")
+  const speechToText = useSpeechToText({
+    transcribe: dummyTranscribeAudio,
+    onTranscriptionComplete: setTranscript,
+  })
 
   return (
     <div className="flex flex-col gap-4">
       <SpeechToTextToggle
         disabled={disabled}
-        transcribe={dummyTranscribeAudio}
-        onTranscriptionComplete={setTranscript}
+        controller={speechToText}
+        cancelOnClickWhileRecording
       />
+      <p className="text-sm text-neutral-600">Status: {speechToText.status}</p>
       <p className="text-sm text-neutral-600">
         Transcript: {transcript || "—"}
       </p>

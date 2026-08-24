@@ -69,8 +69,16 @@ export {
 } from "./prompt-form/prompt-form"
 export { PromptFormAttachButton } from "./prompt-form/prompt-form-attach-button"
 export type { PromptFormAttachButtonProps } from "./prompt-form/prompt-form-attach-button"
-export { SpeechToTextToggle } from "./speech-to-text-toggle"
-export type { SpeechToTextToggleProps } from "./speech-to-text-toggle"
+export {
+  SpeechToTextToggle,
+  useSpeechToText,
+} from "./speech-to-text-toggle"
+export type {
+  SpeechToTextController,
+  SpeechToTextStatus,
+  SpeechToTextToggleProps,
+  UseSpeechToTextOptions,
+} from "./speech-to-text-toggle"
 export { dummyTranscribeAudio } from "./speech-to-text-toggle/transcribe-audio"
 export type { TranscribeAudioFn } from "./speech-to-text-toggle/transcribe-audio"
 export type {

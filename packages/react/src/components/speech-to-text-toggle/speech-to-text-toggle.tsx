@@ -1,113 +1,114 @@
 import type { ButtonHTMLAttributes } from "react"
-import { useEffect, useRef, useState } from "react"
 import { Loader } from "../icons/loader"
 import { Microphone } from "../icons/microphone"
+import { X } from "../icons/x"
 import { joinClasses } from "../internal/join-classes"
 import { PromptFormIconButton } from "../prompt-form/prompt-form"
 import type { TranscribeAudioFn } from "./transcribe-audio"
-import { useVoiceRecording } from "./use-voice-recording"
+import {
+  type SpeechToTextController,
+  useSpeechToText,
+} from "./use-speech-to-text"
 
-export type SpeechToTextToggleProps = {
-  onTranscriptionComplete: (text: string) => void
-  onTranscriptionError?: (error: Error) => void
-  transcribe: TranscribeAudioFn
+type SpeechToTextToggleCommonProps = {
   label?: string
   listeningLabel?: string
+  cancelLabel?: string
+  requestingLabel?: string
   loadingLabel?: string
+  cancelOnClickWhileRecording?: boolean
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onToggle">
 
+type StandaloneSpeechToTextToggleProps = {
+  controller?: never
+  transcribe: TranscribeAudioFn
+  onTranscriptionComplete: (text: string) => void
+  onTranscriptionError?: (error: Error) => void
+}
+
+type ControlledSpeechToTextToggleProps = {
+  controller: SpeechToTextController
+  transcribe?: never
+  onTranscriptionComplete?: never
+  onTranscriptionError?: never
+}
+
+export type SpeechToTextToggleProps = SpeechToTextToggleCommonProps &
+  (StandaloneSpeechToTextToggleProps | ControlledSpeechToTextToggleProps)
+
+async function missingTranscribe(): Promise<string> {
+  throw new Error(
+    "SpeechToTextToggle requires transcribe when no controller is provided.",
+  )
+}
+
 export function SpeechToTextToggle({
+  controller,
   onTranscriptionComplete,
   onTranscriptionError,
   transcribe,
   disabled = false,
   label = "Voice input",
   listeningLabel = "Stop recording",
+  cancelLabel = "Cancel recording",
+  requestingLabel = "Requesting microphone access...",
   loadingLabel = "Transcribing...",
+  cancelOnClickWhileRecording = false,
   className,
+  onClick,
   ...props
 }: SpeechToTextToggleProps) {
-  const [isListening, setIsListening] = useState(false)
-  const [isTranscribing, setIsTranscribing] = useState(false)
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const { start, stop, cancel } = useVoiceRecording()
+  const internalController = useSpeechToText({
+    transcribe: transcribe ?? missingTranscribe,
+    onTranscriptionComplete,
+    onTranscriptionError,
+  })
+  const speechToText = controller ?? internalController
+  const isRequesting = speechToText.status === "requesting"
+  const isListening = speechToText.status === "recording"
+  const isTranscribing = speechToText.status === "transcribing"
+  const cancelsRecording = isListening && cancelOnClickWhileRecording
 
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort()
-      cancel()
-    }
-  }, [cancel])
-
-  async function handleToggle() {
-    if (disabled || isTranscribing) {
-      return
-    }
-
-    if (!isListening) {
-      try {
-        await start()
-        setIsListening(true)
-      } catch (error) {
-        onTranscriptionError?.(
-          error instanceof Error
-            ? error
-            : new Error("Microphone access was denied"),
-        )
-      }
-      return
-    }
-
-    setIsListening(false)
-    setIsTranscribing(true)
-
-    const abortController = new AbortController()
-    abortControllerRef.current = abortController
-
-    try {
-      const audio = await stop()
-      const text = await transcribe(audio, abortController.signal)
-      if (text.trim()) {
-        onTranscriptionComplete(text)
-      }
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return
-      }
-
-      onTranscriptionError?.(
-        error instanceof Error ? error : new Error("Transcription failed"),
-      )
-    } finally {
-      abortControllerRef.current = null
-      setIsTranscribing(false)
-    }
-  }
-
-  const ariaLabel = isTranscribing
-    ? loadingLabel
-    : isListening
-      ? listeningLabel
-      : label
+  const ariaLabel = isRequesting
+    ? requestingLabel
+    : isTranscribing
+      ? loadingLabel
+      : cancelsRecording
+        ? cancelLabel
+        : isListening
+          ? listeningLabel
+          : label
 
   return (
     <PromptFormIconButton
       type="button"
       aria-label={ariaLabel}
       aria-pressed={isListening}
-      aria-busy={isTranscribing}
-      disabled={disabled || isTranscribing}
+      aria-busy={isRequesting || isTranscribing}
+      disabled={disabled || isRequesting || isTranscribing}
       className={joinClasses(
         isListening && !isTranscribing ? "text-red-600" : undefined,
         className,
       )}
-      onClick={() => {
-        void handleToggle()
+      onClick={(event) => {
+        onClick?.(event)
+        if (event.defaultPrevented) {
+          return
+        }
+
+        if (cancelsRecording) {
+          speechToText.cancel()
+          return
+        }
+
+        void speechToText.toggle()
       }}
       {...props}
     >
-      {isTranscribing ? (
+      {isRequesting || isTranscribing ? (
         <Loader className="size-4 animate-spin" />
+      ) : cancelsRecording ? (
+        <X className="size-4" />
       ) : (
         <Microphone className="size-4" />
       )}
