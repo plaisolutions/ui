@@ -43,7 +43,7 @@ Emitted at the very beginning of the streaming response, before any content bloc
 
 ### 2. `content_block_start`
 
-Emitted when a new content block begins. Content blocks can be `text`, `tool_use`, or `guardrail`.
+Emitted when a new content block begins. Content blocks can be `text`, `thinking`, `tool_use`, or `guardrail`.
 
 **Event Name:** `content_block_start`
 
@@ -55,6 +55,18 @@ Emitted when a new content block begins. Content blocks can be `text`, `tool_use
   "index": 0,
   "content_block": {
     "type": "text"
+  }
+}
+```
+
+**Payload for Thinking Block:**
+
+```json
+{
+  "type": "content_block_start",
+  "index": 0,
+  "content_block": {
+    "type": "thinking"
   }
 }
 ```
@@ -100,7 +112,7 @@ Emitted when a new content block begins. Content blocks can be `text`, `tool_use
 
 - `type`: Always `"content_block_start"`
 - `index`: Sequential index of the content block (0-based, increments for each new block)
-- `content_block.type`: One of `"text"`, `"tool_use"`, or `"guardrail"`
+- `content_block.type`: One of `"text"`, `"thinking"`, `"tool_use"`, or `"guardrail"`
 - `content_block.id`: Tool call ID (only present for `tool_use` blocks)
 - `content_block.name`: Tool name (only present for `tool_use` blocks)
 - `content_block.tool_type`: Internal tool type identifier from the agent's tool registry (only present for `tool_use` blocks; may be `null` if not registered)
@@ -111,6 +123,7 @@ Emitted when a new content block begins. Content blocks can be `text`, `tool_use
 **When Emitted:**
 
 - Before streaming text content (`text` block)
+- Before streaming a provider-supplied thinking summary (`thinking` block)
 - When the LLM decides to call a tool (`tool_use` block)
 - When an input or output guardrail fires (`guardrail` block)
 
@@ -120,7 +133,7 @@ Emitted when a new content block begins. Content blocks can be `text`, `tool_use
 
 ### 3. `content_block_delta`
 
-Emitted for each chunk of text content within a text content block. Text is streamed character-by-character or in small chunks.
+Emitted for each chunk of text or provider-supplied thinking-summary content.
 
 **Event Name:** `content_block_delta`
 
@@ -143,6 +156,21 @@ Emitted for each chunk of text content within a text content block. Text is stre
 - `index`: The index of the content block this delta belongs to (matches the `index` from `content_block_start`)
 - `delta.type`: Always `"text_delta"` for text content
 - `delta.text`: The text chunk being streamed (can be a single character, word, or larger chunk)
+
+**Payload for Thinking Block:**
+
+```json
+{
+  "type": "content_block_delta",
+  "index": 0,
+  "delta": {
+    "type": "thinking_delta",
+    "thinking": "Checking the relevant sources."
+  }
+}
+```
+
+Thinking deltas contain provider-supplied summaries only. Provider signatures and other replay metadata are never emitted in SSE events or thread APIs.
 
 **When Emitted:** Multiple times during text streaming, between `content_block_start` and `content_block_stop` for text blocks. Not emitted for `tool_use` or `guardrail` blocks.
 

@@ -23,7 +23,9 @@ pnpm dev
 
 When the configured agent invokes `perplexity` or `firecrawl_search`, the
 streamed result is rendered by `ToolResultWebSearchCard` through `Message` and
-`ToolResultCard`. The application contains no mock tool results.
+`ToolResultCard`. Provider-supplied `thinking` summaries are rendered by
+`MessageParts` automatically; the application contains no mock tool results or
+private reasoning data.
 
 ```tsx
 import { useMemo, useState } from "react";
@@ -57,6 +59,8 @@ return (
           <MessageParts
             message={message}
             datasourceToolResultsPosition="before-content"
+            thinkingLabel="Pensando…"
+            completedThinkingLabel="Resumen del razonamiento"
           />
         </MessageContent>
       </Message>

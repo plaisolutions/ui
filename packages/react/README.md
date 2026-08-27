@@ -97,6 +97,7 @@ import {
   MessageFooter,
   MessageHeader,
   MessageParts,
+  Thinking,
   Clipboard,
   ThumbDown,
   ThumbUp,
@@ -113,6 +114,7 @@ Available optional components:
 - `MessageHeader`
 - `MessageFooter`
 - `MessageParts`
+- `Thinking`
 - `Clipboard`
 - `ThumbUp`
 - `ThumbDown`
@@ -128,6 +130,23 @@ same session-aware transport and dynamic authentication headers as
 `Message` is a composable row primitive. `MessageAvatar`, `MessageContent`,
 `MessageHeader` and `MessageFooter` are optional layout children, while
 `MessageParts` renders a `UIMessage` and accepts custom text/tool renderers.
+
+`MessageParts` automatically renders `thinking` parts streamed by the client.
+`Thinking` displays provider-supplied summaries only, never private reasoning
+or provider replay metadata. Use its labels, or the corresponding
+`thinkingLabel` and `completedThinkingLabel` props on `MessageParts`, to
+localize the UI.
+
+```tsx
+<Thinking
+  part={{
+    type: "thinking",
+    thinking: "Checking the relevant sources.",
+    state: "completed",
+  }}
+  completedLabel="Thought process"
+/>
+```
 
 ```tsx
 <Message align={message.role === "user" ? "end" : "start"}>

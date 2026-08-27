@@ -47,6 +47,22 @@ const assistantMessage: UIMessage = {
   ],
 }
 
+const assistantMessageWithThinking: UIMessage = {
+  id: "message_assistant_thinking_01",
+  role: "assistant",
+  parts: [
+    {
+      type: "thinking",
+      thinking: "Checking the account status before answering.",
+      state: "completed",
+    },
+    {
+      type: "text",
+      text: "Your subscription is active through August 1, 2026.",
+    },
+  ],
+}
+
 function MessageWithActionsExample() {
   const [rating, setRating] = useState<"POSITIVE" | "NEGATIVE" | null>(null)
   const text = assistantMessage.parts
@@ -431,6 +447,10 @@ export const WithMessageActions: Story = {
 
 export const AssistantWithToolCall: Story = {
   render: () => composedMessage({ message: assistantMessageWithToolCall }),
+}
+
+export const AssistantWithThinking: Story = {
+  render: () => composedMessage({ message: assistantMessageWithThinking }),
 }
 
 export const AssistantWithEmailToolCall: Story = {

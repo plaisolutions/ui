@@ -1,12 +1,14 @@
 import type {
   UIMessage,
   UIMessagePart,
+  UIThinkingPart,
   UIToolCallPart,
 } from "@plaisolutions/client"
 import type { HTMLAttributes, ReactNode } from "react"
 import { useMemo, useState } from "react"
 import { joinClasses } from "./internal/join-classes"
 import { ToolResultCard } from "./tool-result-card"
+import { Thinking } from "./thinking"
 
 export type MessageProps = HTMLAttributes<HTMLElement> & {
   align?: "start" | "end"
@@ -136,7 +138,13 @@ export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
     part: UIToolCallPart,
     context: { message: UIMessage },
   ) => ReactNode
+  renderThinking?: (
+    part: UIThinkingPart,
+    context: { message: UIMessage },
+  ) => ReactNode
   isStreaming?: boolean
+  thinkingLabel?: string
+  completedThinkingLabel?: string
   readMoreLabel?: string
   readLessLabel?: string
 }
@@ -172,6 +180,9 @@ function renderPart(
   locale?: string | null,
   renderText?: MessagePartsProps["renderText"],
   renderToolCall?: MessagePartsProps["renderToolCall"],
+  renderThinking?: MessagePartsProps["renderThinking"],
+  thinkingLabel?: string,
+  completedThinkingLabel?: string,
 ) {
   if (part.type === "text") {
     if (renderText) {
@@ -268,6 +279,24 @@ function renderPart(
     )
   }
 
+  if (part.type === "thinking") {
+    if (renderThinking) {
+      return (
+        <div key={`thinking-${index}`}>
+          {renderThinking(part, { message })}
+        </div>
+      )
+    }
+    return (
+      <Thinking
+        key={`thinking-${index}`}
+        part={part}
+        thinkingLabel={thinkingLabel}
+        completedLabel={completedThinkingLabel}
+      />
+    )
+  }
+
   if (part.type === "guardrail") {
     return (
       <p
@@ -312,7 +341,10 @@ export function MessageParts({
   locale,
   renderText,
   renderToolCall,
+  renderThinking,
   isStreaming = false,
+  thinkingLabel,
+  completedThinkingLabel,
   readMoreLabel = "Read more",
   readLessLabel = "Read less",
   className,
@@ -358,6 +390,9 @@ export function MessageParts({
             locale,
             renderText,
             renderToolCall,
+            renderThinking,
+            thinkingLabel,
+            completedThinkingLabel,
           ),
         )
       )}

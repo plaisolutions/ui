@@ -14,6 +14,8 @@ export type {
   MessagePartsProps,
   MessageProps,
 } from "./message"
+export { Thinking } from "./thinking"
+export type { ThinkingProps } from "./thinking"
 export { DatasourceToolResultCard } from "./datasource-tool-result-card"
 export type { DatasourceToolResultCardProps } from "./datasource-tool-result-card"
 export { Clipboard } from "./clipboard"

@@ -173,6 +173,8 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
                 <MessageParts
                   message={message}
                   datasourceToolResultsPosition="before-content"
+                  thinkingLabel="Pensando…"
+                  completedThinkingLabel="Resumen del razonamiento"
                 />
               </MessageContent>
             </Message>

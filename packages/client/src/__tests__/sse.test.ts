@@ -37,6 +37,22 @@ describe("parseSseStream", () => {
     ])
   })
 
+  it("parses provider-supplied thinking summaries", async () => {
+    const raw = readFileSync(resolve(fixturesDir, "thinking.sse"), "utf8")
+    const events = await collect(parseSseStream(streamFromString(raw, 11)))
+
+    expect(events).toContainEqual({
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "thinking" },
+    })
+    expect(events).toContainEqual({
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "thinking_delta", thinking: "sources." },
+    })
+  })
+
   it("parses guardrail stream variants", async () => {
     const inputRaw = readFileSync(
       resolve(fixturesDir, "guardrail-input.sse"),

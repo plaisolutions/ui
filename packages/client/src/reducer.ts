@@ -6,6 +6,7 @@ import type {
   PlaiSseEvent,
   UIGuardrailPart,
   UIMessage,
+  UIThinkingPart,
   UITextPart,
   UIToolCallPart,
   Usage,
@@ -89,16 +90,25 @@ export function reduceChatState(
       const message = state.messages[assistantIndex]
       const part = message.parts[partIndex]
 
-      if (!part || part.type !== "text") {
-        throw new ProtocolError(
-          `Received text delta for non-text block at index ${event.index}.`,
-        )
-      }
-
       const nextParts = [...message.parts]
-      nextParts[partIndex] = {
-        ...part,
-        text: `${part.text}${event.delta.text}`,
+
+      if (part?.type === "text" && event.delta.type === "text_delta") {
+        nextParts[partIndex] = {
+          ...part,
+          text: `${part.text}${event.delta.text}`,
+        }
+      } else if (
+        part?.type === "thinking" &&
+        event.delta.type === "thinking_delta"
+      ) {
+        nextParts[partIndex] = {
+          ...part,
+          thinking: `${part.thinking}${event.delta.thinking}`,
+        }
+      } else {
+        throw new ProtocolError(
+          `Received ${event.delta.type} for incompatible block at index ${event.index}.`,
+        )
       }
 
       return replaceAssistantMessage(state, assistantIndex, {
@@ -109,10 +119,33 @@ export function reduceChatState(
 
     case "content_block_stop": {
       const nextMap = { ...state.blockIndexToPartIndex }
+      const partIndex = nextMap[event.index]
       delete nextMap[event.index]
 
+      if (partIndex === undefined) {
+        return {
+          ...state,
+          blockIndexToPartIndex: nextMap,
+          status: state.status === "submitted" ? "streaming" : state.status,
+        }
+      }
+
+      const assistantIndex = getActiveAssistantMessageIndex(state)
+      const message = state.messages[assistantIndex]
+      const part = message.parts[partIndex]
+      const nextParts = [...message.parts]
+
+      if (part?.type === "thinking") {
+        nextParts[partIndex] = { ...part, state: "completed" }
+      }
+
+      const nextState = replaceAssistantMessage(state, assistantIndex, {
+        ...message,
+        parts: nextParts,
+      })
+
       return {
-        ...state,
+        ...nextState,
         blockIndexToPartIndex: nextMap,
         status: state.status === "submitted" ? "streaming" : state.status,
       }
@@ -231,6 +264,28 @@ function reduceContentBlockStart(
     const nextParts = [
       ...message.parts,
       { type: "text", text: "" } satisfies UITextPart,
+    ]
+    return {
+      ...replaceAssistantMessage(state, assistantIndex, {
+        ...message,
+        parts: nextParts,
+      }),
+      status: "streaming",
+      blockIndexToPartIndex: {
+        ...state.blockIndexToPartIndex,
+        [event.index]: nextParts.length - 1,
+      },
+    }
+  }
+
+  if (event.content_block.type === "thinking") {
+    const nextParts = [
+      ...message.parts,
+      {
+        type: "thinking",
+        thinking: "",
+        state: "streaming",
+      } satisfies UIThinkingPart,
     ]
     return {
       ...replaceAssistantMessage(state, assistantIndex, {

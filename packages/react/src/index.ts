@@ -12,6 +12,7 @@ export {
   MessageFooter,
   MessageHeader,
   MessageParts,
+  Thinking,
   PromptForm,
   PromptFormAttachButton,
   PromptFormIconButton,
@@ -72,6 +73,7 @@ export type {
   MessageHeaderProps,
   MessagePartsProps,
   MessageProps,
+  ThinkingProps,
   LocalizedOpenGraph,
   OpenGraphContainer,
   OpenGraphField,
@@ -124,5 +126,6 @@ export type {
   UploadFileOptions,
   UploadFileProgress,
   UIMessage,
+  UIThinkingPart,
   Usage,
 } from "@plaisolutions/client"

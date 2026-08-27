@@ -52,6 +52,47 @@ describe("reduceChatState", () => {
     })
   })
 
+  it("accumulates and completes thinking summaries", () => {
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", role: "assistant", model: "claude-sonnet" },
+      },
+      {
+        type: "content_block_start",
+        index: 0,
+        content_block: { type: "thinking" },
+      },
+      {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "thinking_delta", thinking: "Checking sources." },
+      },
+      { type: "content_block_stop", index: 0 },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: { type: "text" },
+      },
+      {
+        type: "content_block_delta",
+        index: 1,
+        delta: { type: "text_delta", text: "Answer" },
+      },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+
+    expect(state.messages[0]?.parts).toEqual([
+      {
+        type: "thinking",
+        thinking: "Checking sources.",
+        state: "completed",
+      },
+      { type: "text", text: "Answer" },
+    ])
+  })
+
   it("handles tool call lifecycle", () => {
     const events: PlaiSseEvent[] = [
       {

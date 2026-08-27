@@ -17,6 +17,12 @@ export type UITextPart = {
   text: string
 }
 
+export type UIThinkingPart = {
+  type: "thinking"
+  thinking: string
+  state: "streaming" | "completed"
+}
+
 export type InputFileMetadata = {
   sourceUrl?: string
   wasConverted?: boolean
@@ -335,6 +341,7 @@ export type UIGuardrailPart = {
 
 export type UIMessagePart =
   | UITextPart
+  | UIThinkingPart
   | UIInputFilePart
   | UIInputImagePart
   | UIToolCallPart
@@ -481,6 +488,14 @@ export type ContentBlockStartTextEvent = {
   }
 }
 
+export type ContentBlockStartThinkingEvent = {
+  type: "content_block_start"
+  index: number
+  content_block: {
+    type: "thinking"
+  }
+}
+
 export type ContentBlockStartToolUseEvent = {
   type: "content_block_start"
   index: number
@@ -505,10 +520,11 @@ export type ContentBlockStartGuardrailEvent = {
 
 export type ContentBlockStartEvent =
   | ContentBlockStartTextEvent
+  | ContentBlockStartThinkingEvent
   | ContentBlockStartToolUseEvent
   | ContentBlockStartGuardrailEvent
 
-export type ContentBlockDeltaEvent = {
+export type ContentBlockDeltaTextEvent = {
   type: "content_block_delta"
   index: number
   delta: {
@@ -516,6 +532,19 @@ export type ContentBlockDeltaEvent = {
     text: string
   }
 }
+
+export type ContentBlockDeltaThinkingEvent = {
+  type: "content_block_delta"
+  index: number
+  delta: {
+    type: "thinking_delta"
+    thinking: string
+  }
+}
+
+export type ContentBlockDeltaEvent =
+  | ContentBlockDeltaTextEvent
+  | ContentBlockDeltaThinkingEvent
 
 export type ContentBlockStopEvent = {
   type: "content_block_stop"
