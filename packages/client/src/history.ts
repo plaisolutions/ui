@@ -80,6 +80,17 @@ function partFromValue(value: unknown, index: number): UIMessagePart[] {
     return [{ type: "guardrail", content: stringValue(value.content) ?? "" }]
   }
 
+  if (type === "thinking") {
+    return [{
+      type: "thinking",
+      thinking: stringValue(value.content)
+        ?? stringValue(value.thinking)
+        ?? stringValue(value.text)
+        ?? "",
+      state: "completed",
+    }]
+  }
+
   if (type === "input_image" || type === "image" || type === "image_url") {
     const url = stringValue(value.url) ?? stringValue(value.file_url)
     return url

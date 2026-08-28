@@ -58,4 +58,53 @@ describe("normalizePlaiThreadMessages", () => {
       parts: [{ type: "tool-call", id: "tool_2" }],
     })
   })
+
+  it("normalizes persisted thinking summaries without private metadata", () => {
+    const messages = normalizePlaiThreadMessages([
+      {
+        id: "assistant_1",
+        role: "assistant",
+        content_blocks: [
+          { type: "text", content: "Before" },
+          {
+            type: "thinking",
+            content: "Compared the available options.",
+            thinking: "ignored because content takes precedence",
+            signature: "private-provider-signature",
+          },
+          { type: "text", content: "After" },
+        ],
+      },
+      {
+        id: "assistant_2",
+        role: "assistant",
+        content_parts: [
+          { type: "thinking", thinking: "Provider-shaped summary." },
+          { type: "thinking", text: "Legacy summary." },
+        ],
+      },
+    ])
+
+    expect(messages[0]?.parts).toEqual([
+      { type: "text", text: "Before" },
+      {
+        type: "thinking",
+        thinking: "Compared the available options.",
+        state: "completed",
+      },
+      { type: "text", text: "After" },
+    ])
+    expect(messages[1]?.parts).toEqual([
+      {
+        type: "thinking",
+        thinking: "Provider-shaped summary.",
+        state: "completed",
+      },
+      {
+        type: "thinking",
+        thinking: "Legacy summary.",
+        state: "completed",
+      },
+    ])
+  })
 })

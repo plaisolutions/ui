@@ -35,7 +35,7 @@ export function Thinking({
 
   return (
     <section
-      className={joinClasses("text-sm text-neutral-600", className)}
+      className={joinClasses("text-sm text-neutral-600 dark:text-neutral-300", className)}
       data-thinking-state={part.state}
       {...props}
     >
@@ -50,9 +50,9 @@ export function Thinking({
         }
         disabled={!hasContent}
         className={joinClasses(
-          "inline-flex items-center gap-2 rounded-md py-1 text-left font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "inline-flex items-center gap-2 rounded-md py-1 text-left font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-neutral-100",
           hasContent
-            ? "cursor-pointer hover:text-neutral-900"
+            ? "cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100"
             : "cursor-default",
         )}
         onClick={() => setIsOpen((value) => !value)}
@@ -82,7 +82,7 @@ export function Thinking({
       {hasContent && isOpen ? (
         <p
           id={contentId}
-          className="mt-1 whitespace-pre-wrap border-l-2 border-neutral-200 pl-3 text-sm leading-6 text-neutral-600"
+          className="mt-1 whitespace-pre-wrap border-l-2 border-neutral-200 pl-3 text-sm leading-6 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
         >
           {part.thinking}
         </p>
