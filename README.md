@@ -20,8 +20,8 @@ Run Storybook to develop and validate React components:
 pnpm storybook
 ```
 
-When consuming React components styled with Tailwind utilities, import the
-package stylesheet once in your app entrypoint:
+When consuming React components, import the package stylesheet once in your
+app entrypoint. The stylesheet does not include a global CSS reset:
 
 ```ts
 import "@plaisolutions/react/styles.css"

@@ -11,6 +11,14 @@ that don't want to build chat UI from scratch.
 pnpm add @plaisolutions/client @plaisolutions/react
 ```
 
+Import the component stylesheet once in your application entrypoint. It does
+not include a global CSS reset, so it can safely coexist with the host app's
+styles:
+
+```tsx
+import "@plaisolutions/react/styles.css"
+```
+
 ## Usage
 
 ```tsx
