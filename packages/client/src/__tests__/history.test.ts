@@ -107,4 +107,57 @@ describe("normalizePlaiThreadMessages", () => {
       },
     ])
   })
+
+  it("normalizes media file ids for resending persisted attachments", () => {
+    const messages = normalizePlaiThreadMessages([
+      {
+        id: "user_1",
+        role: "user",
+        content_blocks: [
+          {
+            type: "input_file",
+            file_url: "https://example.com/report.pdf",
+            title: "report.pdf",
+            media_file_id: "media_file_1",
+            metadata: { original_file_name: "original-report.pdf" },
+          },
+          {
+            type: "input_image",
+            url: "https://example.com/chart.png",
+            title: "chart.png",
+            metadata: { media_file_id: "media_file_2" },
+          },
+        ],
+      },
+    ])
+
+    expect(messages[0]?.parts).toEqual([
+      {
+        type: "input_file",
+        fileUrl: "https://example.com/report.pdf",
+        title: "report.pdf",
+        metadata: {
+          original_file_name: "original-report.pdf",
+          originalFileName: "original-report.pdf",
+          sourceUrl: undefined,
+          wasConverted: undefined,
+          convertedFromExtension: undefined,
+          mediaFileId: "media_file_1",
+        },
+      },
+      {
+        type: "input_image",
+        url: "https://example.com/chart.png",
+        title: "chart.png",
+        metadata: {
+          media_file_id: "media_file_2",
+          originalFileName: undefined,
+          sourceUrl: undefined,
+          wasConverted: undefined,
+          convertedFromExtension: undefined,
+          mediaFileId: "media_file_2",
+        },
+      },
+    ])
+  })
 })

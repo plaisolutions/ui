@@ -232,6 +232,47 @@ describe("useChat", () => {
     })
   })
 
+  it("exposes resendMessage from the chat instance", async () => {
+    const transport = createTransport([
+      {
+        type: "message_start",
+        message: { id: "assistant_2", role: "assistant", model: "gpt-4o" },
+      },
+      { type: "message_stop" },
+    ])
+    const { result } = renderHook(() =>
+      useChat({
+        transport,
+        initialMessages: [
+          {
+            id: "user_1",
+            role: "user",
+            parts: [{ type: "text", text: "Hello" }],
+          },
+          {
+            id: "assistant_1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Hi" }],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      await result.current.resendMessage({ messageId: "assistant_1" })
+    })
+
+    expect(result.current.messages.map((message) => message.role)).toEqual([
+      "user",
+      "assistant",
+      "user",
+      "assistant",
+    ])
+    expect(result.current.messages[2]?.parts).toEqual([
+      { type: "text", text: "Hello" },
+    ])
+  })
+
   it("exposes transcribeAudio from the chat instance", async () => {
     const transcribeAudio = vi.fn().mockResolvedValue("Hola desde voz")
     const transport: ChatTransport = {

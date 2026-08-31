@@ -61,6 +61,124 @@ describe("PlaiChat", () => {
     expect(state.status).toBe("ready")
   })
 
+  it("resends the user turn preceding an assistant response", async () => {
+    const streamedInputs: unknown[] = []
+    const transport: ChatTransport = {
+      async *stream({ message }) {
+        streamedInputs.push(message)
+        yield {
+          type: "message_start",
+          message: {
+            id: "assistant_retry",
+            role: "assistant",
+            model: "gpt-5.4-mini",
+          },
+        }
+        yield { type: "message_stop" }
+      },
+    }
+    const initialMessages = [
+      {
+        id: "user_original",
+        role: "user" as const,
+        parts: [
+          {
+            type: "input_file" as const,
+            fileUrl: "https://example.com/report.pdf",
+            title: "report.pdf",
+            metadata: {
+              mediaFileId: "media_1",
+              originalFileName: "original-report.pdf",
+            },
+          },
+          {
+            type: "input_image" as const,
+            url: "https://example.com/chart.png",
+            title: "chart.png",
+          },
+          { type: "text" as const, text: "Review these files" },
+        ],
+      },
+      {
+        id: "assistant_local",
+        role: "assistant" as const,
+        parts: [{ type: "text" as const, text: "Original response" }],
+        metadata: { persistedMessageId: "assistant_persisted" },
+      },
+    ]
+    const chat = new PlaiChat({
+      transport,
+      initialMessages,
+      generateId: () => "user_retry",
+    })
+
+    await chat.resendMessage({
+      messageId: "assistant_persisted",
+      enabledTools: ["tool_1"],
+    })
+
+    expect(streamedInputs).toEqual([
+      {
+        text: "Review these files",
+        enabledTools: ["tool_1"],
+        documents: [
+          {
+            mediaFileId: "media_1",
+            url: "https://example.com/report.pdf",
+            filename: "original-report.pdf",
+          },
+          {
+            url: "https://example.com/chart.png",
+            filename: "chart.png",
+          },
+        ],
+      },
+    ])
+    expect(chat.getState().messages.map((message) => message.id)).toEqual([
+      "user_original",
+      "assistant_local",
+      "user_retry",
+      "assistant_retry",
+    ])
+    expect(chat.getState().messages[1]?.parts).toEqual([
+      { type: "text", text: "Original response" },
+    ])
+  })
+
+  it("rejects resend requests without a matching assistant turn", async () => {
+    const chat = new PlaiChat({
+      transport: createTransport([]),
+      initialMessages: [
+        {
+          id: "user_1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+        },
+      ],
+    })
+
+    await expect(chat.resendMessage({ messageId: "missing" })).rejects.toThrow(
+      /assistant message was not found/,
+    )
+  })
+
+  it("rejects assistant responses without a preceding user message", async () => {
+    const chat = new PlaiChat({
+      transport: createTransport([]),
+      initialMessages: [
+        {
+          id: "assistant_1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Welcome" }],
+        },
+      ],
+    })
+
+    await expect(
+      chat.resendMessage({ messageId: "assistant_1" }),
+    ).rejects.toThrow(/no preceding user message was found/)
+  })
+
   it("creates user parts from documents before text", async () => {
     const chat = new PlaiChat({
       transport: createTransport([{ type: "message_stop" }]),

@@ -6,6 +6,7 @@ import type {
   PlaiChatError,
   PlaiSseEvent,
   RateMessageInput,
+  ResendMessageInput,
   SendMessageInput,
   TranscribeAudioFn,
   UploadFileFn,
@@ -32,6 +33,7 @@ export type UseChatResult = {
   uploadState: FileUploadState
   sendMessage: (input: SendMessageInput) => Promise<void>
   rateMessage: (input: RateMessageInput) => Promise<void>
+  resendMessage: (input: ResendMessageInput) => Promise<void>
   transcribeAudio: TranscribeAudioFn
   uploadFile: UploadFileFn
   stop: () => void
@@ -50,12 +52,14 @@ export function useChat(options: UseChatOptions): UseChatResult {
     // host changes persisted threads while reusing the same transport class.
     void conversationId
     return new PlaiChat({
-        transport,
-        initialMessages: optionsRef.current.initialMessages,
-        generateId: () => optionsRef.current.generateId?.() ?? `local_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`,
-        onEvent: (event) => optionsRef.current.onEvent?.(event),
-        onError: (error) => optionsRef.current.onError?.(error),
-      })
+      transport,
+      initialMessages: optionsRef.current.initialMessages,
+      generateId: () =>
+        optionsRef.current.generateId?.() ??
+        `local_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`,
+      onEvent: (event) => optionsRef.current.onEvent?.(event),
+      onError: (error) => optionsRef.current.onError?.(error),
+    })
   }, [conversationId, transport])
 
   const [state, setState] = useState(() => chat.getState())
@@ -75,6 +79,7 @@ export function useChat(options: UseChatOptions): UseChatResult {
     () => ({
       sendMessage: chat.sendMessage.bind(chat),
       rateMessage: chat.rateMessage.bind(chat),
+      resendMessage: chat.resendMessage.bind(chat),
       transcribeAudio: chat.transcribeAudio.bind(chat),
       uploadFile: chat.uploadFile.bind(chat),
       stop: chat.stop.bind(chat),

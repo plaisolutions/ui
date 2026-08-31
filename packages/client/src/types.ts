@@ -28,6 +28,7 @@ export type InputFileMetadata = {
   wasConverted?: boolean
   originalFileName?: string
   convertedFromExtension?: string
+  mediaFileId?: string
   [key: string]: unknown
 }
 
@@ -428,6 +429,11 @@ export type SendMessageInput = {
   text: string
   enabledTools?: string[]
   documents?: SendMessageDocument[]
+}
+
+export type ResendMessageInput = {
+  messageId: string
+  enabledTools?: string[]
 }
 
 export type MessageRating = "POSITIVE" | "NEGATIVE"

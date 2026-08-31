@@ -49,6 +49,7 @@ export type {
   PlaiChatOptions,
   MessageRating,
   RateMessageInput,
+  ResendMessageInput,
   TranscribeAudioFn,
   UploadFileFn,
   UploadFileOptions,

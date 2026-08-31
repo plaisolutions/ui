@@ -36,6 +36,11 @@ await chat.sendMessage({
   ],
 });
 
+await chat.resendMessage({
+  messageId: "assistant_message_123",
+  enabledTools: ["some_tool_id"],
+});
+
 await chat.rateMessage({
   messageId: "persisted_message_123",
   rating: "POSITIVE",
@@ -64,6 +69,9 @@ await chat.sendMessage({
   Registers a listener and returns `unsubscribe`.
 - `sendMessage(input): Promise<void>`
   Sends a user message and starts streaming the assistant response.
+- `resendMessage(input): Promise<void>`
+  Appends a new turn by resending the user message immediately preceding the
+  selected assistant response.
 - `rateMessage(input): Promise<void>`
   Rates a persisted message as `POSITIVE` or `NEGATIVE` in the transport's
   chat session.
@@ -267,6 +275,22 @@ documents first, then text (if non-empty). Sending documents without text is sup
 `/chat_sessions/{chatSessionId}/rate-message`. It resolves dynamic `headers`
 for every rating request, so refreshed session tokens are used automatically.
 Non-2xx responses, including `404`, reject with `HttpStatusError`.
+
+## Resending a response
+
+```ts
+await chat.resendMessage({
+  messageId: "assistant_message_123",
+  enabledTools: ["some_tool_id"],
+});
+```
+
+`resendMessage` finds the selected assistant message in the current state,
+reconstructs the preceding user text and attachments, and passes them through
+the existing `sendMessage` flow. The previous response remains in history and
+a new user/assistant turn is appended. Existing `mediaFileId` references are
+reused when available, so persisted attachments do not need to be uploaded
+again.
 
 ## Audio transcription
 

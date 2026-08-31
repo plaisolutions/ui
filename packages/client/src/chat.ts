@@ -12,6 +12,7 @@ import type {
   InternalChatState,
   PlaiChatOptions,
   RateMessageInput,
+  ResendMessageInput,
   SendMessageDocument,
   SendMessageInput,
   MediaFile,
@@ -165,11 +166,45 @@ export class PlaiChat {
     }
   }
 
+  /** Append a new turn using the user message that precedes an assistant response. */
+  async resendMessage(input: ResendMessageInput): Promise<void> {
+    const assistantIndex = this.state.messages.findIndex(
+      (message) =>
+        message.role === "assistant" &&
+        (message.id === input.messageId ||
+          message.metadata?.persistedMessageId === input.messageId),
+    )
+    if (assistantIndex === -1) {
+      throw new Error(
+        `Cannot resend message ${input.messageId}: assistant message was not found.`,
+      )
+    }
+
+    let userMessage: UIMessage | undefined
+    for (let index = assistantIndex - 1; index >= 0; index -= 1) {
+      const candidate = this.state.messages[index]
+      if (candidate?.role === "user") {
+        userMessage = candidate
+        break
+      }
+    }
+    if (!userMessage) {
+      throw new Error(
+        `Cannot resend message ${input.messageId}: no preceding user message was found.`,
+      )
+    }
+
+    const message = sendInputFromUserMessage(userMessage, input.enabledTools)
+    await this.sendMessage(message)
+  }
+
   /** Rate a persisted message in this chat session. */
   async rateMessage(input: RateMessageInput): Promise<void> {
     const rateMessage = this.options.transport.rateMessage
     if (!rateMessage) {
-      throw new Error("The configured chat transport does not support message ratings.")
+      throw new Error(
+        "The configured chat transport does not support message ratings.",
+      )
     }
 
     await rateMessage.call(this.options.transport, input)
@@ -314,7 +349,9 @@ export class PlaiChat {
       this.state.uploadState.status === "uploading" ||
       this.state.uploadState.status === "processing"
     ) {
-      throw new Error("Cannot hydrate messages while a response is in progress.")
+      throw new Error(
+        "Cannot hydrate messages while a response is in progress.",
+      )
     }
 
     this.setState(createInitialInternalState(messages))
@@ -419,4 +456,52 @@ function createIdleUploadState() {
     progress: 0,
     error: null,
   }
+}
+
+function sendInputFromUserMessage(
+  message: UIMessage,
+  enabledTools?: string[],
+): SendMessageInput {
+  const text = message.parts
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("")
+  const documents: SendMessageDocument[] = []
+
+  for (const part of message.parts) {
+    if (part.type !== "input_file" && part.type !== "input_image") continue
+
+    const url = part.type === "input_file" ? part.fileUrl : part.url
+    const metadata = part.metadata
+    const mediaFileId =
+      stringMetadataValue(metadata, "mediaFileId") ??
+      stringMetadataValue(metadata, "media_file_id")
+    const filename = metadata?.originalFileName ?? part.title
+
+    if (mediaFileId) {
+      documents.push({ mediaFileId, url: url || undefined, filename })
+    } else if (url) {
+      documents.push({ url, filename })
+    }
+  }
+
+  if (!text && documents.length === 0) {
+    throw new Error(
+      `Cannot resend message ${message.id}: the preceding user message has no resendable content.`,
+    )
+  }
+
+  return {
+    text,
+    ...(enabledTools ? { enabledTools } : {}),
+    ...(documents.length > 0 ? { documents } : {}),
+  }
+}
+
+function stringMetadataValue(
+  metadata: InputFileMetadata | undefined,
+  key: string,
+): string | undefined {
+  const value = metadata?.[key]
+  return typeof value === "string" && value.length > 0 ? value : undefined
 }

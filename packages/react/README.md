@@ -99,6 +99,7 @@ import {
   MessageParts,
   Thinking,
   Clipboard,
+  Reload,
   ThumbDown,
   ThumbUp,
   PromptForm,
@@ -116,6 +117,7 @@ Available optional components:
 - `MessageParts`
 - `Thinking`
 - `Clipboard`
+- `Reload`
 - `ThumbUp`
 - `ThumbDown`
 - `PromptForm`
@@ -124,6 +126,7 @@ Available optional components:
 For persisted threads, pass a stable `conversationId` when the active thread
 changes and use the returned `hydrate(messages)` and `clearError()` APIs.
 The returned `rateMessage({ messageId, rating })`,
+`resendMessage({ messageId, enabledTools? })`,
 `transcribeAudio(audio, signal?)`, and `uploadFile(file)` actions reuse the
 same session-aware transport and dynamic authentication headers as
 `sendMessage`.
@@ -181,7 +184,17 @@ Rating buttons delegate their click behavior to the host:
     rateMessage({ messageId: "message_123", rating: "NEGATIVE" })
   }
 />
+<Reload
+  label="Retry response"
+  onClick={() =>
+    resendMessage({ messageId: "message_123", enabledTools })
+  }
+/>
 ```
+
+`resendMessage` appends a new turn using the user text and attachments that
+precede the selected assistant response. It does not delete or replace the
+original response.
 
 `SpeechToTextToggle` owns recording and UI state while authenticated
 transcription remains a transport capability:

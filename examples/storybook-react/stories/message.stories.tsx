@@ -7,6 +7,7 @@ import {
   MessageFooter,
   MessageHeader,
   MessageParts,
+  Reload,
   ThumbDown,
   ThumbUp,
 } from "@plaisolutions/react/components"
@@ -86,6 +87,7 @@ function MessageWithActionsExample() {
             aria-pressed={rating === "NEGATIVE"}
             onClick={() => setRating("NEGATIVE")}
           />
+          <Reload onClick={() => undefined} />
         </MessageFooter>
       </MessageContent>
     </Message>
@@ -164,7 +166,8 @@ function createCourseResource(
             title: `OpenGraph: ${name}`,
             description: "Descripción localizada desde OpenGraph.",
             type: "LECCIÓN",
-            image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=80",
+            image:
+              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=80",
             url,
           },
         },
@@ -185,7 +188,8 @@ function createCourseResource(
               title: "Programa localizado con OpenGraph",
               description: "Descripción localizada de la carpeta.",
               type: "CURSO",
-              image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=80",
+              image:
+                "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=80",
               url: "https://example.com/course",
             },
           },
@@ -454,8 +458,7 @@ export const AssistantWithThinking: Story = {
 }
 
 export const AssistantWithEmailToolCall: Story = {
-  render: () =>
-    composedMessage({ message: assistantMessageWithEmailToolCall }),
+  render: () => composedMessage({ message: assistantMessageWithEmailToolCall }),
 }
 
 export const AssistantWithDatasourceResultsFirst: Story = {

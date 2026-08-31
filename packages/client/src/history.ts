@@ -47,7 +47,9 @@ export function normalizePlaiThreadMessages(messages: unknown[]): UIMessage[] {
 }
 
 function partsFromMessage(message: Record<string, unknown>): UIMessagePart[] {
-  const contentBlocks = arrayValue(message.content_blocks ?? message.contentBlocks)
+  const contentBlocks = arrayValue(
+    message.content_blocks ?? message.contentBlocks,
+  )
   const contentParts = arrayValue(message.content_parts ?? message.contentParts)
   const content = message.content
   const source = contentBlocks.length
@@ -73,7 +75,12 @@ function partFromValue(value: unknown, index: number): UIMessagePart[] {
   const type = value.type
 
   if (type === "text") {
-    return [{ type: "text", text: stringValue(value.text) ?? stringValue(value.content) ?? "" }]
+    return [
+      {
+        type: "text",
+        text: stringValue(value.text) ?? stringValue(value.content) ?? "",
+      },
+    ]
   }
 
   if (type === "guardrail") {
@@ -81,38 +88,51 @@ function partFromValue(value: unknown, index: number): UIMessagePart[] {
   }
 
   if (type === "thinking") {
-    return [{
-      type: "thinking",
-      thinking: stringValue(value.content)
-        ?? stringValue(value.thinking)
-        ?? stringValue(value.text)
-        ?? "",
-      state: "completed",
-    }]
+    return [
+      {
+        type: "thinking",
+        thinking:
+          stringValue(value.content) ??
+          stringValue(value.thinking) ??
+          stringValue(value.text) ??
+          "",
+        state: "completed",
+      },
+    ]
   }
 
   if (type === "input_image" || type === "image" || type === "image_url") {
     const url = stringValue(value.url) ?? stringValue(value.file_url)
     return url
-      ? [{
-          type: "input_image",
-          url,
-          title: stringValue(value.title),
-          metadata: inputMetadata(value.metadata),
-        }]
+      ? [
+          {
+            type: "input_image",
+            url,
+            title: stringValue(value.title),
+            metadata: inputMetadata(
+              value.metadata,
+              value.media_file_id ?? value.mediaFileId,
+            ),
+          },
+        ]
       : []
   }
 
   if (type === "input_file" || type === "pdf") {
     const fileUrl = stringValue(value.file_url) ?? stringValue(value.url)
     return fileUrl
-      ? [{
-          type: "input_file",
-          fileUrl,
-          title: stringValue(value.title),
-          mimeType: stringValue(value.mime_type),
-          metadata: inputMetadata(value.metadata),
-        }]
+      ? [
+          {
+            type: "input_file",
+            fileUrl,
+            title: stringValue(value.title),
+            mimeType: stringValue(value.mime_type),
+            metadata: inputMetadata(
+              value.metadata,
+              value.media_file_id ?? value.mediaFileId,
+            ),
+          },
+        ]
       : []
   }
 
@@ -122,29 +142,38 @@ function partFromValue(value: unknown, index: number): UIMessagePart[] {
       : isRecord(value.toolInfo)
         ? value.toolInfo
         : value
-    const id = stringValue(info.id) ?? stringValue(value.id) ?? `history_tool_${index}`
-    return [{
-      type: "tool-call",
-      id,
-      name: stringValue(info.name) ?? stringValue(value.name) ?? "tool",
-      toolType: toolType(info.tool_type ?? value.tool_type),
-      input: info.input ?? value.input ?? {},
-      inputSchema: info.input_schema ?? value.input_schema,
-      state: info.is_error === true || info.status === "error" || info.status === "failed"
-        ? "error"
-        : info.status === "executing" || info.status === "pending"
-          ? "pending"
-          : "completed",
-      result: info.result,
-      errorDetails: toolErrorDetails(info.error_details),
-      metadata: recordValue(info.metadata),
-    } as UIToolCallPart]
+    const id =
+      stringValue(info.id) ?? stringValue(value.id) ?? `history_tool_${index}`
+    return [
+      {
+        type: "tool-call",
+        id,
+        name: stringValue(info.name) ?? stringValue(value.name) ?? "tool",
+        toolType: toolType(info.tool_type ?? value.tool_type),
+        input: info.input ?? value.input ?? {},
+        inputSchema: info.input_schema ?? value.input_schema,
+        state:
+          info.is_error === true ||
+          info.status === "error" ||
+          info.status === "failed"
+            ? "error"
+            : info.status === "executing" || info.status === "pending"
+              ? "pending"
+              : "completed",
+        result: info.result,
+        errorDetails: toolErrorDetails(info.error_details),
+        metadata: recordValue(info.metadata),
+      } as UIToolCallPart,
+    ]
   }
 
   return []
 }
 
-function toolPartFromLegacyMessage(message: Record<string, unknown>, index: number): UIToolCallPart | null {
+function toolPartFromLegacyMessage(
+  message: Record<string, unknown>,
+  index: number,
+): UIToolCallPart | null {
   const result = recordValue(message.tool_result)
   if (!result) return null
   return {
@@ -161,7 +190,8 @@ function toolPartFromLegacyMessage(message: Record<string, unknown>, index: numb
 }
 
 function metadataFromMessage(message: Record<string, unknown>) {
-  const createdAt = stringValue(message.created_at) ?? stringValue(message.createdAt)
+  const createdAt =
+    stringValue(message.created_at) ?? stringValue(message.createdAt)
   return {
     model: stringValue(message.model),
     persistedMessageId: stringValue(message.id),
@@ -170,20 +200,35 @@ function metadataFromMessage(message: Record<string, unknown>) {
   }
 }
 
-function inputMetadata(value: unknown): InputFileMetadata | undefined {
+function inputMetadata(
+  value: unknown,
+  partMediaFileId?: unknown,
+): InputFileMetadata | undefined {
   const metadata = recordValue(value)
-  if (!metadata) return undefined
+  const mediaFileId =
+    stringValue(partMediaFileId) ??
+    stringValue(metadata?.media_file_id) ??
+    stringValue(metadata?.mediaFileId)
+  if (!metadata && !mediaFileId) return undefined
   return {
-    originalFileName: stringValue(metadata.original_file_name) ?? stringValue(metadata.originalFileName),
-    sourceUrl: stringValue(metadata.source_url) ?? stringValue(metadata.sourceUrl),
-    wasConverted: booleanValue(metadata.was_converted) ?? booleanValue(metadata.wasConverted),
-    convertedFromExtension: stringValue(metadata.converted_from_extension) ?? stringValue(metadata.convertedFromExtension),
     ...metadata,
+    originalFileName:
+      stringValue(metadata?.original_file_name) ??
+      stringValue(metadata?.originalFileName),
+    sourceUrl:
+      stringValue(metadata?.source_url) ?? stringValue(metadata?.sourceUrl),
+    wasConverted:
+      booleanValue(metadata?.was_converted) ??
+      booleanValue(metadata?.wasConverted),
+    convertedFromExtension:
+      stringValue(metadata?.converted_from_extension) ??
+      stringValue(metadata?.convertedFromExtension),
+    mediaFileId,
   }
 }
 
 function toolType(value: unknown): UIToolType | "unknown" {
-  return typeof value === "string" ? value as UIToolType : "unknown"
+  return typeof value === "string" ? (value as UIToolType) : "unknown"
 }
 
 function toolErrorDetails(value: unknown) {
