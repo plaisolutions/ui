@@ -171,6 +171,17 @@ function getDisplayExtension(label?: string) {
   return ext
 }
 
+function getMessageTextClassName(role: UIMessage["role"]) {
+  return joinClasses(
+    "whitespace-pre-wrap text-sm leading-6",
+    role === "user" ? "font-medium" : "font-normal",
+  )
+}
+
+function getMessageTextAlignmentClassName(role: UIMessage["role"]) {
+  return role === "user" ? "text-right" : "text-left"
+}
+
 function renderPart(
   part: UIMessagePart,
   index: number,
@@ -183,6 +194,7 @@ function renderPart(
   renderThinking?: MessagePartsProps["renderThinking"],
   thinkingLabel?: string,
   completedThinkingLabel?: string,
+  textClassName?: string,
 ) {
   if (part.type === "text") {
     if (renderText) {
@@ -195,7 +207,7 @@ function renderPart(
     return (
       <p
         key={`text-${index}`}
-        className="whitespace-pre-wrap text-sm leading-6"
+        className={textClassName}
       >
         {part.text}
       </p>
@@ -366,6 +378,8 @@ export function MessageParts({
   const previewText = canCollapse
     ? `${textContent.slice(0, collapseThreshold).trimEnd()}...`
     : textContent
+  const textClassName = getMessageTextClassName(message.role)
+  const textAlignmentClassName = getMessageTextAlignmentClassName(message.role)
   const orderedParts = useMemo(
     () => orderMessageParts(message.parts, datasourceToolResultsPosition),
     [message.parts, datasourceToolResultsPosition],
@@ -373,12 +387,12 @@ export function MessageParts({
 
   return (
     <div
-      className={joinClasses("space-y-2", className)}
+      className={joinClasses("space-y-2", textAlignmentClassName, className)}
       data-message-role={message.role}
       {...props}
     >
       {canCollapse && !isExpanded ? (
-        <p className="whitespace-pre-wrap text-sm leading-6">{previewText}</p>
+        <p className={textClassName}>{previewText}</p>
       ) : (
         orderedParts.map(({ part, index }) =>
           renderPart(
@@ -393,13 +407,14 @@ export function MessageParts({
             renderThinking,
             thinkingLabel,
             completedThinkingLabel,
+            textClassName,
           ),
         )
       )}
       {canCollapse ? (
         <button
           type="button"
-          className="text-left text-xs font-medium text-slate-600 hover:text-slate-900"
+          className="text-xs font-medium text-slate-600 hover:text-slate-900"
           onClick={() => setIsExpanded((previous) => !previous)}
         >
           {isExpanded ? readLessLabel : readMoreLabel}

@@ -175,6 +175,8 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
                   datasourceToolResultsPosition="before-content"
                   thinkingLabel="Pensando…"
                   completedThinkingLabel="Resumen del razonamiento"
+                  readMoreLabel="Leer más"
+                  readLessLabel="Leer menos"
                 />
               </MessageContent>
             </Message>

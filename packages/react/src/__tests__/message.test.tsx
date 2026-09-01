@@ -114,16 +114,42 @@ describe("Message composition", () => {
   })
 
   it("collapses long user prompts by default", () => {
+    const text = "x".repeat(800)
     render(
       <MessageParts
+        readLessLabel="Leer menos"
+        readMoreLabel="Leer más"
         message={{
           id: "msg_3",
           role: "user",
-          parts: [{ type: "text", text: "x".repeat(800) }],
+          parts: [{ type: "text", text }],
         }}
       />,
     )
-    expect(screen.getByText("Read more")).toBeTruthy()
+
+    const messageParts = screen.getByText(`${"x".repeat(600)}...`)
+    expect(messageParts.className).toContain("font-medium")
+    expect(messageParts.parentElement?.className).toContain("text-right")
+
+    fireEvent.click(screen.getByRole("button", { name: "Leer más" }))
+    expect(screen.getByText(text).className).toContain("font-medium")
+    expect(screen.getByRole("button", { name: "Leer menos" })).toBeTruthy()
+  })
+
+  it("uses stable left-aligned normal text for assistant messages", () => {
+    render(
+      <MessageParts
+        message={{
+          id: "msg_assistant_text",
+          role: "assistant",
+          parts: [{ type: "text", text: "Hello from the assistant" }],
+        }}
+      />,
+    )
+
+    const messageText = screen.getByText("Hello from the assistant")
+    expect(messageText.className).toContain("font-normal")
+    expect(messageText.parentElement?.className).toContain("text-left")
   })
 
   it("can render datasource tool results before agent content", () => {

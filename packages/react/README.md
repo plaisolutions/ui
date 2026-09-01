@@ -148,6 +148,12 @@ or provider replay metadata. Use its labels, or the corresponding
 `thinkingLabel` and `completedThinkingLabel` props on `MessageParts`, to
 localize the UI.
 
+Long, text-only user messages can be collapsed. Use `readMoreLabel` and
+`readLessLabel` on `MessageParts` to localize that control. The default message
+text is right-aligned and medium weight for users, and left-aligned and normal
+weight for assistant or system messages; this does not change when a message is
+expanded.
+
 ```tsx
 <Thinking
   part={{
@@ -164,7 +170,11 @@ localize the UI.
   <MessageAvatar src={avatarUrl} fallback="John Doe" />
   <MessageContent>
     <MessageHeader>John Doe</MessageHeader>
-    <MessageParts message={message} />
+    <MessageParts
+      message={message}
+      readMoreLabel="Leer más"
+      readLessLabel="Leer menos"
+    />
     <MessageFooter>Delivered</MessageFooter>
   </MessageContent>
 </Message>
