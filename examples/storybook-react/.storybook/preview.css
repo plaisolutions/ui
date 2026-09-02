@@ -1,0 +1,2 @@
+/* Storybook acts as the consuming application, so provide its global reset here. */
+@import "tailwindcss/preflight.css";
