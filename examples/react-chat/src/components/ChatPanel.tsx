@@ -1,32 +1,46 @@
-import { PlaiThreadTransport } from "@plaisolutions/client"
 import {
+  PlaiThreadTransport,
+  normalizePlaiThreadMessages,
+} from "@plaisolutions/client"
+import {
+  Clipboard,
   Message,
+  MessageAvatar,
   MessageContent,
+  MessageFooter,
   MessageParts,
   PromptForm,
-  PromptFormAttachButton,
+  Reload,
   SpeechToTextToggle,
+  ThumbDown,
+  ThumbUp,
   useChat,
 } from "@plaisolutions/react"
 import type {
   InvalidPromptFormFile,
+  MessageRating,
   PromptFormSubmitInput,
 } from "@plaisolutions/react"
-import { useMemo, useState } from "react"
-import type { ChatSession } from "../api"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { type ChatSession, getThread } from "../api"
 import type { DemoConfig } from "../storage"
+import { ChatMarkdown } from "./ChatMarkdown"
 
 type ChatPanelProps = {
   session: ChatSession
   config: DemoConfig
-  onNewThread: () => Promise<void>
+  onDisconnect: () => void
 }
 
-export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
+export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
   const [input, setInput] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const [actionError, setActionError] = useState<string | null>(null)
-  const [isCreatingThread, setIsCreatingThread] = useState(false)
+  const [isHydratingThread, setIsHydratingThread] = useState(true)
+  const [messageRatings, setMessageRatings] = useState<
+    Record<string, MessageRating>
+  >({})
+  const messagesRef = useRef<HTMLDivElement>(null)
 
   const transport = useMemo(
     () =>
@@ -45,9 +59,12 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
     error,
     uploadState,
     sendMessage,
+    resendMessage,
+    rateMessage,
     transcribeAudio,
     uploadFile,
     stop,
+    hydrate,
   } = useChat({ transport })
 
   const isBusy =
@@ -57,6 +74,37 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
     uploadState.status === "processing"
   const chatError =
     actionError ?? (error ? `${error.type}: ${error.message}` : null)
+
+  useEffect(() => {
+    if (messages.length === 0) return
+    const viewport = messagesRef.current
+    if (!viewport) return
+    viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" })
+  }, [messages])
+
+  useEffect(() => {
+    let isCurrent = true
+
+    void getThread({
+      api: config.api,
+      chatSessionId: session.id,
+      threadId: session.thread_id,
+      chatToken: session.chat_token,
+    })
+      .then((thread) => {
+        if (isCurrent) hydrate(normalizePlaiThreadMessages(thread.messages))
+      })
+      .catch(() => {
+        // A new session starts with an empty thread; failure here is non-fatal.
+      })
+      .finally(() => {
+        if (isCurrent) setIsHydratingThread(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [config.api, hydrate, session])
 
   async function handleSubmit({ text, files }: PromptFormSubmitInput) {
     setActionError(null)
@@ -89,10 +137,6 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
     setActionError(error.message)
   }
 
-  function handleFilesSelected(nextFiles: File[]) {
-    setFiles((current) => [...current, ...nextFiles])
-  }
-
   function handleInvalidFiles(invalidFiles: InvalidPromptFormFile[]) {
     setActionError(
       invalidFiles
@@ -101,126 +145,181 @@ export function ChatPanel({ session, config, onNewThread }: ChatPanelProps) {
     )
   }
 
-  async function handleNewThread() {
+  async function handleResendMessage(messageId: string) {
+    if (isBusy) return
     setActionError(null)
-    setIsCreatingThread(true)
-
     try {
-      await onNewThread()
+      await resendMessage({ messageId })
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : "Failed to create thread.",
+        err instanceof Error ? err.message : "Failed to retry the response.",
       )
-    } finally {
-      setIsCreatingThread(false)
+    }
+  }
+
+  async function handleRateMessage(messageId: string, rating: MessageRating) {
+    setActionError(null)
+    try {
+      await rateMessage({ messageId, rating })
+      setMessageRatings((current) => ({ ...current, [messageId]: rating }))
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to rate the response.",
+      )
     }
   }
 
   return (
-    <section className="panel chat-panel">
-      <div className="chat-header">
-        <div>
-          <h2>2. Chat</h2>
-          <dl className="session-dl">
-            <div>
-              <dt>Session ID</dt>
-              <dd>
-                <code>{session.id}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>Thread ID</dt>
-              <dd>
-                <code>{session.thread_id}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>Agent ID</dt>
-              <dd>
-                <code>{session.agent_id}</code>
-              </dd>
-            </div>
-          </dl>
-        </div>
-        <div className="chat-header-actions">
-          <span className="status-pill" data-status={status}>
-            {status}
-          </span>
-          <button
-            type="button"
-            className="secondary"
-            onClick={handleNewThread}
-            disabled={isCreatingThread || isBusy}
-          >
-            {isCreatingThread ? "Creating…" : "New thread"}
-          </button>
+    <main className="chat-shell">
+      <div ref={messagesRef} className="messages-viewport" aria-live="polite">
+        <div className="messages-content">
+          <div className="messages-list">
+            {isHydratingThread && messages.length === 0 ? (
+              <div className="messages-skeleton" aria-label="Loading messages">
+                <span className="skeleton-line skeleton-line--user" />
+                <span className="skeleton-line skeleton-line--assistant" />
+                <span className="skeleton-line skeleton-line--assistant-short" />
+              </div>
+            ) : null}
+            {messages.map((message) => {
+              const persistedMessageId =
+                message.metadata?.persistedMessageId ?? message.id
+              const text = message.parts
+                .filter((part) => part.type === "text")
+                .map((part) => (part.type === "text" ? part.text : ""))
+                .join("\n")
+
+              return (
+                <Message
+                  key={message.id}
+                  align={message.role === "user" ? "end" : "start"}
+                  className={`message message--${message.role}`}
+                >
+                  {message.role === "assistant" && session.agent?.avatar ? (
+                    <MessageAvatar
+                      className="message-avatar"
+                      src={session.agent.avatar}
+                      fallback={session.agent.name || "AI"}
+                    />
+                  ) : null}
+                  <MessageContent
+                    className={`message-content message-content--${message.role}`}
+                  >
+                    <MessageParts
+                      message={message}
+                      className="message-parts"
+                      locale="en"
+                      isStreaming={isBusy && message === messages.at(-1)}
+                      thinkingLabel="Thinking…"
+                      completedThinkingLabel="Reasoning summary"
+                      readMoreLabel="Read more"
+                      readLessLabel="Read less"
+                      renderText={(part) => <ChatMarkdown text={part.text} />}
+                    />
+                    {message.role === "assistant" && text ? (
+                      <MessageFooter className="message-actions">
+                        <Clipboard
+                          className="message-action"
+                          text={text}
+                          copyLabel="Copy"
+                          copiedLabel="Copied"
+                        />
+                        <ThumbUp
+                          className="message-action"
+                          label="Rate positively"
+                          aria-pressed={
+                            messageRatings[persistedMessageId] === "POSITIVE"
+                          }
+                          onClick={() =>
+                            void handleRateMessage(
+                              persistedMessageId,
+                              "POSITIVE",
+                            )
+                          }
+                        />
+                        <ThumbDown
+                          className="message-action"
+                          label="Rate negatively"
+                          aria-pressed={
+                            messageRatings[persistedMessageId] === "NEGATIVE"
+                          }
+                          onClick={() =>
+                            void handleRateMessage(
+                              persistedMessageId,
+                              "NEGATIVE",
+                            )
+                          }
+                        />
+                        {!(
+                          status === "streaming" && message === messages.at(-1)
+                        ) ? (
+                          <Reload
+                            className="message-action"
+                            label="Retry"
+                            disabled={isBusy}
+                            onClick={() => void handleResendMessage(message.id)}
+                          />
+                        ) : null}
+                      </MessageFooter>
+                    ) : null}
+                  </MessageContent>
+                </Message>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {chatError && <p className="error">{chatError}</p>}
-
-      <div className="messages" aria-live="polite">
-        {messages.length === 0 ? (
-          <p className="messages-empty">No messages yet. Send the first one.</p>
-        ) : (
-          messages.map((message) => (
-            <Message
-              key={message.id}
-              align={message.role === "user" ? "end" : "start"}
-              className={`message message--${message.role}`}
-            >
-              <MessageContent>
-                <MessageParts
-                  message={message}
-                  datasourceToolResultsPosition="before-content"
-                  thinkingLabel="Pensando…"
-                  completedThinkingLabel="Resumen del razonamiento"
-                  readMoreLabel="Leer más"
-                  readLessLabel="Leer menos"
-                />
-              </MessageContent>
-            </Message>
-          ))
-        )}
+      <div className="composer-dock">
+        <div className="composer-container">
+          {chatError ? (
+            <p className="chat-error" role="alert">
+              {chatError}
+            </p>
+          ) : null}
+          <PromptForm
+            value={input}
+            onValueChange={setInput}
+            files={files}
+            onFilesChange={setFiles}
+            onSubmit={handleSubmit}
+            clearOnSubmit={false}
+            status={status}
+            uploadState={uploadState}
+            onStop={stop}
+            disabled={isHydratingThread}
+            enableAttachments
+            onInvalidFiles={handleInvalidFiles}
+            placeholder="Send a message..."
+            className="composer"
+            attachLabel="Attach file"
+            sendLabel="Send message"
+            stopLabel="Stop generation"
+            rightSlot={
+              <SpeechToTextToggle
+                transcribe={transcribeAudio}
+                onTranscriptionComplete={handleTranscriptionComplete}
+                onTranscriptionError={handleTranscriptionError}
+                disabled={isBusy}
+                label="Voice input"
+                listeningLabel="Stop recording"
+                loadingLabel="Transcribing..."
+              />
+            }
+          />
+          <div className="disclaimer">
+            <span>
+              You are interacting with an Artificial Intelligence, so the
+              answers may not be 100% accurate. We recommend reviewing the
+              information provided.
+            </span>
+            <span aria-hidden="true"> · </span>
+            <button type="button" onClick={onDisconnect}>
+              Change connection
+            </button>
+          </div>
+        </div>
       </div>
-
-      <PromptForm
-        value={input}
-        onValueChange={setInput}
-        files={files}
-        onFilesChange={setFiles}
-        onSubmit={handleSubmit}
-        clearOnSubmit={false}
-        status={status}
-        uploadState={uploadState}
-        onStop={stop}
-        enableAttachments={false}
-        placeholder="Envía un mensaje..."
-        rightSlot={
-          <>
-            <PromptFormAttachButton
-              onFilesSelected={handleFilesSelected}
-              onInvalidFiles={handleInvalidFiles}
-              disabled={isBusy}
-              label="Adjuntar archivo"
-            />
-            <SpeechToTextToggle
-              transcribe={transcribeAudio}
-              onTranscriptionComplete={handleTranscriptionComplete}
-              onTranscriptionError={handleTranscriptionError}
-              disabled={isBusy}
-              label="Entrada de voz"
-              listeningLabel="Detener grabación"
-              loadingLabel="Transcribiendo..."
-            />
-          </>
-        }
-      />
-
-      <details className="raw-state">
-        <summary>Raw state (debug)</summary>
-        <pre>{JSON.stringify({ messages, status, error }, null, 2)}</pre>
-      </details>
-    </section>
+    </main>
   )
 }

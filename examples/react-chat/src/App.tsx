@@ -1,5 +1,9 @@
 import { useState } from "react"
-import { type ChatSession, createChatSession, createThread } from "./api"
+import {
+  type ChatSession,
+  createChatSession,
+  getChatSessionDetails,
+} from "./api"
 import { ChatPanel } from "./components/ChatPanel"
 import { SetupPanel } from "./components/SetupPanel"
 import {
@@ -21,23 +25,19 @@ export function App() {
     saveConfig(nextConfig)
     setConfig(nextConfig)
 
-    const nextSession = await createChatSession(nextConfig)
+    let nextSession = await createChatSession(nextConfig)
+    try {
+      const details = await getChatSessionDetails({
+        api: nextConfig.api,
+        chatSessionId: nextSession.id,
+        chatToken: nextSession.chat_token,
+      })
+      nextSession = { ...nextSession, agent: details.agent }
+    } catch {
+      // Agent metadata is presentational; the chat can still run without it.
+    }
     saveSession(nextSession)
     setSession(nextSession)
-  }
-
-  async function handleNewThread() {
-    if (!session || !config) return
-
-    const thread = await createThread({
-      api: config.api,
-      chatSessionId: session.id,
-      chatToken: session.chat_token,
-    })
-
-    const updatedSession = { ...session, thread_id: thread.id }
-    saveSession(updatedSession)
-    setSession(updatedSession)
   }
 
   function handleClearSession() {
@@ -45,30 +45,24 @@ export function App() {
     setSession(null)
   }
 
-  return (
-    <div id="app">
-      <header className="header">
-        <h1>@plaisolutions/react demo</h1>
-        <p className="subtitle">
-          Create a chat session, save it to localStorage, and interact with{" "}
-          <code>useChat</code>.
-        </p>
-      </header>
+  if (session && config) {
+    return (
+      <ChatPanel
+        key={`${session.id}-${session.thread_id}`}
+        session={session}
+        config={config}
+        onDisconnect={handleClearSession}
+      />
+    )
+  }
 
+  return (
+    <main className="setup-page">
       <SetupPanel
         initialConfig={config}
         onCreateSession={handleCreateSession}
         onClearSession={handleClearSession}
       />
-
-      {session && config && (
-        <ChatPanel
-          key={`${session.id}-${session.thread_id}`}
-          session={session}
-          config={config}
-          onNewThread={handleNewThread}
-        />
-      )}
-    </div>
+    </main>
   )
 }

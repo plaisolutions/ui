@@ -2,6 +2,11 @@
 
 Interactive demo for `[@plaisolutions/react](../../packages/react)`. Creates a chat session via the Plai API, persists it in `localStorage`, and drives chat state with `useChat` (source of truth) plus optional UI primitives.
 
+The chat screen mirrors the focused central chat pane used in the Plai
+dashboard while remaining a plain Vite + React application. It includes the
+dashboard message layout, Markdown rendering, response actions, file uploads,
+voice input, current-thread hydration, composer gradient, and disclaimer.
+
 ## Run
 
 From the monorepo root:

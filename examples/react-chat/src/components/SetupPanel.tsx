@@ -60,8 +60,13 @@ export function SetupPanel({
   }
 
   return (
-    <section className="panel setup-panel">
-      <h2>1. Setup</h2>
+    <section className="setup-panel">
+      <p className="setup-eyebrow">@plaisolutions/react</p>
+      <h1>Connect your agent</h1>
+      <p className="setup-description">
+        Create a chat session to open the same focused chat experience used in
+        the Plai dashboard.
+      </p>
       <form className="setup-form" onSubmit={handleSubmit}>
         <label>
           API URL
