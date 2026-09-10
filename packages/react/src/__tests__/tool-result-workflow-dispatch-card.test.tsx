@@ -53,7 +53,7 @@ describe("ToolResultWorkflowDispatchCard", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Workflow: dispatch_monthly_report",
+        name: "Failed to use tool dispatch_monthly_report",
       }),
     )
 

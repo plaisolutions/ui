@@ -17,6 +17,10 @@ describe("ResourceCard", () => {
     })
     expect(link.getAttribute("href")).toBe("https://example.com/storyline")
     expect(link.getAttribute("target")).toBe("_blank")
+    expect(link.className).toContain("min-h-[183px]")
+    expect(link.className).toContain("w-[186px]")
+    expect(link.className).toContain("max-w-full")
+    expect(link.className).not.toMatch(/(?:^|\s)w-full(?:\s|$)/)
     expect(view.container.querySelector("svg")).toBeTruthy()
     expect(view.container.querySelector("img")).toBeNull()
   })
@@ -28,6 +32,7 @@ describe("ResourceCard", () => {
         title="SCORM"
         description="Componentes básicos"
         url={null}
+        variant="list"
       />,
     )
 
@@ -35,10 +40,10 @@ describe("ResourceCard", () => {
     const viewQueries = within(view.container)
     expect(image?.getAttribute("src")).toBe("https://example.com/scorm.svg")
     expect(viewQueries.queryByRole("link")).toBeNull()
-    expect(
-      viewQueries.getByRole("article", {
-        name: "SCORM: Componentes básicos",
-      }),
-    ).toBeTruthy()
+    const article = viewQueries.getByRole("article", {
+      name: "SCORM: Componentes básicos",
+    })
+    expect(article.className).toContain("w-full")
+    expect(article.className).not.toContain("min-h-[183px]")
   })
 })

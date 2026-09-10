@@ -25,7 +25,9 @@ function isWebSearchResult(value: unknown): value is WebSearchResult {
   }
 
   const candidate = value as Record<string, unknown>
-  return typeof candidate.title === "string" && typeof candidate.url === "string"
+  return (
+    typeof candidate.title === "string" && typeof candidate.url === "string"
+  )
 }
 
 function toStringOrNull(value: unknown): string | null {
@@ -78,7 +80,8 @@ function WebSearchResultItem({ result }: { result: WebSearchResult }) {
   const hostname = getHostname(result.url)
   const source = toStringOrNull(result.source)
   const snippet = toStringOrNull(result.snippet)
-  const date = toStringOrNull(result.date) ?? toStringOrNull(result.last_updated)
+  const date =
+    toStringOrNull(result.date) ?? toStringOrNull(result.last_updated)
   const imageUrl = toStringOrNull(result.image_url)
   const faviconUrl = getFaviconUrl(result.url)
 
@@ -153,7 +156,7 @@ export function ToolResultWebSearchCard({
       <SheetTrigger
         aria-label={`Web: Internet search results, ${searchResults.length} ${sourceLabel}`}
         className={joinClasses(
-          "min-h-[183px] w-[186px] rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "plai-tool-result-web-search-card min-h-[183px] w-[186px] rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
           className,
         )}
       >
@@ -194,7 +197,8 @@ export function ToolResultWebSearchCard({
 
           {errorDetails ? (
             <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              <span className="font-semibold">Error details:</span> {errorDetails}
+              <span className="font-semibold">Error details:</span>{" "}
+              {errorDetails}
             </p>
           ) : null}
         </section>

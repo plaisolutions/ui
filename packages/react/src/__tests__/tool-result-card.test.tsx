@@ -1,8 +1,61 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
+import { afterEach, describe, expect, it } from "vitest"
 import { ToolResultCard } from "../components"
 
 describe("ToolResultCard", () => {
+  afterEach(cleanup)
+
+  it("renders a localized animated label instead of technical pending details", () => {
+    const view = render(
+      <ToolResultCard
+        locale="es-ES"
+        part={{
+          type: "tool-call",
+          id: "tool_pending_datasource",
+          name: "actua_learn_content",
+          toolType: "datasource",
+          input: { question: "accesibilidad" },
+          state: "pending",
+        }}
+      />,
+    )
+
+    const status = screen.getByRole("status")
+    expect(status.textContent).toBe(
+      "Buscando en la fuente de datos actua_learn_content…",
+    )
+    expect(status.querySelector(".plai-tool-use-shimmer")).toBeTruthy()
+    expect(view.container.querySelector("pre")).toBeNull()
+    expect(screen.queryByText("pending")).toBeNull()
+    expect(screen.queryByText("Input")).toBeNull()
+  })
+
+  it("uses the generic translated action for an unknown pending tool", () => {
+    render(
+      <ToolResultCard
+        locale="en"
+        part={{
+          type: "tool-call",
+          id: "tool_pending_unknown",
+          name: "lookup_subscription",
+          toolType: "unknown",
+          input: { account_id: "acc_123" },
+          state: "pending",
+        }}
+      />,
+    )
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "Running lookup_subscription…",
+    )
+  })
+
   it("renders tool result with input and output", () => {
     render(
       <ToolResultCard
@@ -38,7 +91,12 @@ describe("ToolResultCard", () => {
       />,
     )
 
-    expect(screen.getByText("error")).toBeTruthy()
+    const toggle = screen.getByRole("button", {
+      name: "Failed to use tool http_request",
+    })
+    expect(toggle.getAttribute("aria-expanded")).toBe("false")
+    expect(screen.queryByText(/Request timeout/)).toBeNull()
+    fireEvent.click(toggle)
     expect(screen.getByText(/Request timeout/)).toBeTruthy()
   })
 
@@ -64,7 +122,14 @@ describe("ToolResultCard", () => {
     )
 
     const card = within(view.container)
-    expect(card.getByText("error")).toBeTruthy()
+    fireEvent.click(
+      card.getByRole("button", {
+        name: "Failed to use tool actua_learn_content",
+      }),
+    )
+    expect(
+      card.getByText(/I encountered an issue while searching/),
+    ).toBeTruthy()
     expect(card.getByText(/column "app_id"/)).toBeTruthy()
   })
 

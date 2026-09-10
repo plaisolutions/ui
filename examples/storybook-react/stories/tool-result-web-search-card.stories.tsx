@@ -72,3 +72,19 @@ export const Firecrawl: Story = {
     },
   },
 }
+
+export const MultipleResults: Story = {
+  args: Perplexity.args,
+  render: () => {
+    const firstPart = Perplexity.args?.part
+    const secondPart = Firecrawl.args?.part
+    if (!firstPart || !secondPart) return <></>
+
+    return (
+      <>
+        <ToolResultWebSearchCard part={firstPart} />
+        <ToolResultWebSearchCard part={secondPart} />
+      </>
+    )
+  },
+}

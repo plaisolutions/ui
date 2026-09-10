@@ -39,6 +39,41 @@
   }
 }
 
+@keyframes plai-tool-use-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.plai-tool-use-shimmer {
+  display: inline-block;
+  color: #737373;
+  background-image: linear-gradient(
+    90deg,
+    rgb(115 115 115 / 55%) 0%,
+    rgb(64 64 64) 50%,
+    rgb(115 115 115 / 55%) 100%
+  );
+  background-position: 200% 0;
+  background-size: 200% 100%;
+  background-clip: text;
+  animation: plai-tool-use-shimmer 2.5s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.plai-tool-result-web-search-card + .plai-tool-result-web-search-card {
+  margin-inline-start: 0.75rem;
+}
+
+/* Consecutive start-aligned messages belong to the same assistant turn. Keep
+ * the avatar column aligned, but only show the avatar on the first message. */
+.plai-message[data-align="start"]
+  + .plai-message[data-align="start"]
+  > .plai-message-avatar {
+  visibility: hidden;
+}
+
 .plai-sheet-overlay::backdrop {
   background: transparent;
 }
@@ -119,5 +154,11 @@
   .plai-sheet-overlay,
   .plai-sheet-content {
     animation-duration: 1ms;
+  }
+
+  .plai-tool-use-shimmer {
+    background: none;
+    animation: none;
+    -webkit-text-fill-color: currentcolor;
   }
 }

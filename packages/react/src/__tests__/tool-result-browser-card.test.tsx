@@ -54,7 +54,7 @@ describe("ToolResultBrowserCard", () => {
     )
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Expand browser result" }),
+      screen.getByRole("button", { name: "Failed to use tool Browser" }),
     )
 
     expect(screen.getByText(/Website blocked the scraper/)).toBeTruthy()

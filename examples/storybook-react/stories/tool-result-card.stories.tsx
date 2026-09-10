@@ -39,6 +39,20 @@ export const UnknownPending: Story = {
   },
 }
 
+export const DatasourcePendingSpanish: Story = {
+  args: {
+    locale: "es-ES",
+    part: {
+      type: "tool-call",
+      id: "tool_datasource_pending",
+      name: "actua_learn_content",
+      toolType: "datasource",
+      input: { question: "accesibilidad" },
+      state: "pending",
+    },
+  },
+}
+
 export const UnknownError: Story = {
   args: {
     part: {

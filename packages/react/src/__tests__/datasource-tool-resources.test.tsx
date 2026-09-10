@@ -1,7 +1,7 @@
 import type { FolderReadModel, ResourceReadModel } from "@plaisolutions/client"
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
-import { ToolResultCard } from "../components"
+import { DatasourceToolResources, ToolResultCard } from "../components"
 
 const folder: FolderReadModel = {
   id: "folder-course",
@@ -63,6 +63,30 @@ function createResource(
 }
 
 describe("DatasourceToolResources", () => {
+  it.each([1, 3])(
+    "keeps each of %i ungrouped resource cards at the standard card width",
+    (resourceCount) => {
+      const resources = Array.from({ length: resourceCount }, (_, index) =>
+        createResource({
+          id: `resource-${index + 1}`,
+          name: `Resource ${index + 1}`,
+          folder: null,
+          url: `https://example.com/resource-${index + 1}.pdf`,
+        }),
+      )
+
+      const view = render(<DatasourceToolResources resources={resources} />)
+
+      const cards = within(view.container).getAllByRole("link")
+      expect(cards).toHaveLength(resourceCount)
+      for (const card of cards) {
+        expect(card.className).toContain("w-[186px]")
+        expect(card.className).toContain("max-w-full")
+        expect(card.className).not.toMatch(/(?:^|\s)w-full(?:\s|$)/)
+      }
+    },
+  )
+
   it("groups folder resources in a card and lists them in a sheet", () => {
     const firstResource = createResource({
       id: "resource-1",
@@ -119,10 +143,14 @@ describe("DatasourceToolResources", () => {
     const trigger = screen.getByRole("button", {
       name: "CURSO: Programa localizado",
     })
+    expect(trigger.className).toContain("w-[186px]")
+    expect(trigger.className).toContain("max-w-full")
     expect(screen.getByText("2 Recursos")).toBeTruthy()
-    expect(
-      screen.getByRole("link", { name: "PDF Guía independiente" }),
-    ).toBeTruthy()
+    const ungroupedCard = screen.getByRole("link", {
+      name: "PDF Guía independiente",
+    })
+    expect(ungroupedCard.className).toContain("w-[186px]")
+    expect(ungroupedCard.className).toContain("max-w-full")
     expect(screen.queryByRole("dialog")).toBeNull()
 
     fireEvent.click(trigger)
@@ -138,6 +166,11 @@ describe("DatasourceToolResources", () => {
         name: "LECCIÓN Conceptos localizados Descripción localizada del recurso.",
       }),
     ).toBeTruthy()
+    expect(
+      sheetQueries.getByRole("link", {
+        name: "LECCIÓN Conceptos localizados Descripción localizada del recurso.",
+      }).className,
+    ).toContain("w-full")
     expect(
       sheetQueries.getByRole("link", { name: "View" }).getAttribute("href"),
     ).toBe("https://example.com/folder-es")

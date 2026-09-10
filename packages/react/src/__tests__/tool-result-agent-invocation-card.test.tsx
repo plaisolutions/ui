@@ -61,7 +61,9 @@ describe("ToolResultAgentInvocationCard", () => {
     )
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Agent: support agent" }),
+      screen.getByRole("button", {
+        name: "Failed to use tool invoke_support_agent",
+      }),
     )
 
     expect(screen.getByText(/Agent is unavailable/)).toBeTruthy()

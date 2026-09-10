@@ -32,9 +32,13 @@ describe("ToolResultExternalDatasourceCard", () => {
 
     const sheet = screen.getByRole("dialog", { name: "External datasource" })
     expect(
-      within(sheet).getByText("SELECT name, country FROM users WHERE active = true;"),
+      within(sheet).getByText(
+        "SELECT name, country FROM users WHERE active = true;",
+      ),
     ).toBeTruthy()
-    expect(within(sheet).getByRole("columnheader", { name: "name" })).toBeTruthy()
+    expect(
+      within(sheet).getByRole("columnheader", { name: "name" }),
+    ).toBeTruthy()
     expect(within(sheet).getByText("Ada")).toBeTruthy()
     expect(within(sheet).getByText("Japan")).toBeTruthy()
     view.unmount()
@@ -57,7 +61,9 @@ describe("ToolResultExternalDatasourceCard", () => {
     )
 
     fireEvent.click(
-      screen.getByRole("button", { name: "External datasource: error" }),
+      screen.getByRole("button", {
+        name: "Failed to use tool warehouse_query",
+      }),
     )
 
     expect(screen.getByText(/BigQuery permissions denied/)).toBeTruthy()

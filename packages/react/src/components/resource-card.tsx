@@ -1,4 +1,5 @@
 import { File } from "lucide-react"
+import { joinClasses } from "./internal/join-classes"
 
 export type ResourceCardProps = {
   icon?: string
@@ -6,6 +7,8 @@ export type ResourceCardProps = {
   title: string
   description?: string
   url: string | null
+  variant?: "card" | "list"
+  className?: string
 }
 
 function ResourceCardContent({
@@ -13,7 +16,7 @@ function ResourceCardContent({
   type,
   title,
   description,
-}: Omit<ResourceCardProps, "url">) {
+}: Omit<ResourceCardProps, "url" | "variant" | "className">) {
   const heading = type ?? title
   const bodyTitle = type ? title : description
   const bodyDescription = type ? description : undefined
@@ -49,28 +52,36 @@ function ResourceCardContent({
 }
 
 export function ResourceCard(props: ResourceCardProps) {
-  const className =
-    "block w-full rounded-lg bg-neutral-100 p-4 text-left text-neutral-950"
+  const {
+    className: customClassName,
+    variant = "card",
+    ...contentProps
+  } = props
+  const className = joinClasses(
+    "block rounded-lg bg-neutral-100 p-4 text-left text-neutral-950",
+    variant === "card" ? "min-h-[183px] w-[186px] max-w-full" : "w-full",
+    customClassName,
+  )
 
-  if (!props.url) {
+  if (!contentProps.url) {
     return (
       <article
-        aria-label={`${props.title}: ${props.description}`}
+        aria-label={`${contentProps.title}: ${contentProps.description}`}
         className={className}
       >
-        <ResourceCardContent {...props} />
+        <ResourceCardContent {...contentProps} />
       </article>
     )
   }
 
   return (
     <a
-      href={props.url}
+      href={contentProps.url}
       target="_blank"
       rel="noreferrer noopener"
       className={`${className} transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950`}
     >
-      <ResourceCardContent {...props} />
+      <ResourceCardContent {...contentProps} />
     </a>
   )
 }

@@ -33,7 +33,7 @@ export function DatasourceFolderCard({
     <Sheet>
       <SheetTrigger
         aria-label={`${type}: ${title}`}
-        className="min-h-[183px] w-[186px] rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+        className="min-h-[183px] w-[186px] max-w-full rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
       >
         <DatasourceToolResultCardContent
           icon={icon}
@@ -80,6 +80,7 @@ export function DatasourceFolderCard({
               <ResourceCard
                 key={`${resource.url ?? resource.title}-${index}`}
                 {...resource}
+                variant="list"
               />
             ))}
           </div>

@@ -57,3 +57,13 @@ export const WithoutUrl: Story = {
     url: null,
   },
 }
+
+export const ListVariant: Story = {
+  args: {
+    variant: "list",
+    type: "DOCUMENT",
+    title: "Internal product brief",
+    description: "Full-width layout intended for sheets and lists.",
+    url: "https://example.com/product-brief",
+  },
+}

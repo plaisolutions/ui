@@ -423,6 +423,91 @@ export const Assistant: Story = {
     }),
 }
 
+const assistantTurnMessages: UIMessage[] = [
+  {
+    id: "message_turn_user_01",
+    role: "user",
+    parts: [{ type: "text", text: "Find accessibility information." }],
+  },
+  {
+    id: "message_turn_assistant_01",
+    role: "assistant",
+    parts: [
+      {
+        type: "text",
+        text: "I'll search the connected datasource.",
+      },
+    ],
+  },
+  {
+    id: "message_turn_assistant_02",
+    role: "assistant",
+    parts: [
+      {
+        type: "tool-call",
+        id: "message_turn_tool_01",
+        name: "actua_learn_content",
+        toolType: "datasource",
+        input: { question: "accessibility" },
+        state: "completed",
+        result: { count: 3 },
+      },
+    ],
+  },
+  {
+    id: "message_turn_assistant_03",
+    role: "assistant",
+    parts: [
+      {
+        type: "text",
+        text: "I found three resources about accessibility.",
+      },
+    ],
+  },
+  {
+    id: "message_turn_user_02",
+    role: "user",
+    parts: [{ type: "text", text: "Summarize them." }],
+  },
+  {
+    id: "message_turn_assistant_04",
+    role: "assistant",
+    parts: [
+      {
+        type: "text",
+        text: "Here is a concise summary of the resources.",
+      },
+    ],
+  },
+]
+
+export const OneAvatarPerAssistantTurn: Story = {
+  parameters: { layout: "padded" },
+  render: () => (
+    <div className="flex w-full flex-col gap-3">
+      {assistantTurnMessages.map((message) => (
+        <Message
+          key={message.id}
+          align={message.role === "user" ? "end" : "start"}
+        >
+          {message.role === "assistant" ? (
+            <MessageAvatar src="" fallback="PLai Assistant" />
+          ) : null}
+          <MessageContent
+            className={
+              message.role === "user"
+                ? "max-w-[80%] flex-none rounded-xl bg-white p-4 shadow-sm"
+                : "rounded-xl bg-white p-4 shadow-sm"
+            }
+          >
+            <MessageParts message={message} locale="en" />
+          </MessageContent>
+        </Message>
+      ))}
+    </div>
+  ),
+}
+
 export const AvatarFallback: Story = {
   render: () =>
     composedMessage({

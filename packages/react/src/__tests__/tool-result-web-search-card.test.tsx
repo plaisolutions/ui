@@ -33,6 +33,9 @@ describe("ToolResultWebSearchCard", () => {
       name: "Web: Internet search results, 1 source",
     })
     expect(trigger.className.includes("w-[186px]")).toBe(true)
+    expect(trigger.className.includes("plai-tool-result-web-search-card")).toBe(
+      true,
+    )
     expect(within(trigger).getByText("WEB")).toBeTruthy()
     expect(within(trigger).getByText("Internet search results")).toBeTruthy()
     expect(within(trigger).getByText("1 source")).toBeTruthy()
@@ -48,7 +51,9 @@ describe("ToolResultWebSearchCard", () => {
     expect(
       within(sheet).getByText("Reference documentation for Server Components."),
     ).toBeTruthy()
-    expect(screen.queryByText("React Server Components render on the server.")).toBeNull()
+    expect(
+      screen.queryByText("React Server Components render on the server."),
+    ).toBeNull()
     view.unmount()
   })
 

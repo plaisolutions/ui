@@ -28,14 +28,60 @@ describe("Message composition", () => {
       </Message>,
     )
 
-    expect(screen.getByRole("img", { name: "John Doe" }).textContent).toBe(
-      "JD",
-    )
+    expect(screen.getByRole("img", { name: "John Doe" }).textContent).toBe("JD")
     expect(screen.getByText("Hola mundo")).toBeTruthy()
     expect(screen.getByText("Delivered")).toBeTruthy()
     expect(view.container.querySelector("article")?.className).toContain(
       "items-start",
     )
+    expect(view.container.querySelector("article")?.className).toContain(
+      "plai-message",
+    )
+    expect(view.container.querySelector(".plai-message-avatar")).toBeTruthy()
+  })
+
+  it("exposes stable hooks for showing one avatar per assistant turn", () => {
+    const view = render(
+      <div>
+        <Message align="end">
+          <MessageContent>First user turn</MessageContent>
+        </Message>
+        <Message align="start">
+          <MessageAvatar src="" fallback="PLai Assistant" />
+          <MessageContent>Calling a tool</MessageContent>
+        </Message>
+        <Message align="start">
+          <MessageAvatar src="" fallback="PLai Assistant" />
+          <MessageContent>Tool result</MessageContent>
+        </Message>
+        <Message align="start">
+          <MessageAvatar src="" fallback="PLai Assistant" />
+          <MessageContent>Final answer</MessageContent>
+        </Message>
+        <Message align="end">
+          <MessageContent>Second user turn</MessageContent>
+        </Message>
+        <Message align="start">
+          <MessageAvatar src="" fallback="PLai Assistant" />
+          <MessageContent>Next answer</MessageContent>
+        </Message>
+      </div>,
+    )
+
+    const assistantMessages = view.container.querySelectorAll(
+      '.plai-message[data-align="start"]',
+    )
+    expect(assistantMessages).toHaveLength(4)
+    expect(
+      view.container.querySelectorAll(
+        '.plai-message[data-align="start"] > .plai-message-avatar',
+      ),
+    ).toHaveLength(4)
+    expect(
+      view.container.querySelectorAll(
+        '.plai-message[data-align="start"] + .plai-message[data-align="start"] > .plai-message-avatar',
+      ),
+    ).toHaveLength(2)
   })
 
   it("shows the image and falls back to at most two initials on error", () => {

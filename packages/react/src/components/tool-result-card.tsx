@@ -7,8 +7,8 @@ import {
   DatasourceToolResources,
   isDatasourceResource,
 } from "./datasource-tool-resources"
-import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
+import { ToolError } from "./tool-error"
 import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 import { ToolResultAgentInvocationCard } from "./tool-result-agent-invocation-card"
 import { ToolResultBrowserCard } from "./tool-result-browser-card"
@@ -18,6 +18,7 @@ import { ToolResultMcpCard } from "./tool-result-mcp-card"
 import { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
+import { ToolUseIndicator } from "./tool-use-indicator"
 
 export type ToolResultCardProps = {
   part: UIToolCallPart
@@ -69,9 +70,18 @@ export function ToolResultCard({
   locale,
   onOpenAgentThread,
 }: ToolResultCardProps) {
+  if (part.state === "pending") {
+    return (
+      <ToolUseIndicator part={part} locale={locale} className={className} />
+    )
+  }
+
+  if (part.state === "error") {
+    return <ToolError part={part} locale={locale} className={className} />
+  }
+
   const officeMediaFiles = getOfficeDocumentMediaFiles(part)
   const datasourceResources = getDatasourceResources(part)
-  const errorDetails = formatToolErrorDetails(part.errorDetails)
 
   if (part.toolType === "email_send") {
     return <ToolResultEmailSendCard part={part} className={className} />
@@ -126,20 +136,6 @@ export function ToolResultCard({
     )
   }
 
-  const statusClass =
-    part.state === "error"
-      ? "border-rose-200 bg-rose-50 text-rose-800"
-      : part.state === "pending"
-        ? "border-amber-200 bg-amber-50 text-amber-800"
-        : "border-emerald-200 bg-emerald-50 text-emerald-800"
-
-  const statusLabel =
-    part.state === "pending"
-      ? "pending"
-      : part.state === "error"
-        ? "error"
-        : "completed"
-
   return (
     <section
       className={joinClasses(
@@ -151,13 +147,8 @@ export function ToolResultCard({
     >
       <header className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-semibold text-slate-900">{part.name}</h4>
-        <span
-          className={joinClasses(
-            "rounded-full border px-2 py-0.5 text-xs font-medium",
-            statusClass,
-          )}
-        >
-          {statusLabel}
+        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
+          completed
         </span>
       </header>
 
@@ -213,12 +204,6 @@ export function ToolResultCard({
             {formatJson(part.result)}
           </pre>
         </details>
-      ) : null}
-
-      {errorDetails ? (
-        <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-          <span className="font-semibold">Error details:</span> {errorDetails}
-        </p>
       ) : null}
     </section>
   )

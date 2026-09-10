@@ -22,7 +22,7 @@ export function Message({
   return (
     <article
       className={joinClasses(
-        "flex w-full items-start gap-3",
+        "plai-message flex w-full items-start gap-3",
         align === "end" ? "flex-row-reverse" : undefined,
         className,
       )}
@@ -64,7 +64,7 @@ export function MessageAvatar({
   return (
     <div
       className={joinClasses(
-        "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs font-semibold uppercase text-neutral-700",
+        "plai-message-avatar flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs font-semibold uppercase text-neutral-700",
         className,
       )}
       {...props}
@@ -205,10 +205,7 @@ function renderPart(
       )
     }
     return (
-      <p
-        key={`text-${index}`}
-        className={textClassName}
-      >
+      <p key={`text-${index}`} className={textClassName}>
         {part.text}
       </p>
     )
@@ -294,9 +291,7 @@ function renderPart(
   if (part.type === "thinking") {
     if (renderThinking) {
       return (
-        <div key={`thinking-${index}`}>
-          {renderThinking(part, { message })}
-        </div>
+        <div key={`thinking-${index}`}>{renderThinking(part, { message })}</div>
       )
     }
     return (
