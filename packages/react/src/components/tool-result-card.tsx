@@ -136,6 +136,10 @@ export function ToolResultCard({
     )
   }
 
+  if (part.toolType === "datasource") {
+    return null
+  }
+
   return (
     <section
       className={joinClasses(

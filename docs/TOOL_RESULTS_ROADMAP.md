@@ -28,7 +28,7 @@ por ello tener todavía una UI especializada.
 
 | `toolType` | Estado | UI actual | Alcance pendiente / siguiente subcomponente |
 | --- | --- | --- | --- |
-| `datasource` | Implementado | `DatasourceToolResources` agrupa `metadata.resources` por carpeta y usa `DatasourceToolResultCard`, `DatasourceFolderCard` y `ResourceCard`. | Cubrir de forma especializada los resultados sin `resources`, si el contrato de producto los requiere. |
+| `datasource` | Implementado | `DatasourceToolResources` agrupa `metadata.resources` por carpeta y usa `DatasourceToolResultCard`, `DatasourceFolderCard` y `ResourceCard`. Las ejecuciones completadas sin recursos no renderizan ninguna card. | Mantener ocultos los resultados vacíos para que solo permanezca visible la respuesta del agente. |
 | `email_send` | Implementado | `ToolResultEmailSendCard` muestra asunto, destinatarios, cuerpo desplegable, entrega y recibo. | Exportar la card como API pública y añadir story/test directo si se desea que se consuma fuera del router. |
 | `office_documents` | Implementado | `ToolResultOfficeDocumentsCard` usa un trigger compacto y un sheet de archivos generados con enlaces de descarga. | Añadir acciones específicas por formato si el producto las requiere. |
 | `perplexity` | Implementado | `ToolResultWebSearchCard` muestra el preview `WEB` / `Internet search results` / número de fuentes y abre un sheet con las fuentes. | Mantener el contrato de metadata y revisar mejoras visuales compartidas cuando exista el panel de detalles común. |

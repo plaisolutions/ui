@@ -202,6 +202,7 @@ describe("Message composition", () => {
     const view = render(
       <MessageParts
         datasourceToolResultsPosition="before-content"
+        renderToolCall={(part) => <span>{part.name}</span>}
         message={{
           id: "msg_datasource_first",
           role: "assistant",
@@ -226,5 +227,45 @@ describe("Message composition", () => {
     expect(content.indexOf("search_courses")).toBeLessThan(
       content.indexOf("First agent paragraph"),
     )
+  })
+
+  it("keeps the agent response visible when a datasource has no results", () => {
+    const view = render(
+      <MessageParts
+        message={{
+          id: "msg_empty_datasource",
+          role: "assistant",
+          parts: [
+            {
+              type: "tool-call",
+              id: "tool_empty_datasource",
+              name: "search_courses",
+              toolType: "datasource",
+              input: { query: "Missing course" },
+              state: "completed",
+              result: { count: 0 },
+              metadata: {
+                documents_metadata: [],
+                chunk_ids: null,
+                relevance_scores: null,
+                resources: [],
+              },
+            },
+            {
+              type: "text",
+              text: "I couldn't find a matching course, but I can still help.",
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByText(
+        "I couldn't find a matching course, but I can still help.",
+      ),
+    ).toBeTruthy()
+    expect(view.container.querySelector("[data-tool-call-id]")).toBeNull()
+    expect(view.container.textContent).not.toContain("search_courses")
   })
 })

@@ -56,14 +56,14 @@ describe("ToolResultCard", () => {
     )
   })
 
-  it("renders tool result with input and output", () => {
+  it("renders a generic tool result with input and output", () => {
     render(
       <ToolResultCard
         part={{
           type: "tool-call",
           id: "tool_1",
           name: "search_docs",
-          toolType: "datasource",
+          toolType: "unknown",
           input: { q: "billing" },
           state: "completed",
           result: { total: 3 },
@@ -75,6 +75,30 @@ describe("ToolResultCard", () => {
     expect(screen.getByText("completed")).toBeTruthy()
     expect(screen.getByText(/"q": "billing"/)).toBeTruthy()
     expect(screen.getByText(/"total": 3/)).toBeTruthy()
+  })
+
+  it("renders nothing when a completed datasource has no resources", () => {
+    const view = render(
+      <ToolResultCard
+        part={{
+          type: "tool-call",
+          id: "tool_empty_datasource",
+          name: "search_docs",
+          toolType: "datasource",
+          input: { q: "missing document" },
+          state: "completed",
+          result: { total: 0 },
+          metadata: {
+            documents_metadata: [],
+            chunk_ids: null,
+            relevance_scores: null,
+            resources: [],
+          },
+        }}
+      />,
+    )
+
+    expect(view.container.innerHTML).toBe("")
   })
 
   it("renders error details when provided", () => {
