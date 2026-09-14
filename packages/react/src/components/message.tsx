@@ -15,15 +15,15 @@ import { joinClasses } from "./internal/join-classes"
 import { ToolResultCard } from "./tool-result-card"
 import { Thinking } from "./thinking"
 
-export type MessageProps = HTMLAttributes<HTMLElement> & {
+export type MessageRootProps = HTMLAttributes<HTMLElement> & {
   align?: "start" | "end"
 }
 
-export function Message({
+export function MessageRoot({
   align = "start",
   className,
   ...props
-}: MessageProps) {
+}: MessageRootProps) {
   return (
     <article
       className={joinClasses(
@@ -452,14 +452,10 @@ export function MessageParts({
   const orderedParts = useMemo<OrderedMessageItem[]>(
     () =>
       shouldAggregateSourceResults
-        ? aggregateSourceToolParts(
-            message.parts,
-            resolvedSourceResultsPosition,
-          )
-        : orderMessageParts(
-            message.parts,
-            resolvedSourceResultsPosition,
-          ).map(({ part, index }) => ({ kind: "part", part, index })),
+        ? aggregateSourceToolParts(message.parts, resolvedSourceResultsPosition)
+        : orderMessageParts(message.parts, resolvedSourceResultsPosition).map(
+            ({ part, index }) => ({ kind: "part", part, index }),
+          ),
     [
       message.parts,
       resolvedSourceResultsPosition,

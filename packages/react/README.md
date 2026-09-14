@@ -100,6 +100,9 @@ export function Chat() {
 ```tsx
 import {
   Message,
+  MessageRoot,
+  AssistantMessage,
+  UserMessage,
   MessageAvatar,
   MessageContent,
   MessageFooter,
@@ -118,6 +121,9 @@ import {
 Available optional components:
 
 - `Message`
+- `MessageRoot`
+- `AssistantMessage`
+- `UserMessage`
 - `MessageAvatar`
 - `MessageContent`
 - `MessageHeader`
@@ -138,9 +144,48 @@ The returned `rateMessage({ messageId, rating })`,
 `transcribeAudio(audio, signal?)`, and `uploadFile(file)` actions reuse the
 same session-aware transport and dynamic authentication headers as
 `sendMessage`.
-`Message` is a composable row primitive. `MessageAvatar`, `MessageContent`,
-`MessageHeader` and `MessageFooter` are optional layout children, while
-`MessageParts` renders a `UIMessage` and accepts custom text/tool renderers.
+`Message` is the recommended renderer for a complete turn. It routes user and
+assistant messages to their semantic layout automatically:
+
+```tsx
+<Message
+  message={message}
+  avatar={message.role === "assistant" ? assistantAvatar : undefined}
+  footer={message.role === "assistant" ? actions : undefined}
+  messagePartsProps={{ locale, renderText, renderThinking }}
+/>
+```
+
+`MessageRoot` is the low-level composable row primitive. `MessageAvatar`,
+`MessageContent`, `MessageHeader` and `MessageFooter` are optional layout
+children, while `MessageParts` renders a `UIMessage` and accepts custom
+text/tool renderers. Existing primitive usage through `Message` remains
+supported for compatibility.
+
+Use `UserMessage` and `AssistantMessage` as the semantic turn components in a
+standard chat. `UserMessage` aligns the user content to the end and accepts the
+same `MessageParts` options through `messagePartsProps`:
+
+```tsx
+<UserMessage
+  message={message}
+  messagePartsProps={{ locale, renderText }}
+/>
+```
+
+Use `AssistantMessage` for a complete assistant turn. It renders tool results
+in an avatar-free row and renders the assistant avatar once, beside the
+non-tool content. Pass the existing `MessageParts` options through
+`messagePartsProps` and message actions through the `footer` slot:
+
+```tsx
+<AssistantMessage
+  message={message}
+  avatar={<MessageAvatar src={avatarUrl} fallback="Assistant" />}
+  footer={<MessageFooter>{actions}</MessageFooter>}
+  messagePartsProps={{ locale, renderText, renderThinking }}
+/>
+```
 
 Completed datasource, Perplexity, and Firecrawl results are aggregated by
 default before the assistant text. The first three source cards are shown; an
@@ -174,7 +219,7 @@ expanded.
 ```
 
 ```tsx
-<Message align={message.role === "user" ? "end" : "start"}>
+<MessageRoot align={message.role === "user" ? "end" : "start"}>
   <MessageAvatar src={avatarUrl} fallback="John Doe" />
   <MessageContent>
     <MessageHeader>John Doe</MessageHeader>
@@ -185,7 +230,7 @@ expanded.
     />
     <MessageFooter>Delivered</MessageFooter>
   </MessageContent>
-</Message>
+</MessageRoot>
 ```
 
 `Clipboard` owns the browser clipboard operation and its button feedback. The

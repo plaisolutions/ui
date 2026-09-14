@@ -269,3 +269,73 @@ describe("Message composition", () => {
     expect(view.container.textContent).not.toContain("search_courses")
   })
 })
+
+describe("Message routing", () => {
+  it("routes assistant turns and keeps tool rows avatar-free", () => {
+    const view = render(
+      <Message
+        message={{
+          id: "assistant-routed",
+          role: "assistant",
+          parts: [
+            {
+              type: "tool-call",
+              id: "pending-tool",
+              name: "search_docs",
+              toolType: "datasource",
+              input: {},
+              state: "pending",
+            },
+            { type: "text", text: "Assistant answer" },
+          ],
+        }}
+        avatar={<MessageAvatar src="" fallback="PLai Assistant" />}
+      />,
+    )
+
+    const toolsRow = view.container.querySelector(
+      ".plai-assistant-message-tools",
+    )
+    const contentRow = view.container.querySelector(
+      ".plai-assistant-message-content",
+    )
+
+    expect(view.container.querySelector(".plai-assistant-message")).toBeTruthy()
+    expect(toolsRow?.querySelector(".plai-message-avatar")).toBeNull()
+    expect(contentRow?.querySelectorAll(".plai-message-avatar")).toHaveLength(1)
+    expect(screen.getByText("Assistant answer")).toBeTruthy()
+  })
+
+  it("routes user turns to the end-aligned semantic layout", () => {
+    const view = render(
+      <Message
+        message={{
+          id: "user-routed",
+          role: "user",
+          parts: [{ type: "text", text: "User question" }],
+        }}
+      />,
+    )
+
+    const row = view.container.querySelector(".plai-user-message")
+    expect(row?.getAttribute("data-align")).toBe("end")
+    expect(screen.getByText("User question")).toBeTruthy()
+  })
+
+  it("renders system messages as neutral start-aligned rows", () => {
+    const view = render(
+      <Message
+        message={{
+          id: "system-routed",
+          role: "system",
+          parts: [{ type: "text", text: "System notice" }],
+        }}
+      />,
+    )
+
+    expect(
+      view.container.querySelector('.plai-message[data-align="start"]'),
+    ).toBeTruthy()
+    expect(screen.getByText("System notice")).toBeTruthy()
+  })
+})

@@ -1,5 +1,6 @@
 import type { ResourceReadModel, UIMessage } from "@plaisolutions/client"
 import {
+  AssistantMessage,
   Clipboard,
   Message,
   MessageAvatar,
@@ -7,6 +8,8 @@ import {
   MessageFooter,
   MessageHeader,
   MessageParts,
+  MessageRoot,
+  UserMessage,
   Reload,
   ThumbDown,
   ThumbUp,
@@ -72,7 +75,7 @@ function MessageWithActionsExample() {
     .join("\n")
 
   return (
-    <Message>
+    <MessageRoot>
       <MessageAvatar src="" fallback="PLai Assistant" />
       <MessageContent className="rounded-xl bg-white p-4 shadow-sm">
         <MessageHeader>PLai Assistant</MessageHeader>
@@ -90,7 +93,7 @@ function MessageWithActionsExample() {
           <Reload onClick={() => undefined} />
         </MessageFooter>
       </MessageContent>
-    </Message>
+    </MessageRoot>
   )
 }
 
@@ -411,7 +414,7 @@ function composedMessage({
   locale,
 }: ComposedMessageOptions) {
   return (
-    <Message align={align}>
+    <MessageRoot align={align}>
       {avatar ? (
         <MessageAvatar src={avatar.src} fallback={avatar.fallback} />
       ) : null}
@@ -430,18 +433,18 @@ function composedMessage({
         />
         {footer ? <MessageFooter>{footer}</MessageFooter> : null}
       </MessageContent>
-    </Message>
+    </MessageRoot>
   )
 }
 
 export const User: Story = {
-  args: { align: "end" },
-  render: (args) =>
-    composedMessage({
-      message: userMessage,
-      align: args.align,
-      avatar: { src: "", fallback: "John Doe" },
-    }),
+  render: () => (
+    <UserMessage
+      message={userMessage}
+      avatar={<MessageAvatar src="" fallback="John Doe" />}
+      contentClassName="max-w-[80%] flex-none rounded-xl bg-white p-4 shadow-sm"
+    />
+  ),
 }
 
 export const Assistant: Story = {
@@ -521,21 +524,19 @@ export const OneAvatarPerAssistantTurn: Story = {
       {assistantTurnMessages.map((message) => (
         <Message
           key={message.id}
-          align={message.role === "user" ? "end" : "start"}
-        >
-          {message.role === "assistant" ? (
-            <MessageAvatar src="" fallback="PLai Assistant" />
-          ) : null}
-          <MessageContent
-            className={
-              message.role === "user"
-                ? "max-w-[80%] flex-none rounded-xl bg-white p-4 shadow-sm"
-                : "rounded-xl bg-white p-4 shadow-sm"
-            }
-          >
-            <MessageParts message={message} locale="en" />
-          </MessageContent>
-        </Message>
+          message={message}
+          avatar={
+            message.role === "assistant" ? (
+              <MessageAvatar src="" fallback="PLai Assistant" />
+            ) : undefined
+          }
+          contentClassName={
+            message.role === "user"
+              ? "max-w-[80%] flex-none rounded-xl bg-white p-4 shadow-sm"
+              : "rounded-xl bg-white p-4 shadow-sm"
+          }
+          messagePartsProps={{ locale: "en" }}
+        />
       ))}
     </div>
   ),
@@ -589,11 +590,19 @@ export const AssistantWithDatasourceResultsFirst: Story = {
 }
 
 export const AssistantWithDatasourceOverflow: Story = {
-  render: () =>
-    composedMessage({
-      message: assistantMessageWithDatasourceOverflow,
-      locale: "es-ES",
-    }),
+  render: () => (
+    <AssistantMessage
+      message={assistantMessageWithDatasourceOverflow}
+      avatar={
+        <MessageAvatar
+          src="https://images.unsplash.com/photo-1531299983330-093763e1d963?w=160"
+          fallback="PLai Assistant"
+        />
+      }
+      contentClassName="rounded-xl bg-white p-4 shadow-sm"
+      messagePartsProps={{ locale: "es-ES" }}
+    />
+  ),
 }
 
 export const AssistantWithDatasourceError: Story = {
@@ -609,8 +618,12 @@ export const ToolCall: Story = {
 }
 
 export const UserWithAttachments: Story = {
-  render: () =>
-    composedMessage({ message: userMessageWithAttachments, align: "end" }),
+  render: () => (
+    <UserMessage
+      message={userMessageWithAttachments}
+      contentClassName="max-w-[80%] flex-none rounded-xl bg-white p-4 shadow-sm"
+    />
+  ),
 }
 
 export const OfficeDocumentsToolCall: Story = {

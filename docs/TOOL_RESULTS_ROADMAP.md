@@ -21,6 +21,9 @@ por ello tener todavía una UI especializada.
 | --- | --- | --- | --- |
 | Router de resultados | Parcial | `ToolResultCard` selecciona la card de `email_send`, los recursos de `datasource` y aplica un fallback JSON para el resto. | Convertir las ramas especializadas restantes en subcomponentes. |
 | Wrapper visual común | Pendiente | Cada card controla actualmente su propio contenedor y estados. | Extraer una envoltura común de estado, cabecera y acciones cuando haya suficientes cards que justifiquen la API. |
+| Layout del turno del asistente | Implementado | `AssistantMessage` separa una fila de tool results sin avatar y una fila de contenido con un único avatar y footer opcional. | Mantener `Message` y `MessageParts` como primitivas para composiciones personalizadas. |
+| Layout del turno del usuario | Implementado | `UserMessage` alinea el turno al final y compone avatar, contenido, parts y footer opcionales sobre las primitivas existentes. | Mantener su API simétrica con `AssistantMessage` cuando sea aplicable. |
+| Router de mensajes | Implementado | `Message` selecciona `UserMessage` o `AssistantMessage` según el rol y conserva el modo primitivo anterior; `MessageRoot` expone explícitamente la fila de bajo nivel. | Usar `Message` como entrada recomendada para integraciones estándar. |
 | Panel de detalles reutilizable | Implementado | `Sheet` se reutiliza en las cards especializadas y `AggregatedSourceResults` lo usa para mostrar el conjunto completo de fuentes. | Mantener navegación, foco y etiquetas accesibles al añadir nuevos tipos de resultado. |
 | Fallback genérico | Implementado | Muestra nombre, estado, tipo, input, output, errores y archivos de Office. | Mantenerlo como red de seguridad para tipos desconocidos o contratos aún no tipados. |
 

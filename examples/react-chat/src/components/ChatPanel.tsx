@@ -6,9 +6,7 @@ import {
   Clipboard,
   Message,
   MessageAvatar,
-  MessageContent,
   MessageFooter,
-  MessageParts,
   PromptForm,
   Reload,
   SpeechToTextToggle,
@@ -188,35 +186,36 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                 .filter((part) => part.type === "text")
                 .map((part) => (part.type === "text" ? part.text : ""))
                 .join("\n")
+              const isStreamingMessage = isBusy && message === messages.at(-1)
 
               return (
                 <Message
                   key={message.id}
-                  align={message.role === "user" ? "end" : "start"}
-                  className={`message message--${message.role}`}
-                >
-                  {message.role === "assistant" && session.agent?.avatar ? (
-                    <MessageAvatar
-                      className="message-avatar"
-                      src={session.agent.avatar}
-                      fallback={session.agent.name || "AI"}
-                    />
-                  ) : null}
-                  <MessageContent
-                    className={`message-content message-content--${message.role}`}
-                  >
-                    <MessageParts
-                      message={message}
-                      className="message-parts"
-                      locale="en"
-                      isStreaming={isBusy && message === messages.at(-1)}
-                      thinkingLabel="Thinking…"
-                      completedThinkingLabel="Reasoning summary"
-                      readMoreLabel="Read more"
-                      readLessLabel="Read less"
-                      renderText={(part) => <ChatMarkdown text={part.text} />}
-                    />
-                    {message.role === "assistant" && text ? (
+                  message={message}
+                  avatar={
+                    message.role === "assistant" && session.agent?.avatar ? (
+                      <MessageAvatar
+                        className="message-avatar"
+                        src={session.agent.avatar}
+                        fallback={session.agent.name || "AI"}
+                      />
+                    ) : undefined
+                  }
+                  messageClassName={`message message--${message.role}`}
+                  contentClassName={`message-content message-content--${message.role}`}
+                  partsClassName="message-parts"
+                  toolPartsClassName="message-parts"
+                  messagePartsProps={{
+                    locale: "en",
+                    isStreaming: isStreamingMessage,
+                    thinkingLabel: "Thinking…",
+                    completedThinkingLabel: "Reasoning summary",
+                    readMoreLabel: "Read more",
+                    readLessLabel: "Read less",
+                    renderText: (part) => <ChatMarkdown text={part.text} />,
+                  }}
+                  footer={
+                    message.role === "assistant" && text ? (
                       <MessageFooter className="message-actions">
                         <Clipboard
                           className="message-action"
@@ -250,9 +249,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                             )
                           }
                         />
-                        {!(
-                          status === "streaming" && message === messages.at(-1)
-                        ) ? (
+                        {!isStreamingMessage ? (
                           <Reload
                             className="message-action"
                             label="Retry"
@@ -261,9 +258,9 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                           />
                         ) : null}
                       </MessageFooter>
-                    ) : null}
-                  </MessageContent>
-                </Message>
+                    ) : undefined
+                  }
+                />
               )
             })}
           </div>

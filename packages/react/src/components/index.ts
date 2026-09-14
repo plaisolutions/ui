@@ -1,5 +1,5 @@
 export {
-  Message,
+  MessageRoot,
   MessageAvatar,
   MessageContent,
   MessageFooter,
@@ -12,8 +12,14 @@ export type {
   MessageFooterProps,
   MessageHeaderProps,
   MessagePartsProps,
-  MessageProps,
+  MessageRootProps,
 } from "./message"
+export { Message } from "./message-router"
+export type { MessageProps, RoutedMessageProps } from "./message-router"
+export { AssistantMessage } from "./assistant-message"
+export type { AssistantMessageProps } from "./assistant-message"
+export { UserMessage } from "./user-message"
+export type { UserMessageProps } from "./user-message"
 export { AggregatedSourceResults } from "./aggregated-source-results"
 export type {
   AggregatedSourceResultsProps,
