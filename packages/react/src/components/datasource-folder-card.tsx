@@ -19,6 +19,7 @@ export type DatasourceFolderCardProps = {
   type: string
   url?: string | null
   resources: ResourceCardProps[]
+  variant?: "card" | "list"
 }
 
 export function DatasourceFolderCard({
@@ -28,12 +29,15 @@ export function DatasourceFolderCard({
   type,
   url,
   resources,
+  variant = "card",
 }: DatasourceFolderCardProps) {
   return (
     <Sheet>
       <SheetTrigger
         aria-label={`${type}: ${title}`}
-        className="min-h-[183px] w-[186px] max-w-full rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+        className={`${
+          variant === "card" ? "min-h-[183px] w-[186px] max-w-full" : "w-full"
+        } rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950`}
       >
         <DatasourceToolResultCardContent
           icon={icon}

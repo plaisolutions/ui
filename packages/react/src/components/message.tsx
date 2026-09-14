@@ -6,6 +6,11 @@ import type {
 } from "@plaisolutions/client"
 import type { HTMLAttributes, ReactNode } from "react"
 import { useMemo, useState } from "react"
+import {
+  AggregatedSourceResults,
+  isCompletedSourceToolPart,
+  type SourceToolPart,
+} from "./aggregated-source-results"
 import { joinClasses } from "./internal/join-classes"
 import { ToolResultCard } from "./tool-result-card"
 import { Thinking } from "./thinking"
@@ -127,6 +132,10 @@ export function MessageFooter({ className, ...props }: MessageFooterProps) {
 export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
   message: UIMessage
   collapseThreshold?: number
+  sourceToolResultsLayout?: "aggregated" | "individual"
+  sourceToolResultsPosition?: "inline" | "before-content"
+  maxVisibleSourceCards?: number
+  /** @deprecated Use sourceToolResultsPosition instead. */
   datasourceToolResultsPosition?: "inline" | "before-content"
   onOpenAgentThread?: (threadId: string) => void
   locale?: string | null
@@ -340,10 +349,65 @@ function orderMessageParts(
   return [...datasourceParts, ...remainingParts]
 }
 
+type OrderedMessageItem =
+  | {
+      kind: "part"
+      part: UIMessagePart
+      index: number
+    }
+  | {
+      kind: "source-results"
+      parts: SourceToolPart[]
+      index: number
+    }
+
+function aggregateSourceToolParts(
+  parts: UIMessagePart[],
+  position: "inline" | "before-content",
+): OrderedMessageItem[] {
+  const indexedParts = parts.map((part, index) => ({
+    kind: "part" as const,
+    part,
+    index,
+  }))
+  const sourceParts = indexedParts.flatMap(({ part, index }) =>
+    isCompletedSourceToolPart(part) ? [{ part, index }] : [],
+  )
+  if (sourceParts.length === 0) return indexedParts
+
+  const sourceIndexes = new Set(sourceParts.map(({ index }) => index))
+  const remainingParts = indexedParts.filter(
+    ({ index }) => !sourceIndexes.has(index),
+  )
+  const sourceResults: OrderedMessageItem = {
+    kind: "source-results",
+    parts: sourceParts.map(({ part }) => part),
+    index: sourceParts[0].index,
+  }
+
+  if (position === "before-content") {
+    return [sourceResults, ...remainingParts]
+  }
+
+  const insertionIndex = remainingParts.findIndex(
+    ({ index }) => index > sourceResults.index,
+  )
+  if (insertionIndex === -1) return [...remainingParts, sourceResults]
+
+  return [
+    ...remainingParts.slice(0, insertionIndex),
+    sourceResults,
+    ...remainingParts.slice(insertionIndex),
+  ]
+}
+
 export function MessageParts({
   message,
   collapseThreshold = DEFAULT_COLLAPSE_THRESHOLD,
-  datasourceToolResultsPosition = "inline",
+  sourceToolResultsLayout = "aggregated",
+  sourceToolResultsPosition,
+  maxVisibleSourceCards = 3,
+  datasourceToolResultsPosition,
   onOpenAgentThread,
   locale,
   renderText,
@@ -375,9 +439,32 @@ export function MessageParts({
     : textContent
   const textClassName = getMessageTextClassName(message.role)
   const textAlignmentClassName = getMessageTextAlignmentClassName(message.role)
-  const orderedParts = useMemo(
-    () => orderMessageParts(message.parts, datasourceToolResultsPosition),
-    [message.parts, datasourceToolResultsPosition],
+  const resolvedSourceResultsPosition =
+    sourceToolResultsPosition ??
+    datasourceToolResultsPosition ??
+    (sourceToolResultsLayout === "aggregated" && !renderToolCall
+      ? "before-content"
+      : "inline")
+  const shouldAggregateSourceResults =
+    message.role === "assistant" &&
+    sourceToolResultsLayout === "aggregated" &&
+    !renderToolCall
+  const orderedParts = useMemo<OrderedMessageItem[]>(
+    () =>
+      shouldAggregateSourceResults
+        ? aggregateSourceToolParts(
+            message.parts,
+            resolvedSourceResultsPosition,
+          )
+        : orderMessageParts(
+            message.parts,
+            resolvedSourceResultsPosition,
+          ).map(({ part, index }) => ({ kind: "part", part, index })),
+    [
+      message.parts,
+      resolvedSourceResultsPosition,
+      shouldAggregateSourceResults,
+    ],
   )
 
   return (
@@ -389,20 +476,29 @@ export function MessageParts({
       {canCollapse && !isExpanded ? (
         <p className={textClassName}>{previewText}</p>
       ) : (
-        orderedParts.map(({ part, index }) =>
-          renderPart(
-            part,
-            index,
-            message,
-            isStreaming,
-            onOpenAgentThread,
-            locale,
-            renderText,
-            renderToolCall,
-            renderThinking,
-            thinkingLabel,
-            completedThinkingLabel,
-            textClassName,
+        orderedParts.map((item) =>
+          item.kind === "source-results" ? (
+            <AggregatedSourceResults
+              key={`source-results-${item.index}`}
+              parts={item.parts}
+              locale={locale}
+              maxVisible={maxVisibleSourceCards}
+            />
+          ) : (
+            renderPart(
+              item.part,
+              item.index,
+              message,
+              isStreaming,
+              onOpenAgentThread,
+              locale,
+              renderText,
+              renderToolCall,
+              renderThinking,
+              thinkingLabel,
+              completedThinkingLabel,
+              textClassName,
+            )
           ),
         )
       )}

@@ -142,6 +142,14 @@ same session-aware transport and dynamic authentication headers as
 `MessageHeader` and `MessageFooter` are optional layout children, while
 `MessageParts` renders a `UIMessage` and accepts custom text/tool renderers.
 
+Completed datasource, Perplexity, and Firecrawl results are aggregated by
+default before the assistant text. The first three source cards are shown; an
+additional `+N sources` card opens a sheet containing the complete result set.
+Use `maxVisibleSourceCards` to change the limit,
+`sourceToolResultsPosition="inline"` to keep the aggregate at the first source
+position, or `sourceToolResultsLayout="individual"` to opt out. The deprecated
+`datasourceToolResultsPosition` prop remains available for compatibility.
+
 `MessageParts` automatically renders `thinking` parts streamed by the client.
 `Thinking` displays provider-supplied summaries only, never private reasoning
 or provider replay metadata. Use its labels, or the corresponding

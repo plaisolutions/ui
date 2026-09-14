@@ -21,14 +21,14 @@ por ello tener todavía una UI especializada.
 | --- | --- | --- | --- |
 | Router de resultados | Parcial | `ToolResultCard` selecciona la card de `email_send`, los recursos de `datasource` y aplica un fallback JSON para el resto. | Convertir las ramas especializadas restantes en subcomponentes. |
 | Wrapper visual común | Pendiente | Cada card controla actualmente su propio contenedor y estados. | Extraer una envoltura común de estado, cabecera y acciones cuando haya suficientes cards que justifiquen la API. |
-| Panel de detalles reutilizable | Pendiente | Se usan `<details>` en el fallback y estado local en email. | Definir una experiencia común de detalle (por ejemplo, sheet o acordeón) antes de duplicarla en nuevas cards. |
+| Panel de detalles reutilizable | Implementado | `Sheet` se reutiliza en las cards especializadas y `AggregatedSourceResults` lo usa para mostrar el conjunto completo de fuentes. | Mantener navegación, foco y etiquetas accesibles al añadir nuevos tipos de resultado. |
 | Fallback genérico | Implementado | Muestra nombre, estado, tipo, input, output, errores y archivos de Office. | Mantenerlo como red de seguridad para tipos desconocidos o contratos aún no tipados. |
 
 ## Mapa por `toolType`
 
 | `toolType` | Estado | UI actual | Alcance pendiente / siguiente subcomponente |
 | --- | --- | --- | --- |
-| `datasource` | Implementado | `DatasourceToolResources` agrupa `metadata.resources` por carpeta y usa `DatasourceToolResultCard`, `DatasourceFolderCard` y `ResourceCard`. Las ejecuciones completadas sin recursos no renderizan ninguna card. | Mantener ocultos los resultados vacíos para que solo permanezca visible la respuesta del agente. |
+| `datasource` | Implementado | `DatasourceToolResources` agrupa `metadata.resources` por carpeta. En `MessageParts`, `AggregatedSourceResults` combina Datasource, Perplexity y Firecrawl, muestra hasta tres cards y añade un trigger `+N` con un sheet completo. Las ejecuciones sin recursos no renderizan ninguna card. | Mantener el conteo después de filtrar privados y duplicados, y conservar ocultos los resultados vacíos. |
 | `email_send` | Implementado | `ToolResultEmailSendCard` muestra asunto, destinatarios, cuerpo desplegable, entrega y recibo. | Exportar la card como API pública y añadir story/test directo si se desea que se consuma fuera del router. |
 | `office_documents` | Implementado | `ToolResultOfficeDocumentsCard` usa un trigger compacto y un sheet de archivos generados con enlaces de descarga. | Añadir acciones específicas por formato si el producto las requiere. |
 | `perplexity` | Implementado | `ToolResultWebSearchCard` muestra el preview `WEB` / `Internet search results` / número de fuentes y abre un sheet con las fuentes. | Mantener el contrato de metadata y revisar mejoras visuales compartidas cuando exista el panel de detalles común. |

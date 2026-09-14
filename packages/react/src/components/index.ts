@@ -14,6 +14,11 @@ export type {
   MessagePartsProps,
   MessageProps,
 } from "./message"
+export { AggregatedSourceResults } from "./aggregated-source-results"
+export type {
+  AggregatedSourceResultsProps,
+  SourceToolPart,
+} from "./aggregated-source-results"
 export { Thinking } from "./thinking"
 export type { ThinkingProps } from "./thinking"
 export { DatasourceToolResultCard } from "./datasource-tool-result-card"

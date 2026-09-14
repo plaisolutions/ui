@@ -1,5 +1,8 @@
 import type { FolderReadModel, ResourceReadModel } from "@plaisolutions/client"
-import { DatasourceFolderCard } from "./datasource-folder-card"
+import {
+  DatasourceFolderCard,
+  type DatasourceFolderCardProps,
+} from "./datasource-folder-card"
 import { joinClasses } from "./internal/join-classes"
 import {
   getLocalizedOpenGraphValue,
@@ -16,6 +19,18 @@ export type DatasourceToolResourcesProps = {
   locale?: string | null
   className?: string
 }
+
+export type DatasourceResourceCard =
+  | {
+      kind: "folder"
+      key: string
+      props: DatasourceFolderCardProps
+    }
+  | {
+      kind: "resource"
+      key: string
+      props: ResourceCardProps
+    }
 
 type FolderGroup = {
   folder: FolderReadModel
@@ -41,6 +56,37 @@ function toResourceCardProps(
     title: getResourceTitle(resource, locale),
     description: getResourceDescription(resource, locale),
     url: getResourceUrl(resource, locale),
+  }
+}
+
+function toFolderCardProps(
+  folder: FolderReadModel,
+  group: ResourceReadModel[],
+  locale?: string | null,
+): DatasourceFolderCardProps {
+  const datasource = group[0]?.datasource
+  const type =
+    getLocalizedOpenGraphValue(folder, "type", locale) ??
+    readString(folder.extra_info, "type") ??
+    datasource?.type ??
+    "FOLDER"
+
+  return {
+    icon: getLocalizedOpenGraphValue(folder, "image", locale) ?? undefined,
+    title:
+      getLocalizedOpenGraphValue(folder, "title", locale) ?? folder.name,
+    description:
+      getLocalizedOpenGraphValue(folder, "description", locale) ??
+      readString(folder.extra_info, "description") ??
+      readString(folder.extra_info, "summary") ??
+      datasource?.description ??
+      datasource?.summary ??
+      "",
+    type,
+    url: getLocalizedOpenGraphValue(folder, "url", locale),
+    resources: group.map((resource) =>
+      toResourceCardProps(resource, locale),
+    ),
   }
 }
 
@@ -77,11 +123,10 @@ export function isDatasourceResource(
   )
 }
 
-export function DatasourceToolResources({
-  resources,
-  locale,
-  className,
-}: DatasourceToolResourcesProps) {
+export function getDatasourceResourceCards(
+  resources: ResourceReadModel[],
+  locale?: string | null,
+): DatasourceResourceCard[] {
   const folderGroups = new Map<string, FolderGroup>()
   const ungroupedResources: ResourceReadModel[] = []
   const seenUrls = new Set<string>()
@@ -111,50 +156,48 @@ export function DatasourceToolResources({
     }
   }
 
+  return [
+    ...Array.from(folderGroups.values()).map(({ folder, resources: group }) => ({
+      kind: "folder" as const,
+      key: `folder-${folder.id}`,
+      props: toFolderCardProps(folder, group, locale),
+    })),
+    ...ungroupedResources.map((resource) => ({
+      kind: "resource" as const,
+      key: `resource-${resource.id}`,
+      props: toResourceCardProps(resource, locale),
+    })),
+  ]
+}
+
+export function DatasourceResourceCardView({
+  card,
+  variant = "card",
+}: {
+  card: DatasourceResourceCard
+  variant?: "card" | "list"
+}) {
+  if (card.kind === "folder") {
+    return <DatasourceFolderCard {...card.props} variant={variant} />
+  }
+
+  return <ResourceCard {...card.props} variant={variant} />
+}
+
+export function DatasourceToolResources({
+  resources,
+  locale,
+  className,
+}: DatasourceToolResourcesProps) {
+  const cards = getDatasourceResourceCards(resources, locale)
+
   return (
     <section
       aria-label="Recursos de la fuente de datos"
       className={joinClasses("flex flex-wrap gap-3", className)}
     >
-      {Array.from(folderGroups.values()).map(({ folder, resources: group }) => {
-        const datasource = group[0]?.datasource
-        const type =
-          getLocalizedOpenGraphValue(folder, "type", locale) ??
-          readString(folder.extra_info, "type") ??
-          datasource?.type ??
-          "FOLDER"
-        const title =
-          getLocalizedOpenGraphValue(folder, "title", locale) ?? folder.name
-        const description =
-          getLocalizedOpenGraphValue(folder, "description", locale) ??
-          readString(folder.extra_info, "description") ??
-          readString(folder.extra_info, "summary") ??
-          datasource?.description ??
-          datasource?.summary ??
-          ""
-        const icon = getLocalizedOpenGraphValue(folder, "image", locale)
-        const url = getLocalizedOpenGraphValue(folder, "url", locale)
-
-        return (
-          <DatasourceFolderCard
-            key={folder.id}
-            icon={icon}
-            title={title}
-            description={description}
-            type={getLocalizedOpenGraphValue(folder, "type", locale) ?? type}
-            url={url}
-            resources={group.map((resource) =>
-              toResourceCardProps(resource, locale),
-            )}
-          />
-        )
-      })}
-
-      {ungroupedResources.map((resource) => (
-        <ResourceCard
-          key={resource.id}
-          {...toResourceCardProps(resource, locale)}
-        />
+      {cards.map((card) => (
+        <DatasourceResourceCardView key={card.key} card={card} />
       ))}
     </section>
   )

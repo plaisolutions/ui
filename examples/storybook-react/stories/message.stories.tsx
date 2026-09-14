@@ -255,6 +255,39 @@ const assistantMessageWithDatasourceResults: UIMessage = {
   ],
 }
 
+const assistantMessageWithDatasourceOverflow: UIMessage = {
+  id: "message_assistant_datasource_overflow_01",
+  role: "assistant",
+  parts: [
+    {
+      type: "text",
+      text: "He encontrado varios recursos relacionados con Storyline.",
+    },
+    {
+      type: "tool-call",
+      id: "tool_datasource_overflow_01",
+      name: "search_courses",
+      toolType: "datasource",
+      input: { query: "Storyline" },
+      state: "completed",
+      result: { count: 5 },
+      metadata: {
+        documents_metadata: [],
+        chunk_ids: null,
+        relevance_scores: null,
+        resources: Array.from({ length: 5 }, (_, index) => ({
+          ...createCourseResource(
+            `resource-overflow-${index + 1}`,
+            `Recurso de Storyline ${index + 1}`,
+            `https://example.com/overflow-${index + 1}`,
+          ),
+          folder: null,
+        })),
+      },
+    },
+  ],
+}
+
 const datasourceErrorDetails = {
   error_type: "ProgrammingError",
   error_message: 'column "app_id" of relation "usage_records" does not exist',
@@ -364,7 +397,7 @@ type ComposedMessageOptions = {
   avatar?: { src: string; fallback: string }
   header?: string
   footer?: string
-  datasourceToolResultsPosition?: "inline" | "before-content"
+  sourceToolResultsPosition?: "inline" | "before-content"
   locale?: string
 }
 
@@ -374,7 +407,7 @@ function composedMessage({
   avatar,
   header,
   footer,
-  datasourceToolResultsPosition,
+  sourceToolResultsPosition,
   locale,
 }: ComposedMessageOptions) {
   return (
@@ -393,7 +426,7 @@ function composedMessage({
         <MessageParts
           message={message}
           locale={locale}
-          datasourceToolResultsPosition={datasourceToolResultsPosition}
+          sourceToolResultsPosition={sourceToolResultsPosition}
         />
         {footer ? <MessageFooter>{footer}</MessageFooter> : null}
       </MessageContent>
@@ -551,7 +584,15 @@ export const AssistantWithDatasourceResultsFirst: Story = {
     composedMessage({
       message: assistantMessageWithDatasourceResults,
       locale: "es-ES",
-      datasourceToolResultsPosition: "before-content",
+      sourceToolResultsPosition: "before-content",
+    }),
+}
+
+export const AssistantWithDatasourceOverflow: Story = {
+  render: () =>
+    composedMessage({
+      message: assistantMessageWithDatasourceOverflow,
+      locale: "es-ES",
     }),
 }
 
@@ -559,7 +600,7 @@ export const AssistantWithDatasourceError: Story = {
   render: () =>
     composedMessage({
       message: assistantMessageWithDatasourceError,
-      datasourceToolResultsPosition: "before-content",
+      sourceToolResultsPosition: "before-content",
     }),
 }
 

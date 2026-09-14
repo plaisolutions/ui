@@ -55,7 +55,7 @@ function getLegacyCitationResults(metadata: Record<string, unknown>) {
     }))
 }
 
-function getSearchResults(
+export function getWebSearchResults(
   part: ToolResultWebSearchCardProps["part"],
 ): WebSearchResult[] {
   const searchResults = part.metadata?.search_results
@@ -147,7 +147,7 @@ export function ToolResultWebSearchCard({
   part,
   className,
 }: ToolResultWebSearchCardProps) {
-  const searchResults = getSearchResults(part)
+  const searchResults = getWebSearchResults(part)
   const errorDetails = formatToolErrorDetails(part.errorDetails)
   const sourceLabel = searchResults.length === 1 ? "source" : "sources"
 
@@ -179,30 +179,48 @@ export function ToolResultWebSearchCard({
           <SheetTitle>Internet search results</SheetTitle>
         </SheetHeader>
 
-        <section className="mt-5" aria-label="Search results">
-          {searchResults.length > 0 ? (
-            <div className="space-y-3">
-              {searchResults.map((result, index) => (
-                <WebSearchResultItem
-                  key={`${result.url}-${index}`}
-                  result={result}
-                />
-              ))}
-            </div>
-          ) : part.state === "pending" ? (
-            <p className="text-sm text-neutral-600">Searching for sources…</p>
-          ) : (
-            <p className="text-sm text-neutral-600">No sources returned.</p>
-          )}
-
-          {errorDetails ? (
-            <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              <span className="font-semibold">Error details:</span>{" "}
-              {errorDetails}
-            </p>
-          ) : null}
-        </section>
+        <ToolResultWebSearchResults
+          part={part}
+          searchResults={searchResults}
+          errorDetails={errorDetails}
+          className="mt-5"
+        />
       </SheetContent>
     </Sheet>
+  )
+}
+
+export function ToolResultWebSearchResults({
+  part,
+  searchResults = getWebSearchResults(part),
+  errorDetails = formatToolErrorDetails(part.errorDetails),
+  className,
+}: ToolResultWebSearchCardProps & {
+  searchResults?: WebSearchResult[]
+  errorDetails?: string | null
+}) {
+  return (
+    <section className={className} aria-label="Search results">
+      {searchResults.length > 0 ? (
+        <div className="space-y-3">
+          {searchResults.map((result, index) => (
+            <WebSearchResultItem
+              key={`${result.url}-${index}`}
+              result={result}
+            />
+          ))}
+        </div>
+      ) : part.state === "pending" ? (
+        <p className="text-sm text-neutral-600">Searching for sources…</p>
+      ) : (
+        <p className="text-sm text-neutral-600">No sources returned.</p>
+      )}
+
+      {errorDetails ? (
+        <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+          <span className="font-semibold">Error details:</span> {errorDetails}
+        </p>
+      ) : null}
+    </section>
   )
 }
