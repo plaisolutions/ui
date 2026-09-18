@@ -47,6 +47,10 @@ await chat.rateMessage({
   description: "Useful response",
 });
 
+const downloadUrl = await chat.getResourceDownloadUrl({
+  resourceId: "resource_123",
+});
+
 const transcription = await chat.transcribeAudio(audioBlob);
 
 const mediaFile = await chat.uploadFile(file);
@@ -76,6 +80,8 @@ await chat.sendMessage({
 - `rateMessage(input): Promise<void>`
   Rates a persisted message as `POSITIVE` or `NEGATIVE` in the transport's
   chat session.
+- `getResourceDownloadUrl(input): Promise<string>`
+  Returns a short-lived download URL for a protected chat resource.
 - `transcribeAudio(audio, signal?): Promise<string>`
   Transcribes an audio blob using the transport's chat session and
   authentication headers.
@@ -277,6 +283,22 @@ documents first, then text (if non-empty). Sending documents without text is sup
 `/chat_sessions/{chatSessionId}/messages/{messageId}/feedback`. It resolves dynamic `headers`
 for every rating request, so refreshed session tokens are used automatically.
 Non-2xx responses, including `404`, reject with `HttpStatusError`.
+
+## Protected resource downloads
+
+```ts
+const downloadUrl = await chat.getResourceDownloadUrl({
+  resourceId: "resource_123",
+  signal: abortController.signal,
+});
+```
+
+`PlaiThreadTransport` requests
+`/chat_sessions/{chatSessionId}/resources/{resourceId}/download` with the
+current dynamic authentication headers and returns the `download_url` field.
+Resolve it when the user opens the resource because the URL is short-lived.
+Non-2xx responses reject with `HttpStatusError`; an unexpected success body
+rejects with `ProtocolError`.
 
 ## Resending a response
 

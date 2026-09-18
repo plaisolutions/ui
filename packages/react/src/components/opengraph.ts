@@ -154,6 +154,18 @@ function isGoogleDriveResource(resource: ResourceReadModel) {
   )
 }
 
+export function requiresResourceDownloadUrl(
+  resource: ResourceReadModel,
+  locale?: string | null,
+) {
+  return Boolean(
+    resource.store &&
+      !resource.external_url &&
+      !getLocalizedOpenGraphValue(resource, "url", locale) &&
+      !isGoogleDriveResource(resource),
+  )
+}
+
 export function getResourceUrl(
   resource: ResourceReadModel,
   locale?: string | null,

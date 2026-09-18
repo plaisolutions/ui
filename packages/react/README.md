@@ -141,6 +141,7 @@ For persisted threads, pass a stable `conversationId` when the active thread
 changes and use the returned `hydrate(messages)` and `clearError()` APIs.
 The returned `rateMessage({ messageId, rating, description? })`,
 `resendMessage({ messageId, enabledTools? })`,
+`getResourceDownloadUrl({ resourceId, signal? })`,
 `transcribeAudio(audio, signal?)`, and `uploadFile(file)` actions reuse the
 same session-aware transport and dynamic authentication headers as
 `sendMessage`.
@@ -152,9 +153,16 @@ assistant messages to their semantic layout automatically:
   message={message}
   avatar={message.role === "assistant" ? assistantAvatar : undefined}
   footer={message.role === "assistant" ? actions : undefined}
+  getResourceDownloadUrl={getResourceDownloadUrl}
   messagePartsProps={{ locale, renderText, renderThinking }}
 />
 ```
+
+Pass the `getResourceDownloadUrl` action returned by `useChat` to `Message`.
+Datasource cards keep public and Google Drive links direct. For stored
+resources without a public URL, the card requests a short-lived URL only when
+clicked and never renders the protected bucket URL as a link. If the action is
+omitted, protected resources remain visible but non-interactive.
 
 `MessageRoot` is the low-level composable row primitive. `MessageAvatar`,
 `MessageContent`, `MessageHeader` and `MessageFooter` are optional layout

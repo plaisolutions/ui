@@ -427,6 +427,35 @@ describe("PlaiChat", () => {
     ).rejects.toThrow(/does not support message ratings/)
   })
 
+  it("delegates resource download URL requests to its transport", async () => {
+    const getResourceDownloadUrl = vi
+      .fn()
+      .mockResolvedValue("https://storage.example.com/report.pdf?signed=1")
+    const chat = new PlaiChat({
+      transport: {
+        ...createTransport([]),
+        getResourceDownloadUrl,
+      },
+    })
+    const signal = new AbortController().signal
+
+    await expect(
+      chat.getResourceDownloadUrl({ resourceId: "resource_1", signal }),
+    ).resolves.toBe("https://storage.example.com/report.pdf?signed=1")
+    expect(getResourceDownloadUrl).toHaveBeenCalledWith({
+      resourceId: "resource_1",
+      signal,
+    })
+  })
+
+  it("reports when the transport cannot download resources", async () => {
+    const chat = new PlaiChat({ transport: createTransport([]) })
+
+    await expect(
+      chat.getResourceDownloadUrl({ resourceId: "resource_1" }),
+    ).rejects.toThrow(/does not support resource downloads/)
+  })
+
   it("delegates audio transcription to its session-aware transport", async () => {
     const transcribeAudio = vi.fn().mockResolvedValue("Hola desde voz")
     const chat = new PlaiChat({

@@ -1,7 +1,13 @@
 import type { ResourceReadModel, UIMessage } from "@plaisolutions/client"
-import { fireEvent, render, screen, within } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
-import { MessageParts } from "../components"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { Message, MessageParts } from "../components"
 
 function createResource(
   index: number,
@@ -30,7 +36,7 @@ function createResource(
     },
     external_url: null,
     external_resource_id: null,
-    store: true,
+    store: false,
     created_at: "2026-09-14T10:00:00Z",
     updated_at: "2026-09-14T10:00:00Z",
     ...overrides,
@@ -63,6 +69,46 @@ function createDatasourceMessage(resources: ResourceReadModel[]): UIMessage {
 }
 
 describe("AggregatedSourceResults", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it("passes protected resource resolution through the routed Message API", async () => {
+    const replace = vi.fn()
+    vi.spyOn(window, "open").mockReturnValue({
+      close: vi.fn(),
+      closed: false,
+      location: { replace },
+      opener: window,
+    } as unknown as Window)
+    const getResourceDownloadUrl = vi
+      .fn()
+      .mockResolvedValue("https://storage.example.com/signed")
+    const view = render(
+      <Message
+        message={createDatasourceMessage([
+          createResource(1, {
+            store: true,
+            url: "https://storage.googleapis.com/private/resource.pdf",
+          }),
+        ])}
+        getResourceDownloadUrl={getResourceDownloadUrl}
+      />,
+    )
+
+    fireEvent.click(
+      within(view.container).getByRole("button", { name: "PDF Resource 1" }),
+    )
+
+    expect(getResourceDownloadUrl).toHaveBeenCalledWith({
+      resourceId: "resource-1",
+      signal: expect.any(AbortSignal),
+    })
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith("https://storage.example.com/signed")
+    })
+  })
+
   it("shows three cards and a localized overflow card that opens every source", () => {
     const view = render(
       <MessageParts
@@ -243,8 +289,6 @@ describe("AggregatedSourceResults", () => {
         name: "Failed to use tool failed_search",
       }),
     ).toBeTruthy()
-    expect(
-      within(view.container).queryByLabelText("sources"),
-    ).toBeNull()
+    expect(within(view.container).queryByLabelText("sources")).toBeNull()
   })
 })

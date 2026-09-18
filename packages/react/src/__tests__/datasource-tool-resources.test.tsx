@@ -1,6 +1,6 @@
 import type { FolderReadModel, ResourceReadModel } from "@plaisolutions/client"
 import { fireEvent, render, screen, within } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { DatasourceToolResources, ToolResultCard } from "../components"
 
 const folder: FolderReadModel = {
@@ -63,6 +63,75 @@ function createResource(
 }
 
 describe("DatasourceToolResources", () => {
+  it("does not expose a stored resource URL and delegates signed URL resolution", () => {
+    const getResourceDownloadUrl = vi.fn()
+    const resource = createResource({
+      id: "private-resource",
+      name: "Private guide",
+      type: "PDF",
+      folder: null,
+      url: "https://storage.googleapis.com/private-bucket/guide.pdf",
+    })
+
+    render(
+      <DatasourceToolResources
+        resources={[resource]}
+        getResourceDownloadUrl={getResourceDownloadUrl}
+      />,
+    )
+
+    expect(screen.queryByRole("link")).toBeNull()
+    expect(
+      screen.getByRole("button", { name: "PDF Private guide" }),
+    ).toBeTruthy()
+    expect(document.body.innerHTML).not.toContain(
+      "https://storage.googleapis.com/private-bucket/guide.pdf",
+    )
+  })
+
+  it("keeps external and Google Drive resource URLs as direct links", () => {
+    const driveDatasource = createResource({
+      id: "unused",
+      name: "unused",
+    }).datasource
+    if (!driveDatasource) throw new Error("Expected a datasource fixture.")
+
+    const resources = [
+      createResource({
+        id: "external-resource",
+        name: "External guide",
+        type: "PDF",
+        folder: null,
+        url: "https://storage.googleapis.com/private-bucket/guide.pdf",
+        external_url: "https://example.com/public-guide.pdf",
+      }),
+      createResource({
+        id: "drive-resource",
+        name: "Drive guide",
+        type: "PDF",
+        folder: null,
+        url: "https://drive.google.com/file/d/file-id/view",
+        datasource: {
+          ...driveDatasource,
+          source: "GOOGLE_DRIVE",
+        },
+      }),
+    ]
+
+    render(<DatasourceToolResources resources={resources} />)
+
+    expect(
+      screen
+        .getByRole("link", { name: "PDF External guide" })
+        .getAttribute("href"),
+    ).toBe("https://example.com/public-guide.pdf")
+    expect(
+      screen
+        .getByRole("link", { name: "PDF Drive guide" })
+        .getAttribute("href"),
+    ).toBe("https://drive.google.com/file/d/file-id/view")
+  })
+
   it.each([1, 3])(
     "keeps each of %i ungrouped resource cards at the standard card width",
     (resourceCount) => {
@@ -72,6 +141,7 @@ describe("DatasourceToolResources", () => {
           name: `Resource ${index + 1}`,
           folder: null,
           url: `https://example.com/resource-${index + 1}.pdf`,
+          store: false,
         }),
       )
 
@@ -117,6 +187,7 @@ describe("DatasourceToolResources", () => {
       type: "PDF",
       folder: null,
       url: "https://example.com/guide.pdf",
+      store: false,
     })
 
     render(

@@ -326,6 +326,94 @@ describe("PlaiThreadTransport", () => {
     ).rejects.toThrow(/chatSessionId/)
   })
 
+  it("gets a signed resource URL with the current session token", async () => {
+    let token = "token-one"
+    const fetchMock = vi.fn().mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            download_url: "https://storage.example.com/report.pdf?signed=1",
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        ),
+    )
+    const transport = new PlaiThreadTransport({
+      api: "https://api.plaisolutions.com/",
+      chatSessionId: "session/1",
+      headers: () => ({
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      }),
+      credentials: "include",
+      fetch: fetchMock,
+    })
+    const signal = new AbortController().signal
+
+    await expect(
+      transport.getResourceDownloadUrl({
+        resourceId: "resource/1",
+        signal,
+      }),
+    ).resolves.toBe("https://storage.example.com/report.pdf?signed=1")
+
+    token = "token-two"
+    await transport.getResourceDownloadUrl({ resourceId: "resource_2" })
+
+    const [firstUrl, firstInit] = fetchMock.mock.calls[0] as [
+      string,
+      RequestInit & { headers: Headers },
+    ]
+    const [, secondInit] = fetchMock.mock.calls[1] as [
+      string,
+      RequestInit & { headers: Headers },
+    ]
+    expect(firstUrl).toBe(
+      "https://api.plaisolutions.com/chat_sessions/session%2F1/resources/resource%2F1/download",
+    )
+    expect(firstInit.method).toBe("GET")
+    expect(firstInit.credentials).toBe("include")
+    expect(firstInit.signal).toBe(signal)
+    expect(firstInit.headers.get("Authorization")).toBe("Bearer token-one")
+    expect(firstInit.headers.get("Accept")).toBe("application/json")
+    expect(firstInit.headers.has("Content-Type")).toBe(false)
+    expect(secondInit.headers.get("Authorization")).toBe("Bearer token-two")
+  })
+
+  it("validates resource download responses and HTTP errors", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response("Resource not found", {
+          status: 404,
+          statusText: "Not Found",
+        }),
+      )
+    const transport = new PlaiThreadTransport({
+      api: "https://api.plaisolutions.com",
+      chatSessionId: "session_1",
+      fetch: fetchMock,
+    })
+
+    await expect(
+      transport.getResourceDownloadUrl({ resourceId: "resource_1" }),
+    ).rejects.toThrow(/download_url/)
+    await expect(
+      transport.getResourceDownloadUrl({ resourceId: "resource_1" }),
+    ).rejects.toMatchObject({ status: 404, body: "Resource not found" })
+  })
+
+  it("requires a chat session id to download resources", async () => {
+    const transport = new PlaiThreadTransport({
+      api: "https://api.plaisolutions.com/invoke",
+      fetch: vi.fn(),
+    })
+
+    await expect(
+      transport.getResourceDownloadUrl({ resourceId: "resource_1" }),
+    ).rejects.toThrow(/chatSessionId/)
+  })
+
   it("transcribes audio with the current session token", async () => {
     let token = "token-one"
     const fetchMock = vi

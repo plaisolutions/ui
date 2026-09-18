@@ -34,6 +34,8 @@ export type {
   FileUploadStatus,
   FirecrawlSearchToolResultMetadata,
   FolderReadModel,
+  GetResourceDownloadUrlFn,
+  GetResourceDownloadUrlInput,
   InternalChatState,
   InputFileMetadata,
   HttpRequestToolResultMetadata,

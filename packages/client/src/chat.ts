@@ -8,6 +8,7 @@ import {
 import type {
   ChatState,
   ChatStateListener,
+  GetResourceDownloadUrlInput,
   InputFileMetadata,
   InternalChatState,
   PlaiChatOptions,
@@ -208,6 +209,20 @@ export class PlaiChat {
     }
 
     await rateMessage.call(this.options.transport, input)
+  }
+
+  /** Get a short-lived download URL using this chat session's authentication. */
+  async getResourceDownloadUrl(
+    input: GetResourceDownloadUrlInput,
+  ): Promise<string> {
+    const getResourceDownloadUrl = this.options.transport.getResourceDownloadUrl
+    if (!getResourceDownloadUrl) {
+      throw new Error(
+        "The configured chat transport does not support resource downloads.",
+      )
+    }
+
+    return getResourceDownloadUrl.call(this.options.transport, input)
   }
 
   /** Transcribe audio using the authentication context of this chat session. */

@@ -103,9 +103,12 @@ export const UngroupedResources: Story = {
         id: "resource-ungrouped-2",
         folder: null,
         name: "Storyline shortcuts",
+        url: "https://storage.googleapis.com/private-bucket/shortcuts.pdf",
         external_url: null,
       },
     ],
+    getResourceDownloadUrl: async ({ resourceId }) =>
+      `https://example.com/signed-download/${resourceId}`,
   },
 }
 

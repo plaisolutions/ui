@@ -1,4 +1,4 @@
-import type { UIMessage } from "@plaisolutions/client"
+import type { GetResourceDownloadUrlFn, UIMessage } from "@plaisolutions/client"
 import type { HTMLAttributes, ReactNode } from "react"
 import { AssistantMessage } from "./assistant-message"
 import { joinClasses } from "./internal/join-classes"
@@ -26,6 +26,7 @@ export type RoutedMessageProps = Omit<
   toolResultsClassName?: string
   toolPartsClassName?: string
   messagePartsProps?: RoutedMessagePartsProps
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn
 }
 
 export type MessageProps = MessageRootProps | RoutedMessageProps
@@ -49,9 +50,13 @@ export function Message(props: MessageProps) {
     toolResultsClassName,
     toolPartsClassName,
     messagePartsProps,
+    getResourceDownloadUrl,
     className,
     ...rootProps
   } = props
+  const routedMessagePartsProps = getResourceDownloadUrl
+    ? { ...messagePartsProps, getResourceDownloadUrl }
+    : messagePartsProps
 
   if (message.role === "assistant") {
     return (
@@ -66,7 +71,7 @@ export function Message(props: MessageProps) {
         contentPartsClassName={partsClassName}
         toolResultsClassName={toolResultsClassName}
         toolPartsClassName={toolPartsClassName}
-        messagePartsProps={messagePartsProps}
+        messagePartsProps={routedMessagePartsProps}
       />
     )
   }
@@ -81,7 +86,7 @@ export function Message(props: MessageProps) {
         footer={footer}
         contentClassName={contentClassName}
         partsClassName={partsClassName}
-        messagePartsProps={messagePartsProps}
+        messagePartsProps={routedMessagePartsProps}
       />
     )
   }
@@ -95,7 +100,7 @@ export function Message(props: MessageProps) {
       {avatar}
       <MessageContent className={contentClassName}>
         <MessageParts
-          {...messagePartsProps}
+          {...routedMessagePartsProps}
           message={message}
           className={partsClassName}
         />

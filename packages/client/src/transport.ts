@@ -3,6 +3,7 @@ import { parseSseStream } from "./sse"
 import type {
   ChatTransport,
   ChatTransportRequest,
+  GetResourceDownloadUrlInput,
   MediaFile,
   PlaiSseEvent,
   RateMessageInput,
@@ -103,6 +104,46 @@ export class PlaiThreadTransport implements ChatTransport {
       const body = await safeReadResponseText(response)
       throw new HttpStatusError(response.status, response.statusText, body)
     }
+  }
+
+  async getResourceDownloadUrl({
+    resourceId,
+    signal,
+  }: GetResourceDownloadUrlInput): Promise<string> {
+    const fetchImpl = this.options.fetch ?? globalThis.fetch
+    if (!fetchImpl) {
+      throw new Error("No fetch implementation available.")
+    }
+
+    const headers = await this.resolveHeaders()
+    headers.delete("Content-Type")
+    headers.set("Accept", "application/json")
+
+    const response = await fetchImpl(
+      this.resolveResourceDownloadEndpoint(resourceId),
+      {
+        method: "GET",
+        headers,
+        credentials: this.options.credentials,
+        signal,
+      },
+    )
+
+    if (!response.ok) {
+      const body = await safeReadResponseText(response)
+      throw new HttpStatusError(response.status, response.statusText, body)
+    }
+
+    let payload: unknown
+    try {
+      payload = await response.json()
+    } catch {
+      throw new ProtocolError(
+        "The resource download response must be valid JSON.",
+      )
+    }
+
+    return normalizeResourceDownloadUrl(payload)
   }
 
   async transcribeAudio(audio: Blob, signal?: AbortSignal): Promise<string> {
@@ -267,6 +308,18 @@ export class PlaiThreadTransport implements ChatTransport {
     return `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/transcriptions`
   }
 
+  private resolveResourceDownloadEndpoint(resourceId: string): string {
+    const { api, chatSessionId } = this.options
+    if (!chatSessionId) {
+      throw new Error(
+        "A chatSessionId is required to download a resource with PlaiThreadTransport.",
+      )
+    }
+
+    const base = api.endsWith("/") ? api.slice(0, -1) : api
+    return `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/resources/${encodeURIComponent(resourceId)}/download`
+  }
+
   private resolveMediaFilesEndpoint(): string {
     const { api, chatSessionId, threadId } = this.options
     if (!chatSessionId || !threadId) {
@@ -348,6 +401,21 @@ function normalizeMediaFile(value: unknown): MediaFile {
       ? { updatedAt: mediaFile.updated_at }
       : {}),
   }
+}
+
+function normalizeResourceDownloadUrl(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new ProtocolError("The resource download response must be an object.")
+  }
+
+  const downloadUrl = (value as Record<string, unknown>).download_url
+  if (typeof downloadUrl !== "string" || downloadUrl.trim().length === 0) {
+    throw new ProtocolError(
+      "The resource download response is missing the required download_url field.",
+    )
+  }
+
+  return downloadUrl.trim()
 }
 
 function readRequiredString(

@@ -1,4 +1,8 @@
-import type { FolderReadModel, ResourceReadModel } from "@plaisolutions/client"
+import type {
+  FolderReadModel,
+  GetResourceDownloadUrlFn,
+  ResourceReadModel,
+} from "@plaisolutions/client"
 import {
   DatasourceFolderCard,
   type DatasourceFolderCardProps,
@@ -11,6 +15,7 @@ import {
   getResourceTitle,
   getResourceType,
   getResourceUrl,
+  requiresResourceDownloadUrl,
 } from "./opengraph"
 import { ResourceCard, type ResourceCardProps } from "./resource-card"
 
@@ -18,6 +23,7 @@ export type DatasourceToolResourcesProps = {
   resources: ResourceReadModel[]
   locale?: string | null
   className?: string
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn
 }
 
 export type DatasourceResourceCard =
@@ -49,13 +55,21 @@ function readString(value: Record<string, unknown> | undefined, key: string) {
 function toResourceCardProps(
   resource: ResourceReadModel,
   locale?: string | null,
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn,
 ): ResourceCardProps {
+  const requiresDownloadUrl = requiresResourceDownloadUrl(resource, locale)
+
   return {
     icon: getResourceIcon(resource, locale),
     type: getResourceType(resource, locale),
     title: getResourceTitle(resource, locale),
     description: getResourceDescription(resource, locale),
-    url: getResourceUrl(resource, locale),
+    url: requiresDownloadUrl ? null : getResourceUrl(resource, locale),
+    resourceId: resource.id,
+    getResourceDownloadUrl: requiresDownloadUrl
+      ? getResourceDownloadUrl
+      : undefined,
+    requiresDownloadUrl,
   }
 }
 
@@ -63,6 +77,7 @@ function toFolderCardProps(
   folder: FolderReadModel,
   group: ResourceReadModel[],
   locale?: string | null,
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn,
 ): DatasourceFolderCardProps {
   const datasource = group[0]?.datasource
   const type =
@@ -73,8 +88,7 @@ function toFolderCardProps(
 
   return {
     icon: getLocalizedOpenGraphValue(folder, "image", locale) ?? undefined,
-    title:
-      getLocalizedOpenGraphValue(folder, "title", locale) ?? folder.name,
+    title: getLocalizedOpenGraphValue(folder, "title", locale) ?? folder.name,
     description:
       getLocalizedOpenGraphValue(folder, "description", locale) ??
       readString(folder.extra_info, "description") ??
@@ -85,7 +99,7 @@ function toFolderCardProps(
     type,
     url: getLocalizedOpenGraphValue(folder, "url", locale),
     resources: group.map((resource) =>
-      toResourceCardProps(resource, locale),
+      toResourceCardProps(resource, locale, getResourceDownloadUrl),
     ),
   }
 }
@@ -126,6 +140,7 @@ export function isDatasourceResource(
 export function getDatasourceResourceCards(
   resources: ResourceReadModel[],
   locale?: string | null,
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn,
 ): DatasourceResourceCard[] {
   const folderGroups = new Map<string, FolderGroup>()
   const ungroupedResources: ResourceReadModel[] = []
@@ -157,15 +172,17 @@ export function getDatasourceResourceCards(
   }
 
   return [
-    ...Array.from(folderGroups.values()).map(({ folder, resources: group }) => ({
-      kind: "folder" as const,
-      key: `folder-${folder.id}`,
-      props: toFolderCardProps(folder, group, locale),
-    })),
+    ...Array.from(folderGroups.values()).map(
+      ({ folder, resources: group }) => ({
+        kind: "folder" as const,
+        key: `folder-${folder.id}`,
+        props: toFolderCardProps(folder, group, locale, getResourceDownloadUrl),
+      }),
+    ),
     ...ungroupedResources.map((resource) => ({
       kind: "resource" as const,
       key: `resource-${resource.id}`,
-      props: toResourceCardProps(resource, locale),
+      props: toResourceCardProps(resource, locale, getResourceDownloadUrl),
     })),
   ]
 }
@@ -188,8 +205,13 @@ export function DatasourceToolResources({
   resources,
   locale,
   className,
+  getResourceDownloadUrl,
 }: DatasourceToolResourcesProps) {
-  const cards = getDatasourceResourceCards(resources, locale)
+  const cards = getDatasourceResourceCards(
+    resources,
+    locale,
+    getResourceDownloadUrl,
+  )
 
   return (
     <section

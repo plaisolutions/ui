@@ -59,6 +59,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     sendMessage,
     resendMessage,
     rateMessage,
+    getResourceDownloadUrl,
     transcribeAudio,
     uploadFile,
     stop,
@@ -192,6 +193,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                 <Message
                   key={message.id}
                   message={message}
+                  getResourceDownloadUrl={getResourceDownloadUrl}
                   avatar={
                     message.role === "assistant" && session.agent?.avatar ? (
                       <MessageAvatar

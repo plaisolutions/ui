@@ -1,4 +1,5 @@
 import type {
+  GetResourceDownloadUrlFn,
   UIMessage,
   UIMessagePart,
   UIThinkingPart,
@@ -138,6 +139,7 @@ export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
   /** @deprecated Use sourceToolResultsPosition instead. */
   datasourceToolResultsPosition?: "inline" | "before-content"
   onOpenAgentThread?: (threadId: string) => void
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn
   locale?: string | null
   renderText?: (
     part: Extract<UIMessagePart, { type: "text" }>,
@@ -197,6 +199,7 @@ function renderPart(
   message: UIMessage,
   isStreaming: boolean,
   onOpenAgentThread?: (threadId: string) => void,
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn,
   locale?: string | null,
   renderText?: MessagePartsProps["renderText"],
   renderToolCall?: MessagePartsProps["renderToolCall"],
@@ -293,6 +296,7 @@ function renderPart(
         part={part}
         locale={locale}
         onOpenAgentThread={onOpenAgentThread}
+        getResourceDownloadUrl={getResourceDownloadUrl}
       />
     )
   }
@@ -409,6 +413,7 @@ export function MessageParts({
   maxVisibleSourceCards = 3,
   datasourceToolResultsPosition,
   onOpenAgentThread,
+  getResourceDownloadUrl,
   locale,
   renderText,
   renderToolCall,
@@ -479,6 +484,7 @@ export function MessageParts({
               parts={item.parts}
               locale={locale}
               maxVisible={maxVisibleSourceCards}
+              getResourceDownloadUrl={getResourceDownloadUrl}
             />
           ) : (
             renderPart(
@@ -487,6 +493,7 @@ export function MessageParts({
               message,
               isStreaming,
               onOpenAgentThread,
+              getResourceDownloadUrl,
               locale,
               renderText,
               renderToolCall,

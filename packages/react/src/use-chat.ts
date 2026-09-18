@@ -3,6 +3,7 @@ import type {
   ChatStatus,
   ChatTransport,
   FileUploadState,
+  GetResourceDownloadUrlFn,
   PlaiChatError,
   PlaiSseEvent,
   RateMessageInput,
@@ -33,6 +34,7 @@ export type UseChatResult = {
   uploadState: FileUploadState
   sendMessage: (input: SendMessageInput) => Promise<void>
   rateMessage: (input: RateMessageInput) => Promise<void>
+  getResourceDownloadUrl: GetResourceDownloadUrlFn
   resendMessage: (input: ResendMessageInput) => Promise<void>
   transcribeAudio: TranscribeAudioFn
   uploadFile: UploadFileFn
@@ -79,6 +81,7 @@ export function useChat(options: UseChatOptions): UseChatResult {
     () => ({
       sendMessage: chat.sendMessage.bind(chat),
       rateMessage: chat.rateMessage.bind(chat),
+      getResourceDownloadUrl: chat.getResourceDownloadUrl.bind(chat),
       resendMessage: chat.resendMessage.bind(chat),
       transcribeAudio: chat.transcribeAudio.bind(chat),
       uploadFile: chat.uploadFile.bind(chat),

@@ -1,4 +1,5 @@
 import type {
+  GetResourceDownloadUrlFn,
   ResourceReadModel,
   UIDatasourceToolCallPart,
   UIFirecrawlSearchToolCallPart,
@@ -62,6 +63,7 @@ export type AggregatedSourceResultsProps = {
   locale?: string | null
   maxVisible?: number
   className?: string
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn
 }
 
 export function isCompletedSourceToolPart(
@@ -86,6 +88,7 @@ function getDatasourceResources(
 function getAggregatedCards(
   parts: SourceToolPart[],
   locale?: string | null,
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn,
 ): AggregatedSourceCard[] {
   const datasourceCards = parts
     .filter(
@@ -93,21 +96,22 @@ function getAggregatedCards(
         part.toolType === "datasource",
     )
     .flatMap((part) =>
-      getDatasourceResourceCards(getDatasourceResources(part), locale).map(
-        (card) => ({
-          kind: "datasource" as const,
-          key: `${part.id}-${card.key}`,
-          card,
-        }),
-      ),
+      getDatasourceResourceCards(
+        getDatasourceResources(part),
+        locale,
+        getResourceDownloadUrl,
+      ).map((card) => ({
+        kind: "datasource" as const,
+        key: `${part.id}-${card.key}`,
+        card,
+      })),
     )
   const webCards = parts
     .filter(
       (
         part,
       ): part is UIFirecrawlSearchToolCallPart | UIPerplexityToolCallPart =>
-        part.toolType === "perplexity" ||
-        part.toolType === "firecrawl_search",
+        part.toolType === "perplexity" || part.toolType === "firecrawl_search",
     )
     .map((part) => ({
       kind: "web" as const,
@@ -126,9 +130,7 @@ function SourceCard({
   variant?: "card" | "list"
 }) {
   if (source.kind === "datasource") {
-    return (
-      <DatasourceResourceCardView card={source.card} variant={variant} />
-    )
+    return <DatasourceResourceCardView card={source.card} variant={variant} />
   }
 
   if (variant === "card") {
@@ -150,9 +152,7 @@ function getTotalSourceCount(cards: AggregatedSourceCard[]) {
   return cards.reduce(
     (count, source) =>
       count +
-      (source.kind === "web"
-        ? getWebSearchResults(source.part).length
-        : 1),
+      (source.kind === "web" ? getWebSearchResults(source.part).length : 1),
     0,
   )
 }
@@ -162,14 +162,13 @@ export function AggregatedSourceResults({
   locale,
   maxVisible = 3,
   className,
+  getResourceDownloadUrl,
 }: AggregatedSourceResultsProps) {
-  const cards = getAggregatedCards(parts, locale)
+  const cards = getAggregatedCards(parts, locale, getResourceDownloadUrl)
   if (cards.length === 0) return null
 
   const visibleLimit =
-    Number.isFinite(maxVisible) && maxVisible >= 1
-      ? Math.floor(maxVisible)
-      : 3
+    Number.isFinite(maxVisible) && maxVisible >= 1 ? Math.floor(maxVisible) : 3
   const visibleCards = cards.slice(0, visibleLimit)
   const overflowCount = cards.length - visibleCards.length
   const totalSourceCount = getTotalSourceCount(cards)

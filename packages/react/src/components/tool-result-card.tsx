@@ -1,4 +1,5 @@
 import type {
+  GetResourceDownloadUrlFn,
   OfficeDocumentMediaFile,
   ResourceReadModel,
   UIToolCallPart,
@@ -26,6 +27,7 @@ export type ToolResultCardProps = {
   detailsOpen?: boolean
   locale?: string | null
   onOpenAgentThread?: (threadId: string) => void
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn
 }
 
 function formatJson(value: unknown) {
@@ -69,6 +71,7 @@ export function ToolResultCard({
   detailsOpen = true,
   locale,
   onOpenAgentThread,
+  getResourceDownloadUrl,
 }: ToolResultCardProps) {
   if (part.state === "pending") {
     return (
@@ -132,6 +135,7 @@ export function ToolResultCard({
         resources={datasourceResources}
         locale={locale}
         className={className}
+        getResourceDownloadUrl={getResourceDownloadUrl}
       />
     )
   }

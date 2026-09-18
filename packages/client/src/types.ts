@@ -444,6 +444,15 @@ export type RateMessageInput = {
   description?: string
 }
 
+export type GetResourceDownloadUrlInput = {
+  resourceId: string
+  signal?: AbortSignal
+}
+
+export type GetResourceDownloadUrlFn = (
+  input: GetResourceDownloadUrlInput,
+) => Promise<string>
+
 export type TranscribeAudioFn = (
   audio: Blob,
   signal?: AbortSignal,
@@ -474,6 +483,7 @@ export type ChatTransportRequest = {
 export interface ChatTransport {
   stream(request: ChatTransportRequest): AsyncIterable<PlaiSseEvent>
   rateMessage?(input: RateMessageInput): Promise<void>
+  getResourceDownloadUrl?: GetResourceDownloadUrlFn
   transcribeAudio?: TranscribeAudioFn
   uploadFile?(request: UploadFileTransportRequest): Promise<MediaFile>
 }

@@ -234,6 +234,27 @@ describe("useChat", () => {
     })
   })
 
+  it("exposes getResourceDownloadUrl from the chat instance", async () => {
+    const getResourceDownloadUrl = vi
+      .fn()
+      .mockResolvedValue("https://storage.example.com/report.pdf?signed=1")
+    const transport: ChatTransport = {
+      ...createTransport([]),
+      getResourceDownloadUrl,
+    }
+    const { result } = renderHook(() => useChat({ transport }))
+
+    await act(async () => {
+      await expect(
+        result.current.getResourceDownloadUrl({ resourceId: "resource_1" }),
+      ).resolves.toBe("https://storage.example.com/report.pdf?signed=1")
+    })
+
+    expect(getResourceDownloadUrl).toHaveBeenCalledWith({
+      resourceId: "resource_1",
+    })
+  })
+
   it("exposes resendMessage from the chat instance", async () => {
     const transport = createTransport([
       {

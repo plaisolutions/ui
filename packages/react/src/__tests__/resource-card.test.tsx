@@ -1,8 +1,18 @@
-import { render, screen, within } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { ResourceCard } from "../components"
 
 describe("ResourceCard", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it("renders a linked resource with the default Lucide icon", () => {
     const view = render(
       <ResourceCard
@@ -45,5 +55,94 @@ describe("ResourceCard", () => {
     })
     expect(article.className).toContain("w-full")
     expect(article.className).not.toContain("min-h-[183px]")
+  })
+
+  it("resolves a protected resource URL only when the card is clicked", async () => {
+    const replace = vi.fn()
+    const popup = {
+      close: vi.fn(),
+      closed: false,
+      location: { replace },
+      opener: window,
+    } as unknown as Window
+    const open = vi.spyOn(window, "open").mockReturnValue(popup)
+    const getResourceDownloadUrl = vi
+      .fn()
+      .mockResolvedValue("https://storage.example.com/signed-resource")
+
+    const view = render(
+      <ResourceCard
+        type="PDF"
+        title="Private handbook"
+        description="Internal resource"
+        url={null}
+        resourceId="resource/private handbook"
+        requiresDownloadUrl
+        getResourceDownloadUrl={getResourceDownloadUrl}
+      />,
+    )
+    const viewQueries = within(view.container)
+
+    expect(getResourceDownloadUrl).not.toHaveBeenCalled()
+    expect(viewQueries.queryByRole("link")).toBeNull()
+
+    fireEvent.click(
+      viewQueries.getByRole("button", {
+        name: "PDF Private handbook Internal resource",
+      }),
+    )
+
+    expect(open).toHaveBeenCalledWith("about:blank", "_blank")
+    expect(getResourceDownloadUrl).toHaveBeenCalledWith({
+      resourceId: "resource/private handbook",
+      signal: expect.any(AbortSignal),
+    })
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith(
+        "https://storage.example.com/signed-resource",
+      )
+    })
+    expect(popup.opener).toBeNull()
+  })
+
+  it("shows a retryable error when a protected resource cannot be opened", async () => {
+    const replace = vi.fn()
+    const close = vi.fn()
+    const popup = {
+      close,
+      closed: false,
+      location: { replace },
+      opener: window,
+    } as unknown as Window
+    vi.spyOn(window, "open").mockReturnValue(popup)
+    const getResourceDownloadUrl = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Access denied"))
+      .mockResolvedValueOnce("https://storage.example.com/retry")
+
+    render(
+      <ResourceCard
+        title="Private handbook"
+        url={null}
+        resourceId="resource-1"
+        requiresDownloadUrl
+        getResourceDownloadUrl={getResourceDownloadUrl}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Private handbook" }))
+    const error = await screen.findByRole("alert")
+    expect(error.textContent).toBe("Unable to open resource. Try again.")
+    expect(close).toHaveBeenCalled()
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Private handbook Unable to open resource. Try again.",
+      }),
+    )
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith("https://storage.example.com/retry")
+    })
+    expect(getResourceDownloadUrl).toHaveBeenCalledTimes(2)
   })
 })
