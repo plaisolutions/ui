@@ -139,7 +139,7 @@ Available optional components:
 
 For persisted threads, pass a stable `conversationId` when the active thread
 changes and use the returned `hydrate(messages)` and `clearError()` APIs.
-The returned `rateMessage({ messageId, rating })`,
+The returned `rateMessage({ messageId, rating, description? })`,
 `resendMessage({ messageId, enabledTools? })`,
 `transcribeAudio(audio, signal?)`, and `uploadFile(file)` actions reuse the
 same session-aware transport and dynamic authentication headers as

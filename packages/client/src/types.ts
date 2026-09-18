@@ -441,6 +441,7 @@ export type MessageRating = "POSITIVE" | "NEGATIVE"
 export type RateMessageInput = {
   messageId: string
   rating: MessageRating
+  description?: string
 }
 
 export type TranscribeAudioFn = (

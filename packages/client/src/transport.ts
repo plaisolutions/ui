@@ -72,7 +72,11 @@ export class PlaiThreadTransport implements ChatTransport {
     }
   }
 
-  async rateMessage({ messageId, rating }: RateMessageInput): Promise<void> {
+  async rateMessage({
+    messageId,
+    rating,
+    description,
+  }: RateMessageInput): Promise<void> {
     const fetchImpl = this.options.fetch ?? globalThis.fetch
     if (!fetchImpl) {
       throw new Error("No fetch implementation available.")
@@ -82,15 +86,18 @@ export class PlaiThreadTransport implements ChatTransport {
     headers.set("Content-Type", "application/json")
     headers.set("Accept", "application/json")
 
-    const response = await fetchImpl(this.resolveRateMessageEndpoint(), {
-      method: "POST",
-      headers,
-      credentials: this.options.credentials,
-      body: JSON.stringify({
-        message_id: messageId,
-        rating,
-      }),
-    })
+    const response = await fetchImpl(
+      this.resolveRateMessageEndpoint(messageId),
+      {
+        method: "PUT",
+        headers,
+        credentials: this.options.credentials,
+        body: JSON.stringify({
+          rating,
+          ...(description === undefined ? {} : { description }),
+        }),
+      },
+    )
 
     if (!response.ok) {
       const body = await safeReadResponseText(response)
@@ -236,7 +243,7 @@ export class PlaiThreadTransport implements ChatTransport {
     return api
   }
 
-  private resolveRateMessageEndpoint(): string {
+  private resolveRateMessageEndpoint(messageId: string): string {
     const { api, chatSessionId } = this.options
     if (!chatSessionId) {
       throw new Error(
@@ -245,7 +252,7 @@ export class PlaiThreadTransport implements ChatTransport {
     }
 
     const base = api.endsWith("/") ? api.slice(0, -1) : api
-    return `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/feedback`
+    return `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/messages/${encodeURIComponent(messageId)}/feedback`
   }
 
   private resolveTranscriptionEndpoint(): string {

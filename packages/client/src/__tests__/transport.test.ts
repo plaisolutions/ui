@@ -256,8 +256,9 @@ describe("PlaiThreadTransport", () => {
     })
 
     await transport.rateMessage({
-      messageId: "message_1",
+      messageId: "message/1",
       rating: "POSITIVE",
+      description: "Useful response",
     })
 
     token = "token-two"
@@ -270,20 +271,25 @@ describe("PlaiThreadTransport", () => {
       string,
       RequestInit & { headers: Headers },
     ]
-    const [, secondInit] = fetchMock.mock.calls[1] as [
+    const [secondUrl, secondInit] = fetchMock.mock.calls[1] as [
       string,
       RequestInit & { headers: Headers },
     ]
 
     expect(firstUrl).toBe(
-      "https://api.plaisolutions.com/chat_sessions/session%2F1/feedback",
+      "https://api.plaisolutions.com/chat_sessions/session%2F1/messages/message%2F1/feedback",
     )
-    expect(firstInit.method).toBe("POST")
+    expect(firstInit.method).toBe("PUT")
     expect(firstInit.headers.get("Authorization")).toBe("Bearer token-one")
     expect(firstInit.body).toBe(
-      JSON.stringify({ message_id: "message_1", rating: "POSITIVE" }),
+      JSON.stringify({ rating: "POSITIVE", description: "Useful response" }),
     )
+    expect(secondUrl).toBe(
+      "https://api.plaisolutions.com/chat_sessions/session%2F1/messages/message_2/feedback",
+    )
+    expect(secondInit.method).toBe("PUT")
     expect(secondInit.headers.get("Authorization")).toBe("Bearer token-two")
+    expect(secondInit.body).toBe(JSON.stringify({ rating: "NEGATIVE" }))
   })
 
   it("surfaces the expected 404 from the rate-message endpoint", async () => {

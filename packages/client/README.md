@@ -44,6 +44,7 @@ await chat.resendMessage({
 await chat.rateMessage({
   messageId: "persisted_message_123",
   rating: "POSITIVE",
+  description: "Useful response",
 });
 
 const transcription = await chat.transcribeAudio(audioBlob);
@@ -267,12 +268,13 @@ documents first, then text (if non-empty). Sending documents without text is sup
 ```js
 {
   messageId: string,
-  rating: "POSITIVE" | "NEGATIVE"
+  rating: "POSITIVE" | "NEGATIVE",
+  description?: string
 }
 ```
 
-`PlaiThreadTransport` posts this as `{ message_id, rating }` to
-`/chat_sessions/{chatSessionId}/rate-message`. It resolves dynamic `headers`
+`PlaiThreadTransport` sends this as `{ rating, description? }` with `PUT` to
+`/chat_sessions/{chatSessionId}/messages/{messageId}/feedback`. It resolves dynamic `headers`
 for every rating request, so refreshed session tokens are used automatically.
 Non-2xx responses, including `404`, reject with `HttpStatusError`.
 

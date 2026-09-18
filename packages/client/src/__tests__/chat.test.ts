@@ -406,11 +406,13 @@ describe("PlaiChat", () => {
     await chat.rateMessage({
       messageId: "message_1",
       rating: "POSITIVE",
+      description: "Useful response",
     })
 
     expect(rateMessage).toHaveBeenCalledWith({
       messageId: "message_1",
       rating: "POSITIVE",
+      description: "Useful response",
     })
   })
 

@@ -223,12 +223,14 @@ describe("useChat", () => {
       await result.current.rateMessage({
         messageId: "message_1",
         rating: "NEGATIVE",
+        description: "Incorrect answer",
       })
     })
 
     expect(rateMessage).toHaveBeenCalledWith({
       messageId: "message_1",
       rating: "NEGATIVE",
+      description: "Incorrect answer",
     })
   })
 
