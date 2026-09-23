@@ -1,5 +1,7 @@
 import type {
   InputFileMetadata,
+  MemoryProposal,
+  ThreadMemoryProposalRef,
   UIMessage,
   UIMessagePart,
   UIToolCallPart,
@@ -12,7 +14,10 @@ import type {
  * representations (`content`, `content_parts` and `content_blocks`), so this
  * function deliberately accepts an unknown-shaped record at the boundary.
  */
-export function normalizePlaiThreadMessages(messages: unknown[]): UIMessage[] {
+export function normalizePlaiThreadMessages(
+  messages: unknown[],
+  options: { memoryProposals?: ThreadMemoryProposalRef[] } = {},
+): UIMessage[] {
   const normalized: UIMessage[] = []
 
   for (const [index, value] of messages.entries()) {
@@ -43,7 +48,10 @@ export function normalizePlaiThreadMessages(messages: unknown[]): UIMessage[] {
     })
   }
 
-  return normalized
+  return hydrateMemoryProposalStatuses(
+    normalized,
+    options.memoryProposals ?? [],
+  )
 }
 
 function partsFromMessage(message: Record<string, unknown>): UIMessagePart[] {
@@ -144,12 +152,16 @@ function partFromValue(value: unknown, index: number): UIMessagePart[] {
         : value
     const id =
       stringValue(info.id) ?? stringValue(value.id) ?? `history_tool_${index}`
+    const metadata = recordValue(info.metadata)
     return [
       {
         type: "tool-call",
         id,
         name: stringValue(info.name) ?? stringValue(value.name) ?? "tool",
-        toolType: toolType(info.tool_type ?? value.tool_type),
+        toolType:
+          metadata?.type === "memory_proposal"
+            ? "memory_proposal"
+            : toolType(info.tool_type ?? value.tool_type),
         input: info.input ?? value.input ?? {},
         inputSchema: info.input_schema ?? value.input_schema,
         state:
@@ -162,7 +174,7 @@ function partFromValue(value: unknown, index: number): UIMessagePart[] {
               : "completed",
         result: info.result,
         errorDetails: toolErrorDetails(info.error_details),
-        metadata: recordValue(info.metadata),
+        metadata,
       } as UIToolCallPart,
     ]
   }
@@ -176,17 +188,56 @@ function toolPartFromLegacyMessage(
 ): UIToolCallPart | null {
   const result = recordValue(message.tool_result)
   if (!result) return null
+  const metadata = recordValue(result.extra_info)
   return {
     type: "tool-call",
     id: stringValue(result.id) ?? `legacy_tool_call_${index}`,
     name: stringValue(result.name) ?? "tool",
-    toolType: toolType(result.type),
+    toolType:
+      metadata?.type === "memory_proposal"
+        ? "memory_proposal"
+        : toolType(result.type),
     input: {},
     state: result.is_error === true ? "error" : "completed",
     result: result.output,
     errorDetails: toolErrorDetails(result.error_details),
-    metadata: recordValue(result.extra_info),
+    metadata,
   } as UIToolCallPart
+}
+
+function hydrateMemoryProposalStatuses(
+  messages: UIMessage[],
+  refs: ThreadMemoryProposalRef[],
+): UIMessage[] {
+  if (refs.length === 0) return messages
+  const statuses = new Map(refs.map((ref) => [ref.tool_call_id, ref.status]))
+  return messages.map((message) => ({
+    ...message,
+    parts: message.parts.map((part) => {
+      if (part.type !== "tool-call") return part
+      const proposal = memoryProposalFromMetadata(part.metadata)
+      const status = statuses.get(part.id)
+      if (!proposal || !status) return part
+      return {
+        ...part,
+        toolType: "memory_proposal",
+        state: "completed",
+        metadata: {
+          ...part.metadata,
+          type: "memory_proposal",
+          proposal: { ...proposal, status },
+        },
+      } as UIToolCallPart
+    }),
+  }))
+}
+
+function memoryProposalFromMetadata(
+  metadata: Record<string, unknown> | undefined,
+): MemoryProposal | undefined {
+  if (metadata?.type !== "memory_proposal") return undefined
+  const proposal = metadata.proposal
+  return isRecord(proposal) ? (proposal as MemoryProposal) : undefined
 }
 
 function metadataFromMessage(message: Record<string, unknown>) {

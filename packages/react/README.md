@@ -115,6 +115,7 @@ import {
   ThumbUp,
   PromptForm,
   ToolResultCard,
+  MemoryProposalCard,
 } from "@plaisolutions/react";
 ```
 
@@ -136,11 +137,15 @@ Available optional components:
 - `ThumbDown`
 - `PromptForm`
 - `ToolResultCard`
+- `MemoryProposalCard`
 
 For persisted threads, pass a stable `conversationId` when the active thread
 changes and use the returned `hydrate(messages)` and `clearError()` APIs.
 The returned `rateMessage({ messageId, rating, description? })`,
 `resendMessage({ messageId, enabledTools? })`,
+`getMemoryProposal({ proposalId })`,
+`acceptMemoryProposal({ proposalId })`,
+`rejectMemoryProposal({ proposalId })`,
 `getResourceDownloadUrl({ resourceId, signal? })`,
 `transcribeAudio(audio, signal?)`, and `uploadFile(file)` actions reuse the
 same session-aware transport and dynamic authentication headers as
@@ -163,6 +168,58 @@ Datasource cards keep public and Google Drive links direct. For stored
 resources without a public URL, the card requests a short-lived URL only when
 clicked and never renders the protected bucket URL as a link. If the action is
 omitted, protected resources remain visible but non-interactive.
+
+### Agent Memory proposals
+
+Agent Memory proposal cards are opt-in. Pass the three actions returned by
+`useChat` and the active agent ID through `messagePartsProps`:
+
+```tsx
+const {
+  messages,
+  getMemoryProposal,
+  acceptMemoryProposal,
+  rejectMemoryProposal,
+} = useChat({ transport });
+
+const memoryProposal = {
+  activeAgentId: agent.id,
+  actions: {
+    getMemoryProposal,
+    acceptMemoryProposal,
+    rejectMemoryProposal,
+  },
+};
+
+{messages.map((message) => (
+  <Message
+    key={message.id}
+    message={message}
+    messagePartsProps={{ locale, memoryProposal }}
+  />
+))}
+```
+
+The actions use the ChatSession token already configured on the transport; do
+not provide a Project JWT. The card renders proposal details, Accept/Reject
+controls when the backend allows resolution, administrative-review status, and
+final states. If `memoryProposal` is omitted, memory proposal parts are not
+rendered. This lets embeds and other consumers explicitly exclude the feature.
+
+When hydrating a persisted thread, include its proposal references so resolved
+states remain current:
+
+```tsx
+hydrate(
+  normalizePlaiThreadMessages(thread.messages, {
+    memoryProposals: thread.memory_proposals ?? [],
+  }),
+);
+```
+
+`MemoryProposalCard` is also exported for custom layouts. The React package
+does not expose administrative memory management; applications should keep
+that functionality in their private API layer.
 
 `MessageRoot` is the low-level composable row primitive. `MessageAvatar`,
 `MessageContent`, `MessageHeader` and `MessageFooter` are optional layout

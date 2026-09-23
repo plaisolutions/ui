@@ -4,6 +4,8 @@ import type {
   ChatTransport,
   ChatTransportRequest,
   GetResourceDownloadUrlInput,
+  MemoryProposal,
+  MemoryProposalActionInput,
   MediaFile,
   PlaiSseEvent,
   RateMessageInput,
@@ -104,6 +106,24 @@ export class PlaiThreadTransport implements ChatTransport {
       const body = await safeReadResponseText(response)
       throw new HttpStatusError(response.status, response.statusText, body)
     }
+  }
+
+  async getMemoryProposal({
+    proposalId,
+  }: MemoryProposalActionInput): Promise<MemoryProposal> {
+    return this.requestMemoryProposal(proposalId, "get")
+  }
+
+  async acceptMemoryProposal({
+    proposalId,
+  }: MemoryProposalActionInput): Promise<MemoryProposal> {
+    return this.requestMemoryProposal(proposalId, "accept")
+  }
+
+  async rejectMemoryProposal({
+    proposalId,
+  }: MemoryProposalActionInput): Promise<MemoryProposal> {
+    return this.requestMemoryProposal(proposalId, "reject")
   }
 
   async getResourceDownloadUrl({
@@ -296,6 +316,66 @@ export class PlaiThreadTransport implements ChatTransport {
     return `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/messages/${encodeURIComponent(messageId)}/feedback`
   }
 
+  private resolveMemoryProposalEndpoint(
+    proposalId: string,
+    action: "get" | "accept" | "reject",
+  ): string {
+    const { api, chatSessionId } = this.options
+    if (!chatSessionId) {
+      throw new Error(
+        "A chatSessionId is required to resolve memory proposals with PlaiThreadTransport.",
+      )
+    }
+
+    const base = api.endsWith("/") ? api.slice(0, -1) : api
+    const proposalPath = `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/memory-proposals/${encodeURIComponent(proposalId)}`
+    return action === "get" ? proposalPath : `${proposalPath}/${action}`
+  }
+
+  private async requestMemoryProposal(
+    proposalId: string,
+    action: "get" | "accept" | "reject",
+  ): Promise<MemoryProposal> {
+    const fetchImpl = this.options.fetch ?? globalThis.fetch
+    if (!fetchImpl) {
+      throw new Error("No fetch implementation available.")
+    }
+
+    const headers = await this.resolveHeaders()
+    headers.set("Accept", "application/json")
+    const response = await fetchImpl(
+      this.resolveMemoryProposalEndpoint(proposalId, action),
+      {
+        method: action === "get" ? "GET" : "POST",
+        headers,
+        credentials: this.options.credentials,
+      },
+    )
+    if (!response.ok) {
+      throw new HttpStatusError(
+        response.status,
+        response.statusText,
+        await safeReadResponseText(response),
+      )
+    }
+
+    let payload: unknown
+    try {
+      payload = await response.json()
+    } catch {
+      throw new ProtocolError(
+        "The memory proposal response must be valid JSON.",
+      )
+    }
+    const proposal = action === "accept" && isRecord(payload)
+      ? payload.proposal
+      : payload
+    if (!isMemoryProposal(proposal)) {
+      throw new ProtocolError("The memory proposal response is invalid.")
+    }
+    return proposal
+  }
+
   private resolveTranscriptionEndpoint(): string {
     const { api, chatSessionId } = this.options
     if (!chatSessionId) {
@@ -359,6 +439,22 @@ export class PlaiThreadTransport implements ChatTransport {
 
     return new Headers(headers)
   }
+}
+
+function isMemoryProposal(value: unknown): value is MemoryProposal {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.tool_call_id === "string" &&
+    typeof value.agent_id === "string" &&
+    typeof value.scope === "string" &&
+    typeof value.operation === "string" &&
+    typeof value.status === "string"
+  )
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function serializeDocument(document: SendMessageDocument) {

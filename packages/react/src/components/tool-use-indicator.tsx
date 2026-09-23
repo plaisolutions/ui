@@ -25,6 +25,7 @@ const TOOL_USE_ACTIONS: Record<UIToolType, ToolUseAction> = {
   external_datasource: "query",
   firecrawl_search: "web",
   http_request: "request",
+  memory_proposal: "tool",
   mcp_tool: "request",
   office_documents: "documents",
   perplexity: "web",

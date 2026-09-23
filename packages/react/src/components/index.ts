@@ -109,6 +109,8 @@ export {
 } from "./prompt-form/file-attachments"
 export { ToolResultCard } from "./tool-result-card"
 export type { ToolResultCardProps } from "./tool-result-card"
+export { MemoryProposalCard } from "./memory-proposal-card"
+export type { MemoryProposalCardProps } from "./memory-proposal-card"
 export { ToolError } from "./tool-error"
 export type { ToolErrorProps } from "./tool-error"
 export { getToolUseLabel, ToolUseIndicator } from "./tool-use-indicator"

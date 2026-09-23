@@ -234,6 +234,44 @@ describe("useChat", () => {
     })
   })
 
+  it("exposes memory proposal actions from the chat instance", async () => {
+    const proposal = {
+      id: "proposal_1",
+      tool_call_id: "tool_1",
+      agent_id: "agent_1",
+      scope: "USER" as const,
+      category: "PREFERENCE" as const,
+      operation: "CREATE" as const,
+      content: "Concise answers",
+      previous_content: null,
+      target_memory_id: null,
+      target_memory_version: null,
+      status: "ACCEPTED" as const,
+      created_at: "2026-09-23T10:00:00Z",
+      expires_at: "2026-10-23T10:00:00Z",
+    }
+    const getMemoryProposal = vi.fn().mockResolvedValue(proposal)
+    const acceptMemoryProposal = vi.fn().mockResolvedValue(proposal)
+    const rejectMemoryProposal = vi.fn().mockResolvedValue(proposal)
+    const transport: ChatTransport = {
+      ...createTransport([]),
+      getMemoryProposal,
+      acceptMemoryProposal,
+      rejectMemoryProposal,
+    }
+    const { result } = renderHook(() => useChat({ transport }))
+
+    await act(async () => {
+      await result.current.getMemoryProposal({ proposalId: "proposal_1" })
+      await result.current.acceptMemoryProposal({ proposalId: "proposal_1" })
+      await result.current.rejectMemoryProposal({ proposalId: "proposal_1" })
+    })
+
+    expect(getMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+    expect(acceptMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+    expect(rejectMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+  })
+
   it("exposes getResourceDownloadUrl from the chat instance", async () => {
     const getResourceDownloadUrl = vi
       .fn()

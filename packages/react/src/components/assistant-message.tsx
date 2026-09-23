@@ -47,7 +47,9 @@ function isRenderableToolPart(
   part: UIToolCallPart,
   locale?: string | null,
   hasCustomRenderer = false,
+  hasMemoryProposalClient = false,
 ) {
+  if (part.toolType === "memory_proposal") return hasMemoryProposalClient
   if (hasCustomRenderer || part.toolType !== "datasource") return true
   if (part.state !== "completed") return true
 
@@ -82,6 +84,7 @@ export function AssistantMessage({
       part,
       messagePartsProps?.locale,
       Boolean(messagePartsProps?.renderToolCall),
+      Boolean(messagePartsProps?.memoryProposal),
     ),
   )
   const hasContentRow = contentParts.length > 0 || footer !== undefined

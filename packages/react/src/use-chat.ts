@@ -4,9 +4,11 @@ import type {
   ChatTransport,
   FileUploadState,
   GetResourceDownloadUrlFn,
+  GetMemoryProposalFn,
   PlaiChatError,
   PlaiSseEvent,
   RateMessageInput,
+  ResolveMemoryProposalFn,
   ResendMessageInput,
   SendMessageInput,
   TranscribeAudioFn,
@@ -34,6 +36,9 @@ export type UseChatResult = {
   uploadState: FileUploadState
   sendMessage: (input: SendMessageInput) => Promise<void>
   rateMessage: (input: RateMessageInput) => Promise<void>
+  getMemoryProposal: GetMemoryProposalFn
+  acceptMemoryProposal: ResolveMemoryProposalFn
+  rejectMemoryProposal: ResolveMemoryProposalFn
   getResourceDownloadUrl: GetResourceDownloadUrlFn
   resendMessage: (input: ResendMessageInput) => Promise<void>
   transcribeAudio: TranscribeAudioFn
@@ -81,6 +86,9 @@ export function useChat(options: UseChatOptions): UseChatResult {
     () => ({
       sendMessage: chat.sendMessage.bind(chat),
       rateMessage: chat.rateMessage.bind(chat),
+      getMemoryProposal: chat.getMemoryProposal.bind(chat),
+      acceptMemoryProposal: chat.acceptMemoryProposal.bind(chat),
+      rejectMemoryProposal: chat.rejectMemoryProposal.bind(chat),
       getResourceDownloadUrl: chat.getResourceDownloadUrl.bind(chat),
       resendMessage: chat.resendMessage.bind(chat),
       transcribeAudio: chat.transcribeAudio.bind(chat),

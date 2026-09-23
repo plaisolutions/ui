@@ -47,6 +47,13 @@ await chat.rateMessage({
   description: "Useful response",
 });
 
+const proposal = await chat.getMemoryProposal({
+  proposalId: "proposal_123",
+});
+
+await chat.acceptMemoryProposal({ proposalId: proposal.id });
+// Or: await chat.rejectMemoryProposal({ proposalId: proposal.id });
+
 const downloadUrl = await chat.getResourceDownloadUrl({
   resourceId: "resource_123",
 });
@@ -80,6 +87,12 @@ await chat.sendMessage({
 - `rateMessage(input): Promise<void>`
   Rates a persisted message as `POSITIVE` or `NEGATIVE` in the transport's
   chat session.
+- `getMemoryProposal(input): Promise<MemoryProposal>`
+  Gets the current state of an Agent Memory proposal from the chat session.
+- `acceptMemoryProposal(input): Promise<MemoryProposal>`
+  Accepts a resolvable Agent Memory proposal and returns its updated state.
+- `rejectMemoryProposal(input): Promise<MemoryProposal>`
+  Rejects a resolvable Agent Memory proposal and returns its updated state.
 - `getResourceDownloadUrl(input): Promise<string>`
   Returns a short-lived download URL for a protected chat resource.
 - `transcribeAudio(audio, signal?): Promise<string>`
@@ -99,9 +112,19 @@ await chat.sendMessage({
 
 ## Persisted thread history
 
-`normalizePlaiThreadMessages(messages)` converts messages returned by PLai thread
-and snapshot endpoints (including legacy content blocks, content parts and tool
-messages) into `UIMessage[]` for `initialMessages` or `hydrate()`.
+`normalizePlaiThreadMessages(messages, { memoryProposals })` converts messages
+returned by PLai thread and snapshot endpoints (including legacy content
+blocks, content parts and tool messages) into `UIMessage[]` for
+`initialMessages` or `hydrate()`. Pass the thread's `memory_proposals` references
+to restore the latest proposal status after reloading a conversation:
+
+```ts
+const messages = normalizePlaiThreadMessages(thread.messages, {
+  memoryProposals: thread.memory_proposals ?? [],
+});
+
+chat.hydrate(messages);
+```
 
 ## `subscribe` State Shape
 
@@ -218,7 +241,7 @@ Tool call part:
   name: string,
   // Discriminant. Concrete part types exist per tool:
   // UIAgentInvocationToolCallPart | UIDatasourceToolCallPart | ... | UIUnknownToolCallPart
-  toolType?: "unknown" | null | "agent_invocation" | "browser" | "datasource" | "email_send" | "external_datasource" | "firecrawl_search" | "http_request" | "mcp_tool" | "office_documents" | "perplexity" | "structured_datasource" | "workflow_dispatch",
+  toolType?: "unknown" | null | "agent_invocation" | "browser" | "datasource" | "email_send" | "external_datasource" | "firecrawl_search" | "http_request" | "mcp_tool" | "memory_proposal" | "office_documents" | "perplexity" | "structured_datasource" | "workflow_dispatch",
   input: unknown,
   inputSchema?: unknown,
   state: "pending" | "completed" | "error",
@@ -299,6 +322,33 @@ current dynamic authentication headers and returns the `download_url` field.
 Resolve it when the user opens the resource because the URL is short-lived.
 Non-2xx responses reject with `HttpStatusError`; an unexpected success body
 rejects with `ProtocolError`.
+
+## Agent Memory proposals
+
+Agent Memory proposals arrive in the stream as specialized `memory_proposal`
+tool parts. The SDK exposes only the chat actions required to inspect, accept,
+or reject those proposals:
+
+```ts
+const latest = await chat.getMemoryProposal({ proposalId });
+
+if (latest.can_resolve) {
+  const accepted = await chat.acceptMemoryProposal({ proposalId });
+  // accepted.status === "ACCEPTED"
+}
+```
+
+`PlaiThreadTransport` sends these requests to the current chat session's
+proposal endpoints and resolves its dynamic `headers` for every request. Use
+the same ChatSession token used by `sendMessage`; a Project JWT is neither
+required nor expected. `409` and `410` responses reject with `HttpStatusError`,
+so the caller can fetch the latest proposal and refresh its UI.
+
+The public client intentionally does not expose memory CRUD, administrative
+lists, or project-level review operations. Those belong to the private
+application API. Agent Memories currently apply only to eligible chat sessions
+associated with a platform user; external-ref sessions do not create or resolve
+memories.
 
 ## Resending a response
 

@@ -427,6 +427,43 @@ describe("PlaiChat", () => {
     ).rejects.toThrow(/does not support message ratings/)
   })
 
+  it("delegates memory proposal actions to its session-aware transport", async () => {
+    const resolvedProposal = {
+      id: "proposal_1",
+      tool_call_id: "tool_1",
+      agent_id: "agent_1",
+      scope: "USER" as const,
+      category: "PREFERENCE" as const,
+      operation: "CREATE" as const,
+      content: "Concise answers",
+      previous_content: null,
+      target_memory_id: null,
+      target_memory_version: null,
+      status: "ACCEPTED" as const,
+      created_at: "2026-09-23T10:00:00Z",
+      expires_at: "2026-10-23T10:00:00Z",
+    }
+    const getMemoryProposal = vi.fn().mockResolvedValue(resolvedProposal)
+    const acceptMemoryProposal = vi.fn().mockResolvedValue(resolvedProposal)
+    const rejectMemoryProposal = vi.fn().mockResolvedValue(resolvedProposal)
+    const chat = new PlaiChat({
+      transport: {
+        ...createTransport([]),
+        getMemoryProposal,
+        acceptMemoryProposal,
+        rejectMemoryProposal,
+      },
+    })
+
+    await chat.getMemoryProposal({ proposalId: "proposal_1" })
+    await chat.acceptMemoryProposal({ proposalId: "proposal_1" })
+    await chat.rejectMemoryProposal({ proposalId: "proposal_1" })
+
+    expect(getMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+    expect(acceptMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+    expect(rejectMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+  })
+
   it("delegates resource download URL requests to its transport", async () => {
     const getResourceDownloadUrl = vi
       .fn()

@@ -5,9 +5,149 @@ import {
   reduceChatState,
   toPublicChatState,
 } from "../reducer"
+import { normalizePlaiThreadMessages } from "../history"
 import type { PlaiSseEvent } from "../types"
 
 describe("reduceChatState", () => {
+  it("creates and deduplicates memory proposal tool parts", () => {
+    const proposal = {
+      id: "proposal-1",
+      tool_call_id: "tool-memory-1",
+      agent_id: "agent-1",
+      scope: "USER" as const,
+      category: "PREFERENCE" as const,
+      operation: "CREATE" as const,
+      content: "Prefer short answers",
+      previous_content: null,
+      target_memory_id: null,
+      target_memory_version: null,
+      status: "PENDING" as const,
+      created_at: "2026-09-23T10:00:00Z",
+      expires_at: "2026-10-23T10:00:00Z",
+    }
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg", role: "assistant", model: "model" },
+      },
+      { type: "memory_proposal", proposal },
+      {
+        type: "tool_result",
+        tool_use_id: "tool-memory-1",
+        tool_type: "memory_proposal",
+        content: "ok",
+        is_error: false,
+        error_details: null,
+        metadata: {
+          type: "memory_proposal",
+          proposal: { ...proposal, content: "[redacted]", status: "ACCEPTED" },
+        },
+      },
+    ]
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+    expect(state.messages[0].parts).toHaveLength(1)
+    expect(state.messages[0].parts[0]).toMatchObject({
+      toolType: "memory_proposal",
+      state: "completed",
+      metadata: {
+        proposal: { content: "Prefer short answers", status: "ACCEPTED" },
+      },
+    })
+  })
+
+  it("converts an existing proposal tool call instead of duplicating it", () => {
+    const proposal = {
+      id: "proposal-2",
+      tool_call_id: "tool-memory-2",
+      agent_id: "agent-1",
+      scope: "PROJECT" as const,
+      category: "CORRECTION" as const,
+      operation: "CREATE" as const,
+      content: "Use the corrected endpoint",
+      previous_content: null,
+      target_memory_id: null,
+      target_memory_version: null,
+      status: "PENDING" as const,
+      created_at: "2026-09-23T10:00:00Z",
+      expires_at: "2026-10-23T10:00:00Z",
+    }
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg", role: "assistant", model: "model" },
+      },
+      {
+        type: "content_block_start",
+        index: 0,
+        content_block: {
+          type: "tool_use",
+          id: proposal.tool_call_id,
+          name: "propose_memory_change",
+          tool_type: "mcp_tool",
+          input: {},
+          input_schema: {},
+        },
+      },
+      { type: "memory_proposal", proposal },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+
+    expect(state.messages[0].parts).toHaveLength(1)
+    expect(state.messages[0].parts[0]).toMatchObject({
+      id: proposal.tool_call_id,
+      toolType: "memory_proposal",
+      state: "completed",
+    })
+  })
+
+  it("hydrates persisted proposal status from thread references", () => {
+    const messages = normalizePlaiThreadMessages(
+      [
+        {
+          id: "message-1",
+          role: "assistant",
+          content_blocks: [
+            {
+              type: "tool_use",
+              tool_info: {
+                id: "tool-memory-3",
+                name: "propose_memory_change",
+                tool_type: "memory_proposal",
+                status: "completed",
+                metadata: {
+                  type: "memory_proposal",
+                  proposal: {
+                    id: "proposal-3",
+                    tool_call_id: "tool-memory-3",
+                    agent_id: "agent-1",
+                    scope: "USER",
+                    category: "PREFERENCE",
+                    operation: "CREATE",
+                    content: "Use short answers",
+                    previous_content: null,
+                    status: "PENDING",
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
+      {
+        memoryProposals: [
+          { tool_call_id: "tool-memory-3", status: "ACCEPTED" },
+        ],
+      },
+    )
+
+    expect(messages[0].parts[0]).toMatchObject({
+      toolType: "memory_proposal",
+      metadata: {
+        proposal: { status: "ACCEPTED" },
+      },
+    })
+  })
   it("creates assistant message on message_start", () => {
     const next = reduceChatState(createInitialInternalState(), {
       type: "message_start",

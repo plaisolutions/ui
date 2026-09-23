@@ -6,7 +6,7 @@ The chat screen mirrors the focused central chat pane used in the Plai
 dashboard while remaining a plain Vite + React application. It includes the
 dashboard message layout, avatar-free tool rows, one assistant avatar per turn,
 Markdown rendering, response actions, file uploads, voice input, current-thread
-hydration, composer gradient, and disclaimer.
+hydration, Agent Memory proposal wiring, composer gradient, and disclaimer.
 
 ## Run
 
@@ -54,7 +54,25 @@ const transport = useMemo(
   [session.id, session.thread_id, session.chat_token],
 );
 
-const { messages, status, error, sendMessage, stop } = useChat({ transport });
+const {
+  messages,
+  status,
+  error,
+  sendMessage,
+  getMemoryProposal,
+  acceptMemoryProposal,
+  rejectMemoryProposal,
+  stop,
+} = useChat({ transport });
+
+const memoryProposal = {
+  activeAgentId: session.agent_id,
+  actions: {
+    getMemoryProposal,
+    acceptMemoryProposal,
+    rejectMemoryProposal,
+  },
+};
 
 return (
   <>
@@ -70,6 +88,7 @@ return (
         messagePartsProps={{
           thinkingLabel: "Pensando…",
           completedThinkingLabel: "Resumen del razonamiento",
+          memoryProposal,
         }}
       />
     ))}
@@ -91,3 +110,9 @@ return (
 3. Chat using the returned `chat_token` (not the project token).
 
 See [docs/openapi.json](../../docs/openapi.json) for API details.
+
+The demo wires Agent Memory proposal cards to the same ChatSession token used
+for messages. The default setup creates an external-ref session, which the
+current Agent Memories MVP intentionally excludes, so that setup will not emit
+proposals. The wiring becomes active when the example is supplied an eligible
+user-backed ChatSession.

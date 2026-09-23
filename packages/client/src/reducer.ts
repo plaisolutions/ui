@@ -3,6 +3,8 @@ import type {
   ChatState,
   ContentBlockStartEvent,
   InternalChatState,
+  MemoryProposal,
+  MemoryProposalEvent,
   PlaiSseEvent,
   UIGuardrailPart,
   UIMessage,
@@ -151,7 +153,18 @@ export function reduceChatState(
       }
     }
 
+    case "memory_proposal": {
+      return reduceMemoryProposal(state, event)
+    }
+
     case "tool_result": {
+      const proposal = memoryProposalFromMetadata(event.metadata)
+      if (proposal) {
+        return reduceMemoryProposal(state, {
+          type: "memory_proposal",
+          proposal,
+        })
+      }
       const assistantIndex = getActiveAssistantMessageIndex(state)
       const partIndex = state.toolUseIdToPartIndex[event.tool_use_id]
 
@@ -251,6 +264,92 @@ export function reduceChatState(
     default:
       return state
   }
+}
+
+function reduceMemoryProposal(
+  state: InternalChatState,
+  event: MemoryProposalEvent,
+): InternalChatState {
+  const assistantIndex = getActiveAssistantMessageIndex(state)
+  const message = state.messages[assistantIndex]
+  const mappedIndex = state.toolUseIdToPartIndex[event.proposal.tool_call_id]
+  const proposalIndex = message.parts.findIndex(
+    (part) =>
+      part.type === "tool-call" &&
+      memoryProposalFromMetadata(part.metadata)?.id === event.proposal.id,
+  )
+  const partIndex =
+    mappedIndex ?? (proposalIndex >= 0 ? proposalIndex : undefined)
+  const current = partIndex === undefined ? undefined : message.parts[partIndex]
+  const currentProposal =
+    current?.type === "tool-call"
+      ? memoryProposalFromMetadata(current.metadata)
+      : undefined
+  const proposal = currentProposal
+    ? mergeProposalForDisplay(currentProposal, event.proposal)
+    : event.proposal
+  const nextPart = {
+    type: "tool-call",
+    id: event.proposal.tool_call_id,
+    name: "propose_memory_change",
+    toolType: "memory_proposal",
+    input: current?.type === "tool-call" ? current.input : {},
+    inputSchema:
+      current?.type === "tool-call" ? current.inputSchema : undefined,
+    state: "completed",
+    metadata: { type: "memory_proposal", proposal },
+  } as const
+  const nextParts = [...message.parts]
+  const nextIndex = partIndex ?? nextParts.length
+  if (partIndex === undefined) nextParts.push(nextPart)
+  else nextParts[partIndex] = nextPart
+
+  return {
+    ...replaceAssistantMessage(state, assistantIndex, {
+      ...message,
+      parts: nextParts,
+    }),
+    status: "streaming",
+    toolUseIdToPartIndex: {
+      ...state.toolUseIdToPartIndex,
+      [event.proposal.tool_call_id]: nextIndex,
+    },
+  }
+}
+
+const REDACTED_CONTENT = "[redacted]"
+
+function mergeProposalForDisplay(
+  current: MemoryProposal,
+  incoming: MemoryProposal,
+): MemoryProposal {
+  if (current.id !== incoming.id) return incoming
+  return {
+    ...incoming,
+    content:
+      incoming.content === REDACTED_CONTENT
+        ? current.content
+        : incoming.content,
+    previous_content:
+      incoming.previous_content === REDACTED_CONTENT
+        ? current.previous_content
+        : incoming.previous_content,
+    rationale:
+      incoming.rationale === REDACTED_CONTENT
+        ? current.rationale
+        : incoming.rationale,
+  }
+}
+
+function memoryProposalFromMetadata(
+  metadata: Record<string, unknown> | undefined,
+): MemoryProposal | undefined {
+  if (metadata?.type !== "memory_proposal") return undefined
+  const proposal = metadata.proposal
+  if (!proposal || typeof proposal !== "object" || Array.isArray(proposal)) {
+    return undefined
+  }
+  return proposal as MemoryProposal
 }
 
 function reduceContentBlockStart(

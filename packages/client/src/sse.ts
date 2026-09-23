@@ -7,6 +7,7 @@ const ALLOWED_EVENT_TYPES = new Set([
   "content_block_delta",
   "content_block_stop",
   "tool_result",
+  "memory_proposal",
   "message_id",
   "usage",
   "message_stop",

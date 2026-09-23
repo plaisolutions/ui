@@ -37,13 +37,23 @@ chat.subscribe((state) => {
 });
 
 await chat.sendMessage({ text: "Hello" });
+
+// When a memory_proposal tool part provides a proposal ID:
+const proposal = await chat.getMemoryProposal({ proposalId });
+if (proposal.can_resolve) {
+  await chat.acceptMemoryProposal({ proposalId });
+  // Or: await chat.rejectMemoryProposal({ proposalId });
+}
 ```
 
-
+Agent Memory proposal actions use the same ChatSession token as
+`sendMessage`. This vanilla example displays tool parts as JSON; applications
+that need the packaged consent card can use `MemoryProposalCard` from
+`@plaisolutions/react`. The client intentionally does not include
+administrative memory CRUD APIs.
 
 ## Setup
 
 1. Enter your project bearer token, agent ID, and external ref.
 2. Click **Create session** — calls `POST /chat_sessions`.
 3. Chat using the returned `chat_token` (not the project token).
-

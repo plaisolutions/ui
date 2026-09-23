@@ -1,5 +1,6 @@
 import type {
   GetResourceDownloadUrlFn,
+  MemoryProposalActions,
   UIMessage,
   UIMessagePart,
   UIThinkingPart,
@@ -141,6 +142,10 @@ export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
   onOpenAgentThread?: (threadId: string) => void
   getResourceDownloadUrl?: GetResourceDownloadUrlFn
   locale?: string | null
+  memoryProposal?: {
+    actions: MemoryProposalActions
+    activeAgentId: string
+  }
   renderText?: (
     part: Extract<UIMessagePart, { type: "text" }>,
     context: { message: UIMessage; isStreaming: boolean },
@@ -201,6 +206,7 @@ function renderPart(
   onOpenAgentThread?: (threadId: string) => void,
   getResourceDownloadUrl?: GetResourceDownloadUrlFn,
   locale?: string | null,
+  memoryProposal?: MessagePartsProps["memoryProposal"],
   renderText?: MessagePartsProps["renderText"],
   renderToolCall?: MessagePartsProps["renderToolCall"],
   renderThinking?: MessagePartsProps["renderThinking"],
@@ -297,6 +303,7 @@ function renderPart(
         locale={locale}
         onOpenAgentThread={onOpenAgentThread}
         getResourceDownloadUrl={getResourceDownloadUrl}
+        memoryProposal={memoryProposal}
       />
     )
   }
@@ -415,6 +422,7 @@ export function MessageParts({
   onOpenAgentThread,
   getResourceDownloadUrl,
   locale,
+  memoryProposal,
   renderText,
   renderToolCall,
   renderThinking,
@@ -495,6 +503,7 @@ export function MessageParts({
               onOpenAgentThread,
               getResourceDownloadUrl,
               locale,
+              memoryProposal,
               renderText,
               renderToolCall,
               renderThinking,

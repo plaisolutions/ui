@@ -59,12 +59,32 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     sendMessage,
     resendMessage,
     rateMessage,
+    getMemoryProposal,
+    acceptMemoryProposal,
+    rejectMemoryProposal,
     getResourceDownloadUrl,
     transcribeAudio,
     uploadFile,
     stop,
     hydrate,
   } = useChat({ transport })
+
+  const memoryProposal = useMemo(
+    () => ({
+      activeAgentId: session.agent_id,
+      actions: {
+        getMemoryProposal,
+        acceptMemoryProposal,
+        rejectMemoryProposal,
+      },
+    }),
+    [
+      acceptMemoryProposal,
+      getMemoryProposal,
+      rejectMemoryProposal,
+      session.agent_id,
+    ],
+  )
 
   const isBusy =
     status === "submitted" ||
@@ -91,7 +111,13 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
       chatToken: session.chat_token,
     })
       .then((thread) => {
-        if (isCurrent) hydrate(normalizePlaiThreadMessages(thread.messages))
+        if (isCurrent) {
+          hydrate(
+            normalizePlaiThreadMessages(thread.messages, {
+              memoryProposals: thread.memory_proposals ?? [],
+            }),
+          )
+        }
       })
       .catch(() => {
         // A new session starts with an empty thread; failure here is non-fatal.
@@ -214,6 +240,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                     completedThinkingLabel: "Reasoning summary",
                     readMoreLabel: "Read more",
                     readLessLabel: "Read less",
+                    memoryProposal,
                     renderText: (part) => <ChatMarkdown text={part.text} />,
                   }}
                   footer={

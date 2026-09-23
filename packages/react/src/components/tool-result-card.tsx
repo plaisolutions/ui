@@ -1,5 +1,6 @@
 import type {
   GetResourceDownloadUrlFn,
+  MemoryProposalActions,
   OfficeDocumentMediaFile,
   ResourceReadModel,
   UIToolCallPart,
@@ -20,6 +21,7 @@ import { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-ca
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
 import { ToolUseIndicator } from "./tool-use-indicator"
+import { MemoryProposalCard } from "./memory-proposal-card"
 
 export type ToolResultCardProps = {
   part: UIToolCallPart
@@ -28,6 +30,10 @@ export type ToolResultCardProps = {
   locale?: string | null
   onOpenAgentThread?: (threadId: string) => void
   getResourceDownloadUrl?: GetResourceDownloadUrlFn
+  memoryProposal?: {
+    actions: MemoryProposalActions
+    activeAgentId: string
+  }
 }
 
 function formatJson(value: unknown) {
@@ -72,7 +78,23 @@ export function ToolResultCard({
   locale,
   onOpenAgentThread,
   getResourceDownloadUrl,
+  memoryProposal,
 }: ToolResultCardProps) {
+  if (part.toolType === "memory_proposal") {
+    const proposal = part.metadata?.proposal
+    if (!memoryProposal || !proposal || typeof proposal !== "object")
+      return null
+    return (
+      <MemoryProposalCard
+        proposal={proposal}
+        actions={memoryProposal.actions}
+        activeAgentId={memoryProposal.activeAgentId}
+        locale={locale}
+        className={className}
+      />
+    )
+  }
+
   if (part.state === "pending") {
     return (
       <ToolUseIndicator part={part} locale={locale} className={className} />

@@ -17,6 +17,8 @@ import type {
   SendMessageDocument,
   SendMessageInput,
   MediaFile,
+  MemoryProposal,
+  MemoryProposalActionInput,
   UploadFileOptions,
   UIMessage,
   UIMessagePart,
@@ -209,6 +211,45 @@ export class PlaiChat {
     }
 
     await rateMessage.call(this.options.transport, input)
+  }
+
+  /** Load the current state of a proposal using this chat session's authentication. */
+  async getMemoryProposal(
+    input: MemoryProposalActionInput,
+  ): Promise<MemoryProposal> {
+    const getMemoryProposal = this.options.transport.getMemoryProposal
+    if (!getMemoryProposal) {
+      throw new Error(
+        "The configured chat transport does not support memory proposals.",
+      )
+    }
+    return getMemoryProposal.call(this.options.transport, input)
+  }
+
+  /** Accept a proposal using this chat session's authentication. */
+  async acceptMemoryProposal(
+    input: MemoryProposalActionInput,
+  ): Promise<MemoryProposal> {
+    const acceptMemoryProposal = this.options.transport.acceptMemoryProposal
+    if (!acceptMemoryProposal) {
+      throw new Error(
+        "The configured chat transport does not support memory proposals.",
+      )
+    }
+    return acceptMemoryProposal.call(this.options.transport, input)
+  }
+
+  /** Reject a proposal using this chat session's authentication. */
+  async rejectMemoryProposal(
+    input: MemoryProposalActionInput,
+  ): Promise<MemoryProposal> {
+    const rejectMemoryProposal = this.options.transport.rejectMemoryProposal
+    if (!rejectMemoryProposal) {
+      throw new Error(
+        "The configured chat transport does not support memory proposals.",
+      )
+    }
+    return rejectMemoryProposal.call(this.options.transport, input)
   }
 
   /** Get a short-lived download URL using this chat session's authentication. */

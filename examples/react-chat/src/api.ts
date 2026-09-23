@@ -1,3 +1,5 @@
+import type { ThreadMemoryProposalRef } from "@plaisolutions/client"
+
 export const DEFAULT_API = "https://api.plaisolutions.com"
 
 export type ChatSession = {
@@ -17,6 +19,7 @@ export type Thread = {
 
 export type ThreadWithMessages = Thread & {
   messages: unknown[]
+  memory_proposals?: ThreadMemoryProposalRef[]
 }
 
 type ChatSessionDetails = {

@@ -226,6 +226,54 @@ export type WorkflowDispatchToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type MemoryScope = "USER" | "PROJECT"
+export type MemoryCategory =
+  | "PREFERENCE"
+  | "PROFILE"
+  | "INSTRUCTION"
+  | "TOOL_GUIDANCE"
+  | "CORRECTION"
+  | "OTHER"
+export type MemoryOperation = "CREATE" | "UPDATE" | "DELETE"
+export type MemoryProposalStatus =
+  | "PENDING"
+  | "ACCEPTED"
+  | "REJECTED"
+  | "EXPIRED"
+  | "CONFLICTED"
+
+export type MemoryProposal = {
+  id: string
+  tool_call_id: string
+  agent_id: string
+  project_id?: string
+  scope: MemoryScope
+  category: MemoryCategory
+  operation: MemoryOperation
+  content: string | null
+  previous_content: string | null
+  target_memory_id: string | null
+  target_memory_version: number | null
+  rationale?: string | null
+  status: MemoryProposalStatus
+  can_resolve?: boolean
+  requires_admin_review?: boolean
+  created_at: string
+  expires_at: string
+  resolved_at?: string | null
+}
+
+export type ThreadMemoryProposalRef = {
+  tool_call_id: string
+  status: MemoryProposalStatus
+}
+
+export type MemoryProposalToolMetadata = {
+  type: "memory_proposal"
+  proposal: MemoryProposal
+  [key: string]: unknown
+}
+
 export type UIToolCallMetadata =
   | AgentInvocationToolResultMetadata
   | BrowserToolResultMetadata
@@ -237,6 +285,7 @@ export type UIToolCallMetadata =
   | WorkflowDispatchToolResultMetadata
   | PerplexityToolResultMetadata
   | FirecrawlSearchToolResultMetadata
+  | MemoryProposalToolMetadata
   | Record<string, unknown>
 
 export type UIToolType =
@@ -247,6 +296,7 @@ export type UIToolType =
   | "external_datasource"
   | "firecrawl_search"
   | "http_request"
+  | "memory_proposal"
   | "mcp_tool"
   | "office_documents"
   | "perplexity"
@@ -299,6 +349,10 @@ export type UIMcpToolCallPart = UIBaseToolCallPart<
   "mcp_tool",
   McpToolResultMetadata
 >
+export type UIMemoryProposalToolCallPart = UIBaseToolCallPart<
+  "memory_proposal",
+  MemoryProposalToolMetadata
+>
 export type UIOfficeDocumentsToolCallPart = UIBaseToolCallPart<
   "office_documents",
   OfficeDocumentsToolMetadata
@@ -328,6 +382,7 @@ export type UIToolCallPart =
   | UIExternalDatasourceToolCallPart
   | UIFirecrawlSearchToolCallPart
   | UIHttpRequestToolCallPart
+  | UIMemoryProposalToolCallPart
   | UIMcpToolCallPart
   | UIOfficeDocumentsToolCallPart
   | UIPerplexityToolCallPart
@@ -444,6 +499,24 @@ export type RateMessageInput = {
   description?: string
 }
 
+export type MemoryProposalActionInput = {
+  proposalId: string
+}
+
+export type GetMemoryProposalFn = (
+  input: MemoryProposalActionInput,
+) => Promise<MemoryProposal>
+
+export type ResolveMemoryProposalFn = (
+  input: MemoryProposalActionInput,
+) => Promise<MemoryProposal>
+
+export type MemoryProposalActions = {
+  getMemoryProposal: GetMemoryProposalFn
+  acceptMemoryProposal: ResolveMemoryProposalFn
+  rejectMemoryProposal: ResolveMemoryProposalFn
+}
+
 export type GetResourceDownloadUrlInput = {
   resourceId: string
   signal?: AbortSignal
@@ -483,6 +556,9 @@ export type ChatTransportRequest = {
 export interface ChatTransport {
   stream(request: ChatTransportRequest): AsyncIterable<PlaiSseEvent>
   rateMessage?(input: RateMessageInput): Promise<void>
+  getMemoryProposal?: GetMemoryProposalFn
+  acceptMemoryProposal?: ResolveMemoryProposalFn
+  rejectMemoryProposal?: ResolveMemoryProposalFn
   getResourceDownloadUrl?: GetResourceDownloadUrlFn
   transcribeAudio?: TranscribeAudioFn
   uploadFile?(request: UploadFileTransportRequest): Promise<MediaFile>
@@ -578,6 +654,11 @@ export type ToolResultEvent = {
   metadata: Record<string, unknown>
 }
 
+export type MemoryProposalEvent = {
+  type: "memory_proposal"
+  proposal: MemoryProposal
+}
+
 export type MessageIdEvent = {
   type: "message_id"
   message_id: string
@@ -614,6 +695,7 @@ export type PlaiSseEvent =
   | ContentBlockDeltaEvent
   | ContentBlockStopEvent
   | ToolResultEvent
+  | MemoryProposalEvent
   | MessageIdEvent
   | UsageEvent
   | MessageStopEvent

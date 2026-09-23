@@ -653,4 +653,72 @@ describe("PlaiThreadTransport", () => {
       }),
     ).rejects.toThrow(/chatSessionId and threadId/)
   })
+
+  it("resolves memory proposals through chat-session endpoints", async () => {
+    const proposal = {
+      id: "proposal/1",
+      tool_call_id: "tool_1",
+      agent_id: "agent_1",
+      scope: "USER",
+      category: "PREFERENCE",
+      operation: "CREATE",
+      content: "Concise answers",
+      previous_content: null,
+      target_memory_id: null,
+      target_memory_version: null,
+      status: "PENDING",
+      created_at: "2026-09-23T10:00:00Z",
+      expires_at: "2026-10-23T10:00:00Z",
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(proposal))
+      .mockResolvedValueOnce(
+        Response.json({ proposal: { ...proposal, status: "ACCEPTED" } }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({ ...proposal, status: "REJECTED" }),
+      )
+    const transport = new PlaiThreadTransport({
+      api: "https://api.plaisolutions.com/",
+      chatSessionId: "session/1",
+      threadId: "thread_1",
+      headers: () => ({ Authorization: "Bearer chat-token" }),
+      fetch: fetchMock,
+    })
+
+    await expect(
+      transport.getMemoryProposal({ proposalId: "proposal/1" }),
+    ).resolves.toMatchObject({ status: "PENDING" })
+    await expect(
+      transport.acceptMemoryProposal({ proposalId: "proposal/1" }),
+    ).resolves.toMatchObject({ status: "ACCEPTED" })
+    await expect(
+      transport.rejectMemoryProposal({ proposalId: "proposal/1" }),
+    ).resolves.toMatchObject({ status: "REJECTED" })
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://api.plaisolutions.com/chat_sessions/session%2F1/memory-proposals/proposal%2F1",
+      expect.objectContaining({ method: "GET" }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://api.plaisolutions.com/chat_sessions/session%2F1/memory-proposals/proposal%2F1/accept",
+      expect.objectContaining({ method: "POST" }),
+    )
+    const acceptHeaders = new Headers(fetchMock.mock.calls[1]?.[1]?.headers)
+    expect(acceptHeaders.get("Authorization")).toBe("Bearer chat-token")
+  })
+
+  it("requires a chatSessionId for memory proposal actions", async () => {
+    const transport = new PlaiThreadTransport({
+      api: "https://api.plaisolutions.com",
+      fetch: vi.fn(),
+    })
+
+    await expect(
+      transport.acceptMemoryProposal({ proposalId: "proposal_1" }),
+    ).rejects.toThrow(/chatSessionId/)
+  })
 })
