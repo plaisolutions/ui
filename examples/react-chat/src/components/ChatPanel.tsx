@@ -1,6 +1,8 @@
 import {
   PlaiThreadTransport,
   normalizePlaiThreadMessages,
+  canShowAssistantTurnActions,
+  getAssistantTurnContent,
 } from "@plaisolutions/client"
 import {
   Clipboard,
@@ -207,12 +209,9 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
               </div>
             ) : null}
             {messages.map((message) => {
-              const persistedMessageId =
-                message.metadata?.persistedMessageId ?? message.id
-              const text = message.parts
-                .filter((part) => part.type === "text")
-                .map((part) => (part.type === "text" ? part.text : ""))
-                .join("\n")
+              const persistedMessageId = message.metadata?.persistedMessageId
+              const turn = getAssistantTurnContent(message.parts)
+              const text = turn.finalText
               const isStreamingMessage = isBusy && message === messages.at(-1)
 
               return (
@@ -241,10 +240,22 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                     readMoreLabel: "Read more",
                     readLessLabel: "Read less",
                     memoryProposal,
-                    renderText: (part) => <ChatMarkdown text={part.text} />,
+                    renderText: (part) =>
+                      message.role === "assistant" &&
+                      turn.hasFinalResponse &&
+                      turn.leadingParts.includes(part) ? (
+                        <details>
+                          <summary>Earlier draft</summary>
+                          <ChatMarkdown text={part.text} />
+                        </details>
+                      ) : (
+                        <ChatMarkdown text={part.text} />
+                      ),
                   }}
                   footer={
-                    message.role === "assistant" && text ? (
+                    persistedMessageId &&
+                    canShowAssistantTurnActions(message) &&
+                    !isStreamingMessage ? (
                       <MessageFooter className="message-actions">
                         <Clipboard
                           className="message-action"

@@ -52,11 +52,14 @@ describe("normalizePlaiThreadMessages", () => {
     expect(messages[1]?.parts.map((part) => part.type)).toEqual([
       "text",
       "tool-call",
+      "tool-call",
     ])
-    expect(messages[2]).toMatchObject({
-      role: "assistant",
-      parts: [{ type: "tool-call", id: "tool_2" }],
+    expect(messages).toHaveLength(2)
+    expect(messages[1]?.parts[2]).toMatchObject({
+      type: "tool-call",
+      id: "tool_2",
     })
+    expect(messages[1]?.metadata?.persistedMessageId).toBe("assistant_1")
   })
 
   it("normalizes persisted thinking summaries without private metadata", () => {
@@ -93,8 +96,6 @@ describe("normalizePlaiThreadMessages", () => {
         state: "completed",
       },
       { type: "text", text: "After" },
-    ])
-    expect(messages[1]?.parts).toEqual([
       {
         type: "thinking",
         thinking: "Provider-shaped summary.",

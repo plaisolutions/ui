@@ -1,3 +1,4 @@
+import { groupAssistantMessages } from "./turns"
 import type {
   InputFileMetadata,
   MemoryProposal,
@@ -49,7 +50,7 @@ export function normalizePlaiThreadMessages(
   }
 
   return hydrateMemoryProposalStatuses(
-    normalized,
+    groupAssistantMessages(normalized),
     options.memoryProposals ?? [],
   )
 }
@@ -69,6 +70,27 @@ function partsFromMessage(message: Record<string, unknown>): UIMessagePart[] {
         : []
 
   const parts = source.flatMap((part, index) => partFromValue(part, index))
+  // content_parts can carry results alongside their tool_use; content_blocks
+  // already embed them in tool_info. Support both public history shapes.
+  for (const value of source) {
+    if (!isRecord(value) || value.type !== "tool_result") continue
+    const index = parts.findIndex(
+      (part) => part.type === "tool-call" && part.id === value.tool_use_id,
+    )
+    const part = parts[index]
+    if (part?.type !== "tool-call") continue
+    parts[index] = {
+      ...part,
+      toolType:
+        recordValue(value.metadata)?.type === "memory_proposal"
+          ? "memory_proposal"
+          : toolType(value.tool_type ?? part.toolType),
+      state: value.is_error === true ? "error" : "completed",
+      result: value.content,
+      errorDetails: toolErrorDetails(value.error_details),
+      metadata: { ...part.metadata, ...recordValue(value.metadata) },
+    } as UIToolCallPart
+  }
   if (parts.length > 0) return parts
 
   if (typeof content === "string" && content.length > 0) {
@@ -191,7 +213,10 @@ function toolPartFromLegacyMessage(
   const metadata = recordValue(result.extra_info)
   return {
     type: "tool-call",
-    id: stringValue(result.id) ?? `legacy_tool_call_${index}`,
+    id:
+      stringValue(message.tool_call_id) ??
+      stringValue(result.id) ??
+      `legacy_tool_call_${index}`,
     name: stringValue(result.name) ?? "tool",
     toolType:
       metadata?.type === "memory_proposal"
@@ -246,6 +271,7 @@ function metadataFromMessage(message: Record<string, unknown>) {
   return {
     model: stringValue(message.model),
     persistedMessageId: stringValue(message.id),
+    completed: true,
     ...(createdAt ? { createdAt: new Date(createdAt) } : {}),
     ...(isRecord(message.metadata) ? { metadata: message.metadata } : {}),
   }

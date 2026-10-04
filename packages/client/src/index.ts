@@ -8,6 +8,11 @@ export {
 export { parseSseStream } from "./sse"
 export { PlaiThreadTransport } from "./transport"
 export { normalizePlaiThreadMessages } from "./history"
+export {
+  groupAssistantMessages,
+  getAssistantTurnContent,
+  canShowAssistantTurnActions,
+} from "./turns"
 export type { PlaiThreadTransportOptions } from "./transport"
 export type {
   ChatState,

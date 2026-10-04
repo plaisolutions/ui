@@ -158,6 +158,15 @@ export class PlaiChat {
       if (!(this.isStopping && normalized.type === "abort_error")) {
         this.setState({
           ...this.state,
+          messages: this.state.messages.map((message, index) =>
+            index === this.state.messages.length - 1 &&
+            message.role === "assistant"
+              ? {
+                  ...message,
+                  metadata: { ...message.metadata, completed: false },
+                }
+              : message,
+          ),
           status: normalized.type === "abort_error" ? "ready" : "error",
           error: normalized.type === "abort_error" ? null : normalized,
         })

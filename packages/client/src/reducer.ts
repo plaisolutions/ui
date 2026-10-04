@@ -60,6 +60,7 @@ export function reduceChatState(
         metadata: {
           model: event.message.model,
           createdAt: new Date(),
+          completed: false,
         },
       }
 
@@ -241,6 +242,7 @@ export function reduceChatState(
     case "error": {
       return {
         ...state,
+        messages: updateTurnCompletion(state, false),
         error: {
           type: event.error.type,
           message: event.error.message,
@@ -253,6 +255,7 @@ export function reduceChatState(
     case "message_stop": {
       return {
         ...state,
+        messages: updateTurnCompletion(state, !state.didReceiveErrorEvent),
         status: state.didReceiveErrorEvent ? "error" : "ready",
         activeAssistantMessageId: undefined,
         blockIndexToPartIndex: {},
@@ -264,6 +267,18 @@ export function reduceChatState(
     default:
       return state
   }
+}
+
+function updateTurnCompletion(
+  state: InternalChatState,
+  completed: boolean,
+): UIMessage[] {
+  const id = state.activeAssistantMessageId ?? state.messages.at(-1)?.id
+  return state.messages.map((message) =>
+    message.id === id && message.role === "assistant"
+      ? { ...message, metadata: { ...message.metadata, completed } }
+      : message,
+  )
 }
 
 function reduceMemoryProposal(
