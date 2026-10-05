@@ -8,13 +8,13 @@ import type {
 } from "@plaisolutions/client"
 import { Globe } from "lucide-react"
 import {
+  type DatasourceResourceCard,
   DatasourceResourceCardView,
   getDatasourceResourceCards,
   isDatasourceResource,
-  type DatasourceResourceCard,
 } from "./datasource-tool-resources"
 import { joinClasses } from "./internal/join-classes"
-import { getSupportedToolLocale } from "./internal/tool-locale"
+import { getSourceResultsCopy } from "./internal/source-results-copy"
 import {
   Sheet,
   SheetContent,
@@ -23,9 +23,9 @@ import {
   SheetTrigger,
 } from "./sheet"
 import {
-  getWebSearchResults,
   ToolResultWebSearchCard,
   ToolResultWebSearchResults,
+  getWebSearchResults,
 } from "./tool-result-web-search-card"
 
 export type SourceToolPart =
@@ -44,19 +44,6 @@ type AggregatedSourceCard =
       key: string
       part: UIFirecrawlSearchToolCallPart | UIPerplexityToolCallPart
     }
-
-const SOURCE_LABELS = {
-  en: ["source", "sources"],
-  es: ["fuente", "fuentes"],
-  ca: ["font", "fonts"],
-  fr: ["source", "sources"],
-  it: ["fonte", "fonti"],
-  de: ["Quelle", "Quellen"],
-  da: ["kilde", "kilder"],
-  sv: ["källa", "källor"],
-  no: ["kilde", "kilder"],
-  pt: ["fonte", "fontes"],
-} as const
 
 export type AggregatedSourceResultsProps = {
   parts: SourceToolPart[]
@@ -113,6 +100,7 @@ function getAggregatedCards(
       ): part is UIFirecrawlSearchToolCallPart | UIPerplexityToolCallPart =>
         part.toolType === "perplexity" || part.toolType === "firecrawl_search",
     )
+    .filter((part) => getWebSearchResults(part).length > 0)
     .map((part) => ({
       kind: "web" as const,
       key: part.id,
@@ -124,9 +112,11 @@ function getAggregatedCards(
 
 function SourceCard({
   source,
+  locale,
   variant = "card",
 }: {
   source: AggregatedSourceCard
+  locale?: string | null
   variant?: "card" | "list"
 }) {
   if (source.kind === "datasource") {
@@ -134,16 +124,18 @@ function SourceCard({
   }
 
   if (variant === "card") {
-    return <ToolResultWebSearchCard part={source.part} />
+    return <ToolResultWebSearchCard part={source.part} locale={locale} />
   }
 
   return (
     <section className="rounded-lg bg-neutral-100 p-4">
       <header className="mb-4 flex items-center gap-3">
         <Globe className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <h3 className="text-sm font-medium">Internet search results</h3>
+        <h3 className="text-sm font-medium">
+          {getSourceResultsCopy(locale).webSearchTitle}
+        </h3>
       </header>
-      <ToolResultWebSearchResults part={source.part} />
+      <ToolResultWebSearchResults part={source.part} locale={locale} />
     </section>
   )
 }
@@ -172,8 +164,7 @@ export function AggregatedSourceResults({
   const visibleCards = cards.slice(0, visibleLimit)
   const overflowCount = cards.length - visibleCards.length
   const totalSourceCount = getTotalSourceCount(cards)
-  const [singularSource, pluralSources] =
-    SOURCE_LABELS[getSupportedToolLocale(locale)]
+  const { singularSource, pluralSources } = getSourceResultsCopy(locale)
   const overflowLabel = overflowCount === 1 ? singularSource : pluralSources
   const totalLabel = totalSourceCount === 1 ? singularSource : pluralSources
 
@@ -183,7 +174,7 @@ export function AggregatedSourceResults({
       className={joinClasses("flex flex-wrap gap-3", className)}
     >
       {visibleCards.map((source) => (
-        <SourceCard key={source.key} source={source} />
+        <SourceCard key={source.key} source={source} locale={locale} />
       ))}
 
       {overflowCount > 0 ? (
@@ -198,7 +189,7 @@ export function AggregatedSourceResults({
             <span className="mt-2 text-sm leading-5">{overflowLabel}</span>
           </SheetTrigger>
 
-          <SheetContent closeLabel="Close">
+          <SheetContent locale={locale}>
             <SheetHeader className="pr-10">
               <SheetTitle>
                 {totalSourceCount} {totalLabel}
@@ -209,6 +200,7 @@ export function AggregatedSourceResults({
                 <SourceCard
                   key={`sheet-${source.key}`}
                   source={source}
+                  locale={locale}
                   variant="list"
                 />
               ))}

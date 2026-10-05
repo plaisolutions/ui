@@ -3,10 +3,12 @@ import { CheckCircle2, Globe, LoaderCircle, Minus, Plus, XCircle } from "lucide-
 import { useState } from "react"
 import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 
 export type ToolResultBrowserCardProps = {
   part: UIBrowserToolCallPart
   className?: string
+  locale?: string | null
 }
 
 const SCRAPER_LABELS = {
@@ -40,7 +42,9 @@ function getPreview(output: string | null) {
 export function ToolResultBrowserCard({
   part,
   className,
+  locale,
 }: ToolResultBrowserCardProps) {
+  const copy = getUiCopy(locale)
   const [expanded, setExpanded] = useState(false)
   const metadata = part.metadata
   const output = toOutput(part.result)
@@ -53,7 +57,7 @@ export function ToolResultBrowserCard({
   const credits = metadata?.scraper_api_tokens ?? metadata?.firecrawl_credits
   const creditsLabel =
     typeof credits === "number"
-      ? `${credits} credit${credits === 1 ? "" : "s"}`
+      ? `${credits} ${credits === 1 ? copy.credit : copy.credits}`
       : null
   const subtitle = [scraperLabel, creditsLabel].filter(Boolean).join(" · ")
   const failed = part.state === "error"
@@ -66,11 +70,11 @@ export function ToolResultBrowserCard({
         "overflow-hidden rounded-lg border border-neutral-200 bg-white",
         className,
       )}
-      aria-label="Browser result"
+      aria-label={copy.browserResult}
     >
       <div className="flex items-center gap-2 px-3 py-2 text-sm">
         <Globe className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
-        <span className="font-medium text-neutral-800">Browser</span>
+        <span className="font-medium text-neutral-800">{copy.browser}</span>
         {subtitle ? (
           <span className="min-w-0 truncate text-xs text-neutral-500">
             {subtitle}
@@ -80,7 +84,7 @@ export function ToolResultBrowserCard({
           {pending ? (
             <LoaderCircle
               className="h-4 w-4 animate-spin text-amber-600"
-              aria-label="Pending"
+              aria-label={copy.pending}
             />
           ) : failed ? (
             <XCircle className="h-4 w-4 text-rose-600" aria-hidden="true" />
@@ -93,7 +97,7 @@ export function ToolResultBrowserCard({
           {canExpand ? (
             <button
               type="button"
-              aria-label={expanded ? "Collapse browser result" : "Expand browser result"}
+              aria-label={expanded ? copy.collapseBrowserResult : copy.expandBrowserResult}
               aria-expanded={expanded}
               className="flex h-5 w-5 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
               onClick={() => setExpanded((value) => !value)}
@@ -126,7 +130,7 @@ export function ToolResultBrowserCard({
           ) : null}
           {error ? (
             <p className="text-xs text-rose-700">
-              <span className="font-semibold">Error details:</span> {error}
+              <span className="font-semibold">{copy.errorDetails}:</span> {error}
             </p>
           ) : null}
         </div>

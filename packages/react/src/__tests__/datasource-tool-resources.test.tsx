@@ -231,7 +231,7 @@ describe("DatasourceToolResources", () => {
     })
     expect(sheet.getAttribute("data-state")).toBe("open")
     const sheetQueries = within(sheet)
-    expect(sheetQueries.getByText("Ver")).toBeTruthy()
+    expect(sheetQueries.getByRole("heading", { name: "Ver" })).toBeTruthy()
     expect(
       sheetQueries.getByRole("link", {
         name: "LECCIÓN Conceptos localizados Descripción localizada del recurso.",
@@ -243,7 +243,7 @@ describe("DatasourceToolResources", () => {
       }).className,
     ).toContain("w-full")
     expect(
-      sheetQueries.getByRole("link", { name: "View" }).getAttribute("href"),
+      sheetQueries.getByRole("link", { name: "Ver" }).getAttribute("href"),
     ).toBe("https://example.com/folder-es")
     expect(
       sheetQueries.getByRole("link", {

@@ -3,6 +3,7 @@ import { Loader } from "../icons/loader"
 import { Microphone } from "../icons/microphone"
 import { X } from "../icons/x"
 import { joinClasses } from "../internal/join-classes"
+import { getUiCopy } from "../internal/ui-copy"
 import { PromptFormIconButton } from "../prompt-form/prompt-form"
 import type { TranscribeAudioFn } from "./transcribe-audio"
 import {
@@ -11,6 +12,7 @@ import {
 } from "./use-speech-to-text"
 
 type SpeechToTextToggleCommonProps = {
+  locale?: string | null
   label?: string
   listeningLabel?: string
   cancelLabel?: string
@@ -47,17 +49,19 @@ export function SpeechToTextToggle({
   onTranscriptionComplete,
   onTranscriptionError,
   transcribe,
+  locale,
   disabled = false,
-  label = "Voice input",
-  listeningLabel = "Stop recording",
-  cancelLabel = "Cancel recording",
-  requestingLabel = "Requesting microphone access...",
-  loadingLabel = "Transcribing...",
+  label,
+  listeningLabel,
+  cancelLabel,
+  requestingLabel,
+  loadingLabel,
   cancelOnClickWhileRecording = false,
   className,
   onClick,
   ...props
 }: SpeechToTextToggleProps) {
+  const copy = getUiCopy(locale)
   const internalController = useSpeechToText({
     transcribe: transcribe ?? missingTranscribe,
     onTranscriptionComplete,
@@ -70,14 +74,14 @@ export function SpeechToTextToggle({
   const cancelsRecording = isListening && cancelOnClickWhileRecording
 
   const ariaLabel = isRequesting
-    ? requestingLabel
+    ? (requestingLabel ?? copy.requestingMicrophoneAccess)
     : isTranscribing
-      ? loadingLabel
+      ? (loadingLabel ?? copy.transcribing)
       : cancelsRecording
-        ? cancelLabel
+        ? (cancelLabel ?? copy.cancelRecording)
         : isListening
-          ? listeningLabel
-          : label
+          ? (listeningLabel ?? copy.stopRecording)
+          : (label ?? copy.voiceInput)
 
   return (
     <PromptFormIconButton

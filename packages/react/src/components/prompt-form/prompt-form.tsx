@@ -5,6 +5,7 @@ import { ArrowUp } from "../icons/arrow"
 import { Stop } from "../icons/stop"
 import { X } from "../icons/x"
 import { joinClasses } from "../internal/join-classes"
+import { getUiCopy } from "../internal/ui-copy"
 import {
   PROMPT_FORM_FILE_ACCEPT,
   partitionPromptFormFiles,
@@ -57,6 +58,7 @@ export type PromptFormProps = {
   onValueChange: (value: string) => void
   onSubmit: (input: PromptFormSubmitInput) => void | Promise<void>
   status?: ChatStatus
+  locale?: string | null
   uploadState?: FileUploadState
   onStop?: () => void
   disabled?: boolean
@@ -96,20 +98,21 @@ export function PromptForm({
   onValueChange,
   onSubmit,
   status = "ready",
+  locale,
   uploadState,
   onStop,
   disabled = false,
   hasPendingInput = false,
   clearOnSubmit = true,
   enabledTools,
-  placeholder = "Type a message...",
-  sendLabel = "Send",
-  stopLabel = "Stop",
-  attachLabel = "Attach file",
-  removeFileLabel = "Remove file",
-  uploadingLabel = "Uploading",
-  processingUploadLabel = "Processing upload",
-  uploadErrorLabel = "Upload failed",
+  placeholder: placeholderProp,
+  sendLabel: sendLabelProp,
+  stopLabel: stopLabelProp,
+  attachLabel: attachLabelProp,
+  removeFileLabel: removeFileLabelProp,
+  uploadingLabel: uploadingLabelProp,
+  processingUploadLabel: processingUploadLabelProp,
+  uploadErrorLabel: uploadErrorLabelProp,
   enableAttachments = true,
   files: filesProp,
   onFilesChange,
@@ -127,6 +130,16 @@ export function PromptForm({
   submitOnEnter = true,
   onTextareaKeyDown,
 }: PromptFormProps) {
+  const copy = getUiCopy(locale)
+  const placeholder = placeholderProp ?? copy.typeMessage
+  const sendLabel = sendLabelProp ?? copy.send
+  const stopLabel = stopLabelProp ?? copy.stop
+  const attachLabel = attachLabelProp ?? copy.attachFile
+  const removeFileLabel = removeFileLabelProp ?? copy.removeFile
+  const uploadingLabel = uploadingLabelProp ?? copy.uploading
+  const processingUploadLabel =
+    processingUploadLabelProp ?? copy.processingUpload
+  const uploadErrorLabel = uploadErrorLabelProp ?? copy.uploadFailed
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [internalFiles, setInternalFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -288,16 +301,7 @@ export function PromptForm({
             ))}
           </div>
           {isUploading && uploadState ? (
-            <div className="space-y-1.5 px-4 pb-3">
-              <div className="flex items-center justify-between gap-3 text-xs text-neutral-500">
-                <span className="truncate">
-                  {uploadState.status === "processing"
-                    ? processingUploadLabel
-                    : uploadingLabel}
-                  {uploadState.fileName ? `: ${uploadState.fileName}` : ""}
-                </span>
-                <span>{Math.round(uploadState.progress)}%</span>
-              </div>
+            <div className="px-4 pb-3">
               <div
                 role="progressbar"
                 tabIndex={0}

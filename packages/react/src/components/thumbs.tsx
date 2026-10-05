@@ -1,6 +1,7 @@
 import { ThumbsDown, ThumbsUp } from "lucide-react"
 import type { ButtonHTMLAttributes, ReactNode } from "react"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 
 type ThumbButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string
@@ -39,13 +40,14 @@ export type ThumbUpProps = Omit<
   "icon" | "label" | "onClick"
 > & {
   label?: string
+  locale?: string | null
   onClick: ThumbClickHandler
 }
 
-export function ThumbUp({ label = "Rate positively", ...props }: ThumbUpProps) {
+export function ThumbUp({ label, locale, ...props }: ThumbUpProps) {
   return (
     <ThumbButton
-      label={label}
+      label={label ?? getUiCopy(locale).ratePositively}
       icon={<ThumbsUp className="size-4" aria-hidden="true" />}
       {...props}
     />
@@ -57,16 +59,18 @@ export type ThumbDownProps = Omit<
   "icon" | "label" | "onClick"
 > & {
   label?: string
+  locale?: string | null
   onClick: ThumbClickHandler
 }
 
 export function ThumbDown({
-  label = "Rate negatively",
+  label,
+  locale,
   ...props
 }: ThumbDownProps) {
   return (
     <ThumbButton
-      label={label}
+      label={label ?? getUiCopy(locale).rateNegatively}
       icon={<ThumbsDown className="size-4" aria-hidden="true" />}
       {...props}
     />

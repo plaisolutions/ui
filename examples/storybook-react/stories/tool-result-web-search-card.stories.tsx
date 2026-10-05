@@ -8,6 +8,12 @@ const meta: Meta<typeof ToolResultWebSearchCard> = {
   parameters: {
     layout: "padded",
   },
+  argTypes: {
+    locale: {
+      control: "select",
+      options: ["en", "es", "ca", "fr", "it", "pt", "de", "da", "sv", "no"],
+    },
+  },
 }
 
 export default meta
@@ -73,17 +79,31 @@ export const Firecrawl: Story = {
   },
 }
 
+export const LocalizedPerplexity: Story = {
+  args: {
+    ...Perplexity.args,
+    locale: "es-ES",
+  },
+}
+
+export const LocalizedFirecrawl: Story = {
+  args: {
+    ...Firecrawl.args,
+    locale: "fr-FR",
+  },
+}
+
 export const MultipleResults: Story = {
   args: Perplexity.args,
-  render: () => {
+  render: ({ locale }) => {
     const firstPart = Perplexity.args?.part
     const secondPart = Firecrawl.args?.part
     if (!firstPart || !secondPart) return <></>
 
     return (
       <>
-        <ToolResultWebSearchCard part={firstPart} />
-        <ToolResultWebSearchCard part={secondPart} />
+        <ToolResultWebSearchCard part={firstPart} locale={locale} />
+        <ToolResultWebSearchCard part={secondPart} locale={locale} />
       </>
     )
   },

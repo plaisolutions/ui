@@ -3,6 +3,27 @@ import { describe, expect, it } from "vitest"
 import { ToolResultCard } from "../components"
 
 describe("ToolResultWebSearchCard", () => {
+  it("does not render a completed web-search card with no results", () => {
+    const view = render(
+      <ToolResultCard
+        part={{
+          type: "tool-call",
+          id: "tool_perplexity_empty",
+          name: "perplexity_search",
+          toolType: "perplexity",
+          input: { query: "No matches" },
+          state: "completed",
+          metadata: {
+            type: "perplexity",
+            search_results: [],
+          },
+        }}
+      />,
+    )
+
+    expect(view.container.innerHTML).toBe("")
+  })
+
   it("opens the Perplexity results from the compact web-search preview", () => {
     const view = render(
       <ToolResultCard
@@ -54,6 +75,41 @@ describe("ToolResultWebSearchCard", () => {
     expect(
       screen.queryByText("React Server Components render on the server."),
     ).toBeNull()
+    view.unmount()
+  })
+
+  it("translates the web-search title and source count in Spanish", () => {
+    const view = render(
+      <ToolResultCard
+        locale="es-ES"
+        part={{
+          type: "tool-call",
+          id: "tool_perplexity_es",
+          name: "perplexity_search",
+          toolType: "perplexity",
+          input: { query: "React" },
+          state: "completed",
+          metadata: {
+            type: "perplexity",
+            search_results: [
+              { title: "React", url: "https://react.dev" },
+              { title: "React blog", url: "https://react.dev/blog" },
+            ],
+          },
+        }}
+      />,
+    )
+
+    const trigger = within(view.container).getByRole("button", {
+      name: "Web: Resultados de búsqueda en Internet, 2 fuentes",
+    })
+    expect(within(trigger).getByText("2 fuentes")).toBeTruthy()
+    fireEvent.click(trigger)
+    expect(
+      screen.getByRole("dialog", {
+        name: "Resultados de búsqueda en Internet",
+      }),
+    ).toBeTruthy()
     view.unmount()
   })
 

@@ -2,6 +2,7 @@ import { Check, Copy } from "lucide-react"
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react"
 import { useEffect, useRef, useState } from "react"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 
 export type ClipboardState = {
   isCopied: boolean
@@ -17,6 +18,7 @@ export type ClipboardProps = Omit<
   copiedDuration?: number
   copyLabel?: string
   copiedLabel?: string
+  locale?: string | null
   children?: ReactNode | ((state: ClipboardState) => ReactNode)
 }
 
@@ -51,8 +53,9 @@ export function Clipboard({
   text,
   onCopy,
   copiedDuration = 2000,
-  copyLabel = "Copy",
-  copiedLabel = "Copied",
+  copyLabel,
+  copiedLabel,
+  locale,
   children,
   className,
   disabled,
@@ -60,6 +63,9 @@ export function Clipboard({
   type = "button",
   ...props
 }: ClipboardProps) {
+  const copy = getUiCopy(locale)
+  const resolvedCopyLabel = copyLabel ?? copy.copy
+  const resolvedCopiedLabel = copiedLabel ?? copy.copied
   const [isCopied, setIsCopied] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
@@ -99,7 +105,7 @@ export function Clipboard({
   return (
     <button
       type={type}
-      aria-label={isCopied ? copiedLabel : copyLabel}
+      aria-label={isCopied ? resolvedCopiedLabel : resolvedCopyLabel}
       className={joinClasses(
         "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-not-allowed disabled:opacity-40",
         className,
@@ -118,7 +124,7 @@ export function Clipboard({
         <Copy className="size-4" aria-hidden="true" />
       )}
       <span className="sr-only" aria-live="polite">
-        {isCopied ? copiedLabel : copyLabel}
+        {isCopied ? resolvedCopiedLabel : resolvedCopyLabel}
       </span>
     </button>
   )

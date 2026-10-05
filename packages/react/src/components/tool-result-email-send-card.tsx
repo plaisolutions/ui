@@ -2,10 +2,12 @@ import type { UIEmailSendToolCallPart } from "@plaisolutions/client"
 import { useState } from "react"
 import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy, getUiStatusLabel } from "./internal/ui-copy"
 
 export type ToolResultEmailSendCardProps = {
   part: UIEmailSendToolCallPart
   className?: string
+  locale?: string | null
 }
 
 type EmailSendInputView = {
@@ -22,12 +24,6 @@ type EmailSendResultView = {
   receiptMessageId: string | null
   receiptRawStatus: string | null
   raw: string | null
-}
-
-function formatStatus(status: UIEmailSendToolCallPart["state"]) {
-  if (status === "pending") return "pending"
-  if (status === "error") return "error"
-  return "completed"
 }
 
 function asObject(value: unknown): Record<string, unknown> | null {
@@ -113,7 +109,9 @@ function parseEmailSendResult(
 export function ToolResultEmailSendCard({
   part,
   className,
+  locale,
 }: ToolResultEmailSendCardProps) {
+  const copy = getUiCopy(locale)
   const [isExpanded, setIsExpanded] = useState(false)
   const emailInput = parseEmailSendInput(part)
   const emailResult = parseEmailSendResult(part)
@@ -136,7 +134,7 @@ export function ToolResultEmailSendCard({
       data-tool-call-state={part.state}
     >
       <header className="flex items-center justify-between gap-2">
-        <h4 className="text-sm font-semibold text-slate-900">Email</h4>
+        <h4 className="text-sm font-semibold text-slate-900">{copy.email}</h4>
         <div className="flex items-center gap-2">
           <span
             className={joinClasses(
@@ -144,11 +142,12 @@ export function ToolResultEmailSendCard({
               statusClass,
             )}
           >
-            {formatStatus(part.state)}
+            {getUiStatusLabel(part.state, copy)}
           </span>
           <button
             type="button"
             aria-expanded={isExpanded}
+            aria-label={isExpanded ? copy.collapse : copy.expand}
             aria-controls={`tool-email-details-${part.id}`}
             className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-100"
             onClick={() => setIsExpanded((previous) => !previous)}
@@ -160,13 +159,13 @@ export function ToolResultEmailSendCard({
 
       {emailInput.subject ? (
         <div className="space-y-1">
-          <p className="text-xs font-semibold text-slate-600">Subject</p>
+          <p className="text-xs font-semibold text-slate-600">{copy.subject}</p>
           <p className="text-sm text-slate-900">{emailInput.subject}</p>
         </div>
       ) : null}
 
       <div className="space-y-1">
-        <p className="text-xs font-semibold text-slate-600">To</p>
+        <p className="text-xs font-semibold text-slate-600">{copy.to}</p>
         {emailInput.to.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {emailInput.to.map((recipient) => (
@@ -179,7 +178,7 @@ export function ToolResultEmailSendCard({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">No recipients provided.</p>
+          <p className="text-sm text-slate-500">{copy.noRecipientsProvided}</p>
         )}
       </div>
 
@@ -190,7 +189,7 @@ export function ToolResultEmailSendCard({
       >
         {emailInput.text ? (
           <div className="space-y-1">
-            <p className="text-xs font-semibold text-slate-600">Body</p>
+            <p className="text-xs font-semibold text-slate-600">{copy.body}</p>
             <p className="whitespace-pre-wrap rounded border border-slate-200 bg-slate-50 p-2 text-sm text-slate-700">
               {emailInput.text}
             </p>
@@ -200,32 +199,32 @@ export function ToolResultEmailSendCard({
         {part.result !== undefined ? (
           <div className="space-y-2 rounded border border-slate-200 bg-white p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Delivery
+              {copy.delivery}
             </p>
             {emailResult.status ? (
               <p className="text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Status:</span>{" "}
+                <span className="font-semibold text-slate-900">{copy.status}:</span>{" "}
                 {emailResult.status}
               </p>
             ) : null}
             {emailResult.recipientsCount !== null ? (
               <p className="text-sm text-slate-700">
                 <span className="font-semibold text-slate-900">
-                  Recipients:
+                  {copy.recipients}:
                 </span>{" "}
                 {emailResult.recipientsCount}
               </p>
             ) : null}
             {emailResult.receiptProvider ? (
               <p className="text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">Provider:</span>{" "}
+                <span className="font-semibold text-slate-900">{copy.provider}:</span>{" "}
                 {emailResult.receiptProvider}
               </p>
             ) : null}
             {emailResult.receiptMessageId ? (
               <p className="break-all text-sm text-slate-700">
                 <span className="font-semibold text-slate-900">
-                  Message ID:
+                  {copy.messageId}:
                 </span>{" "}
                 {emailResult.receiptMessageId}
               </p>
@@ -233,7 +232,7 @@ export function ToolResultEmailSendCard({
             {emailResult.receiptRawStatus ? (
               <p className="text-sm text-slate-700">
                 <span className="font-semibold text-slate-900">
-                  Raw status:
+                  {copy.rawStatus}:
                 </span>{" "}
                 {emailResult.receiptRawStatus}
               </p>
@@ -249,7 +248,7 @@ export function ToolResultEmailSendCard({
 
       {errorDetails ? (
         <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-          <span className="font-semibold">Error details:</span> {errorDetails}
+          <span className="font-semibold">{copy.errorDetails}:</span> {errorDetails}
         </p>
       ) : null}
     </section>

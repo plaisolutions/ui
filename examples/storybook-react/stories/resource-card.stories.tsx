@@ -49,6 +49,16 @@ export const OpenGraphContent: Story = {
   },
 }
 
+export const LongResourceName: Story = {
+  args: {
+    type: "DOCUMENT",
+    title:
+      "A very long resource name that should remain on one line and truncate inside the card",
+    description: "The complete name remains available in the resource data.",
+    url: "https://example.com/long-resource-name",
+  },
+}
+
 export const WithoutUrl: Story = {
   args: {
     type: "DOCUMENT",

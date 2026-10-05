@@ -2,6 +2,7 @@ import type { UIMcpToolCallPart } from "@plaisolutions/client"
 import { CheckCircle2, Plug, XCircle } from "lucide-react"
 import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 import {
   Sheet,
   SheetContent,
@@ -13,6 +14,7 @@ import {
 export type ToolResultMcpCardProps = {
   part: UIMcpToolCallPart
   className?: string
+  locale?: string | null
 }
 
 function text(value: unknown) {
@@ -25,7 +27,8 @@ function text(value: unknown) {
   }
 }
 
-export function ToolResultMcpCard({ part, className }: ToolResultMcpCardProps) {
+export function ToolResultMcpCard({ part, className, locale }: ToolResultMcpCardProps) {
+  const copy = getUiCopy(locale)
   const meta = part.metadata
   const server = meta?.mcp_server_url ?? meta?.server_name
   const tool = meta?.mcp_tool_name ?? meta?.tool_name ?? part.name
@@ -35,7 +38,7 @@ export function ToolResultMcpCard({ part, className }: ToolResultMcpCardProps) {
   return (
     <Sheet>
       <SheetTrigger
-        aria-label={`MCP tool: ${tool}`}
+        aria-label={`${copy.mcpTool}: ${tool}`}
         className={joinClasses(
           "w-full rounded-lg border border-neutral-200 bg-white text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
           className,
@@ -62,26 +65,26 @@ export function ToolResultMcpCard({ part, className }: ToolResultMcpCardProps) {
           </span>
         </span>
       </SheetTrigger>
-      <SheetContent closeLabel="Close">
+      <SheetContent locale={locale}>
         <SheetHeader className="pr-10">
-          <SheetTitle>MCP tool</SheetTitle>
+          <SheetTitle>{copy.mcpTool}</SheetTitle>
         </SheetHeader>
-        <section className="mt-6 space-y-4" aria-label="MCP tool result">
+        <section className="mt-6 space-y-4" aria-label={copy.mcpToolResult}>
           <dl className="grid gap-2 text-sm">
             <div>
-              <dt className="text-xs text-neutral-500">Tool</dt>
+              <dt className="text-xs text-neutral-500">{copy.tool}</dt>
               <dd>{tool}</dd>
             </div>
             {server ? (
               <div>
-                <dt className="text-xs text-neutral-500">Server</dt>
+                <dt className="text-xs text-neutral-500">{copy.server}</dt>
                 <dd className="break-all">{server}</dd>
               </div>
             ) : null}
           </dl>
           {result ? (
             <div>
-              <h3 className="mb-2 text-sm font-medium">Result</h3>
+              <h3 className="mb-2 text-sm font-medium">{copy.result}</h3>
               <pre className="overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs leading-5">
                 {result}
               </pre>
@@ -89,7 +92,7 @@ export function ToolResultMcpCard({ part, className }: ToolResultMcpCardProps) {
           ) : null}
           {error ? (
             <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              <span className="font-semibold">Error details:</span> {error}
+              <span className="font-semibold">{copy.errorDetails}:</span> {error}
             </p>
           ) : null}
         </section>

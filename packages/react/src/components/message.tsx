@@ -14,6 +14,7 @@ import {
   type SourceToolPart,
 } from "./aggregated-source-results"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 import { ToolResultCard } from "./tool-result-card"
 import { Thinking } from "./thinking"
 
@@ -214,6 +215,7 @@ function renderPart(
   completedThinkingLabel?: string,
   textClassName?: string,
 ) {
+  const copy = getUiCopy(locale)
   if (part.type === "text") {
     if (renderText) {
       return (
@@ -245,7 +247,7 @@ function renderPart(
       >
         <img
           src={part.url}
-          alt={title || "Uploaded image"}
+          alt={title || copy.uploadedImage}
           className="max-h-56 rounded-md object-contain"
         />
         {title ? (
@@ -262,7 +264,7 @@ function renderPart(
       part.metadata?.originalFileName ||
       part.title ||
       getFilenameFromUrl(part.fileUrl) ||
-      "Document"
+      copy.document
     const extension = getDisplayExtension(fileName)
 
     return (
@@ -274,7 +276,7 @@ function renderPart(
         className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left"
       >
         <span className="rounded bg-slate-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-          {extension ?? "File"}
+          {extension ?? copy.file}
         </span>
         <div className="min-w-0">
           <p className="max-w-xs truncate text-sm font-medium text-slate-900">
@@ -320,6 +322,7 @@ function renderPart(
         part={part}
         thinkingLabel={thinkingLabel}
         completedLabel={completedThinkingLabel}
+        locale={locale}
       />
     )
   }
@@ -429,11 +432,12 @@ export function MessageParts({
   isStreaming = false,
   thinkingLabel,
   completedThinkingLabel,
-  readMoreLabel = "Read more",
-  readLessLabel = "Read less",
+  readMoreLabel,
+  readLessLabel,
   className,
   ...props
 }: MessagePartsProps) {
+  const copy = getUiCopy(locale)
   const [isExpanded, setIsExpanded] = useState(false)
   const textContent = useMemo(
     () =>
@@ -520,7 +524,9 @@ export function MessageParts({
           className="text-xs font-medium text-slate-600 hover:text-slate-900"
           onClick={() => setIsExpanded((previous) => !previous)}
         >
-          {isExpanded ? readLessLabel : readMoreLabel}
+          {isExpanded
+            ? (readLessLabel ?? copy.readLess)
+            : (readMoreLabel ?? copy.readMore)}
         </button>
       ) : null}
     </div>
