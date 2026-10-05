@@ -1,9 +1,13 @@
-import { Globe } from "lucide-react"
 import type {
   UIFirecrawlSearchToolCallPart,
   UIPerplexityToolCallPart,
   WebSearchResult,
 } from "@plaisolutions/client"
+import { Globe } from "lucide-react"
+import { formatToolErrorDetails } from "./internal/format-tool-error-details"
+import { joinClasses } from "./internal/join-classes"
+import { getSourceResultsCopy } from "./internal/source-results-copy"
+import { getUiCopy } from "./internal/ui-copy"
 import {
   Sheet,
   SheetContent,
@@ -11,11 +15,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./sheet"
-import { formatToolErrorDetails } from "./internal/format-tool-error-details"
-import { joinClasses } from "./internal/join-classes"
 
 export type ToolResultWebSearchCardProps = {
   part: UIPerplexityToolCallPart | UIFirecrawlSearchToolCallPart
+  locale?: string | null
   className?: string
 }
 
@@ -145,16 +148,22 @@ function WebSearchResultItem({ result }: { result: WebSearchResult }) {
 
 export function ToolResultWebSearchCard({
   part,
+  locale,
   className,
 }: ToolResultWebSearchCardProps) {
   const searchResults = getWebSearchResults(part)
+  if (part.state === "completed" && searchResults.length === 0) return null
+
   const errorDetails = formatToolErrorDetails(part.errorDetails)
-  const sourceLabel = searchResults.length === 1 ? "source" : "sources"
+  const copy = getSourceResultsCopy(locale)
+  const uiCopy = getUiCopy(locale)
+  const sourceLabel =
+    searchResults.length === 1 ? copy.singularSource : copy.pluralSources
 
   return (
     <Sheet>
       <SheetTrigger
-        aria-label={`Web: Internet search results, ${searchResults.length} ${sourceLabel}`}
+        aria-label={`Web: ${copy.webSearchTitle}, ${searchResults.length} ${sourceLabel}`}
         className={joinClasses(
           "plai-tool-result-web-search-card min-h-[183px] w-[186px] rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
           className,
@@ -165,24 +174,25 @@ export function ToolResultWebSearchCard({
           <p className="text-base leading-5">WEB</p>
         </header>
         <h3 className="mt-3 line-clamp-2 text-sm font-normal leading-5">
-          Internet search results
+          {copy.webSearchTitle}
         </h3>
         <p className="mt-2 text-xs leading-4 text-neutral-600">
           {part.state === "pending"
-            ? "Searching…"
+            ? uiCopy.searching
             : `${searchResults.length} ${sourceLabel}`}
         </p>
       </SheetTrigger>
 
-      <SheetContent closeLabel="Close">
+      <SheetContent locale={locale}>
         <SheetHeader className="pr-10">
-          <SheetTitle>Internet search results</SheetTitle>
+          <SheetTitle>{copy.webSearchTitle}</SheetTitle>
         </SheetHeader>
 
         <ToolResultWebSearchResults
           part={part}
           searchResults={searchResults}
           errorDetails={errorDetails}
+          locale={locale}
           className="mt-5"
         />
       </SheetContent>
@@ -194,13 +204,15 @@ export function ToolResultWebSearchResults({
   part,
   searchResults = getWebSearchResults(part),
   errorDetails = formatToolErrorDetails(part.errorDetails),
+  locale,
   className,
 }: ToolResultWebSearchCardProps & {
   searchResults?: WebSearchResult[]
   errorDetails?: string | null
 }) {
+  const copy = getUiCopy(locale)
   return (
-    <section className={className} aria-label="Search results">
+    <section className={className} aria-label={copy.searchResults}>
       {searchResults.length > 0 ? (
         <div className="space-y-3">
           {searchResults.map((result, index) => (
@@ -211,14 +223,15 @@ export function ToolResultWebSearchResults({
           ))}
         </div>
       ) : part.state === "pending" ? (
-        <p className="text-sm text-neutral-600">Searching for sources…</p>
+        <p className="text-sm text-neutral-600">{copy.searchingForSources}</p>
       ) : (
-        <p className="text-sm text-neutral-600">No sources returned.</p>
+        <p className="text-sm text-neutral-600">{copy.noSourcesReturned}</p>
       )}
 
       {errorDetails ? (
         <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-          <span className="font-semibold">Error details:</span> {errorDetails}
+          <span className="font-semibold">{copy.errorDetails}:</span>{" "}
+          {errorDetails}
         </p>
       ) : null}
     </section>

@@ -130,7 +130,9 @@ describe("AggregatedSourceResults", () => {
 
     fireEvent.click(overflow)
 
-    const sheet = screen.getByRole("dialog", { name: "4 fuentes" })
+    const sheet = within(view.container).getByRole("dialog", {
+      name: "4 fuentes",
+    })
     expect(within(sheet).getAllByRole("link")).toHaveLength(4)
     expect(within(sheet).getByRole("link", { name: /Resource 4/ })).toBeTruthy()
   })
@@ -138,6 +140,7 @@ describe("AggregatedSourceResults", () => {
   it("aggregates datasource and web tools into one shared overflow", () => {
     const view = render(
       <MessageParts
+        locale="es-ES"
         message={{
           id: "message-mixed",
           role: "assistant",
@@ -198,21 +201,52 @@ describe("AggregatedSourceResults", () => {
     expect(within(view.container).getAllByRole("link")).toHaveLength(2)
     expect(
       within(view.container).getByRole("button", {
-        name: "Web: Internet search results, 1 source",
+        name: "Web: Resultados de búsqueda en Internet, 1 fuente",
       }),
     ).toBeTruthy()
     const overflow = within(view.container).getByRole("button", {
-      name: "+1 source",
+      name: "+1 fuente",
     })
 
     fireEvent.click(overflow)
 
-    const sheet = screen.getByRole("dialog", { name: "4 sources" })
+    const sheet = within(view.container).getByRole("dialog", {
+      name: "4 fuentes",
+    })
+    expect(
+      within(sheet).getAllByText("Resultados de búsqueda en Internet"),
+    ).toHaveLength(2)
     expect(within(sheet).getByRole("link", { name: /Resource 1/ })).toBeTruthy()
     expect(
       within(sheet).getByRole("link", { name: "React documentation" }),
     ).toBeTruthy()
     expect(within(sheet).getByRole("link", { name: "PLai news" })).toBeTruthy()
+  })
+
+  it("excludes empty web searches from the cards and overflow count", () => {
+    const message = createDatasourceMessage([
+      createResource(1),
+      createResource(2),
+      createResource(3),
+    ])
+    message.parts.push({
+      type: "tool-call",
+      id: "perplexity-empty",
+      name: "search_web",
+      toolType: "perplexity",
+      input: { query: "No matches" },
+      state: "completed",
+      metadata: {
+        type: "perplexity",
+        search_results: [],
+      },
+    })
+
+    const view = render(<MessageParts message={message} />)
+
+    expect(within(view.container).getAllByRole("link")).toHaveLength(3)
+    expect(within(view.container).queryByRole("button")).toBeNull()
+    expect(view.container.textContent).not.toContain("Internet search results")
   })
 
   it("filters private and duplicate resources before calculating overflow", () => {

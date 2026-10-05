@@ -53,6 +53,7 @@ function PromptFormDemo({
         <SpeechToTextToggle
           controller={speechToText}
           cancelOnClickWhileRecording
+          locale={props.locale}
         />
       }
     />
@@ -66,6 +67,12 @@ const meta: Meta<typeof PromptFormDemo> = {
   parameters: {
     layout: "padded",
   },
+  argTypes: {
+    locale: {
+      control: "select",
+      options: ["en", "es", "ca", "fr", "it", "pt", "de", "da", "sv", "no"],
+    },
+  },
   decorators: [
     (Story) => (
       <div className="w-full min-w-xl max-w-4xl">
@@ -76,7 +83,6 @@ const meta: Meta<typeof PromptFormDemo> = {
   args: {
     onSubmit: async () => {},
     onStop: () => {},
-    placeholder: "Envía un mensaje...",
   },
 }
 
@@ -85,6 +91,13 @@ export default meta
 type Story = StoryObj<typeof PromptFormDemo>
 
 export const Empty: Story = {}
+
+export const Spanish: Story = {
+  args: {
+    locale: "es-ES",
+    initialValue: "Hola",
+  },
+}
 
 export const WithText: Story = {
   args: {

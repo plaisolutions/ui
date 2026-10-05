@@ -255,22 +255,24 @@ non-tool content. Pass the existing `MessageParts` options through
 Completed datasource, Perplexity, and Firecrawl results are aggregated by
 default before the assistant text. The first three source cards are shown; an
 additional `+N sources` card opens a sheet containing the complete result set.
-Use `maxVisibleSourceCards` to change the limit,
+Datasource results without resources and completed Perplexity or Firecrawl
+searches without sources do not render a card. The web search title and source
+count use the active locale. Use `maxVisibleSourceCards` to change the limit,
 `sourceToolResultsPosition="inline"` to keep the aggregate at the first source
 position, or `sourceToolResultsLayout="individual"` to opt out. The deprecated
 `datasourceToolResultsPosition` prop remains available for compatibility.
 
 `MessageParts` automatically renders `thinking` parts streamed by the client.
 `Thinking` displays provider-supplied summaries only, never private reasoning
-or provider replay metadata. Use its labels, or the corresponding
-`thinkingLabel` and `completedThinkingLabel` props on `MessageParts`, to
-localize the UI.
+or provider replay metadata. Its default labels follow `locale`; use
+`thinkingLabel` and `completedThinkingLabel` on `MessageParts` only to override
+them.
 
-Long, text-only user messages can be collapsed. Use `readMoreLabel` and
-`readLessLabel` on `MessageParts` to localize that control. The default message
-text is right-aligned and medium weight for users, and left-aligned and normal
-weight for assistant or system messages; this does not change when a message is
-expanded.
+Long, text-only user messages can be collapsed. Their control follows `locale`;
+use `readMoreLabel` and `readLessLabel` on `MessageParts` to override its text.
+The default message text is right-aligned and medium weight for users, and
+left-aligned and normal weight for assistant or system messages; this does not
+change when a message is expanded.
 
 ```tsx
 <Thinking
@@ -382,7 +384,15 @@ const { uploadFile, uploadState, sendMessage } = useChat({ transport });
 ```
 
 `PromptForm` keeps attachment previews visible, disables file interactions
-during `uploading` and `processing`, and renders byte progress below them.
+during `uploading` and `processing`, and renders only the progress bar below
+them (without a visible status or percentage). The progress bar retains its
+accessible label and value.
+
+UI labels support `ca`, `da`, `de`, `en`, `es`, `fr`, `it`, `no`, `pt`, and `sv`.
+Pass `locale` to components such as `MessageParts` and `PromptForm`; otherwise
+they use the document language, then the browser language. Unknown locales and
+untranslated labels fall back to English. Explicit label props still override
+the built-in translations.
 
 Datasource results use localized OpenGraph metadata when it is present. Pass
 the active locale to `MessageParts` (for example, `locale="es-ES"`). Resolution

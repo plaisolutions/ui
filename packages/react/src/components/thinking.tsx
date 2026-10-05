@@ -3,28 +3,34 @@ import { Brain, ChevronDown, LoaderCircle } from "lucide-react"
 import type { HTMLAttributes } from "react"
 import { useEffect, useId, useRef, useState } from "react"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 
 export type ThinkingProps = Omit<HTMLAttributes<HTMLElement>, "part"> & {
   part: UIThinkingPart
   thinkingLabel?: string
   completedLabel?: string
+  locale?: string | null
   defaultOpen?: boolean
 }
 
 export function Thinking({
   part,
-  thinkingLabel = "Thinking…",
-  completedLabel = "Thought process",
+  thinkingLabel,
+  completedLabel,
+  locale,
   defaultOpen,
   className,
   ...props
 }: ThinkingProps) {
+  const copy = getUiCopy(locale)
   const isStreaming = part.state === "streaming"
   const hasContent = Boolean(part.thinking.trim())
   const [isOpen, setIsOpen] = useState(defaultOpen ?? isStreaming)
   const previousState = useRef(part.state)
   const contentId = useId()
-  const label = isStreaming ? thinkingLabel : completedLabel
+  const label = isStreaming
+    ? (thinkingLabel ?? copy.thinking)
+    : (completedLabel ?? copy.thoughtProcess)
 
   useEffect(() => {
     if (previousState.current === "streaming" && !isStreaming) {
@@ -45,7 +51,7 @@ export function Thinking({
         aria-expanded={hasContent ? isOpen : undefined}
         aria-label={
           hasContent
-            ? `${isOpen ? "Collapse" : "Expand"} ${label}`
+            ? `${isOpen ? copy.collapse : copy.expand} ${label}`
             : label
         }
         disabled={!hasContent}
@@ -77,7 +83,7 @@ export function Thinking({
         ) : null}
       </button>
       <span className="sr-only" aria-live="polite">
-        {isStreaming ? "Thinking in progress" : "Thinking complete"}
+        {isStreaming ? copy.thinkingInProgress : copy.thinkingComplete}
       </span>
       {hasContent && isOpen ? (
         <p

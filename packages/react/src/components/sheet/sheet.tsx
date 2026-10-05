@@ -21,6 +21,7 @@ import {
 } from "react"
 import { X } from "../icons"
 import { joinClasses } from "../internal/join-classes"
+import { getUiCopy } from "../internal/ui-copy"
 
 export type SheetProps = PropsWithChildren<{
   open?: boolean
@@ -38,6 +39,7 @@ export type SheetContentProps = Omit<
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
   closeLabel?: string
+  locale?: string | null
 }
 
 export type SheetHeaderProps = HTMLAttributes<HTMLDivElement>
@@ -214,7 +216,8 @@ export const SheetContent = forwardRef<HTMLDialogElement, SheetContentProps>(
       className,
       side = "right",
       showCloseButton = true,
-      closeLabel = "Close",
+      closeLabel,
+      locale,
       onCancel,
       onClick,
       "aria-label": ariaLabel,
@@ -341,7 +344,7 @@ export const SheetContent = forwardRef<HTMLDialogElement, SheetContentProps>(
         >
           {showCloseButton ? (
             <SheetClose
-              aria-label={closeLabel}
+              aria-label={closeLabel ?? getUiCopy(locale).close}
               className="absolute right-4 top-2 rounded-sm p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
             >
               <X className="h-5 w-5" />

@@ -86,13 +86,13 @@ return (
           ) : undefined
         }
         messagePartsProps={{
-          thinkingLabel: "Pensando…",
-          completedThinkingLabel: "Resumen del razonamiento",
+          locale: "es-ES",
           memoryProposal,
         }}
       />
     ))}
     <PromptForm
+      locale="es-ES"
       value={input}
       onValueChange={setInput}
       onSubmit={sendMessage}

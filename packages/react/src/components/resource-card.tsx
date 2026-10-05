@@ -2,6 +2,7 @@ import type { GetResourceDownloadUrlFn } from "@plaisolutions/client"
 import { File } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 
 export type ResourceCardProps = {
   icon?: string
@@ -14,11 +15,12 @@ export type ResourceCardProps = {
   resourceId?: string
   requiresDownloadUrl?: boolean
   getResourceDownloadUrl?: GetResourceDownloadUrlFn
+  locale?: string | null
 }
 
 type ResourceCardContentProps = Pick<
   ResourceCardProps,
-  "icon" | "type" | "title" | "description"
+  "icon" | "type" | "title" | "description" | "variant"
 >
 
 function ResourceCardContent({
@@ -26,6 +28,7 @@ function ResourceCardContent({
   type,
   title,
   description,
+  variant = "card",
 }: ResourceCardContentProps) {
   const heading = type ?? title
   const bodyTitle = type ? title : description
@@ -48,7 +51,12 @@ function ResourceCardContent({
         <p className="min-w-0 truncate text-base leading-5">{heading}</p>
       </header>
       {bodyTitle ? (
-        <p className="mt-2 line-clamp-2 text-sm font-medium leading-5">
+        <p
+          className={joinClasses(
+            "mt-2 text-sm font-medium leading-5",
+            variant === "card" && type ? "truncate" : "line-clamp-2",
+          )}
+        >
           {bodyTitle}
         </p>
       ) : null}
@@ -68,8 +76,10 @@ export function ResourceCard(props: ResourceCardProps) {
     resourceId,
     requiresDownloadUrl = false,
     getResourceDownloadUrl,
+    locale,
     ...contentProps
   } = props
+  const copy = getUiCopy(locale)
   const [downloadState, setDownloadState] = useState<
     "idle" | "loading" | "error"
   >("idle")
@@ -142,18 +152,18 @@ export function ResourceCard(props: ResourceCardProps) {
         disabled={downloadState === "loading"}
         aria-busy={downloadState === "loading"}
       >
-        <ResourceCardContent {...contentProps} />
+        <ResourceCardContent {...contentProps} variant={variant} />
         {downloadState === "loading" ? (
           <span
             className="mt-2 block text-xs text-neutral-600"
             aria-live="polite"
           >
-            Opening resource…
+            {copy.openingResource}
           </span>
         ) : null}
         {downloadState === "error" ? (
           <span className="mt-2 block text-xs text-red-700" role="alert">
-            Unable to open resource. Try again.
+            {copy.resourceOpenFailed}
           </span>
         ) : null}
       </button>
@@ -166,7 +176,7 @@ export function ResourceCard(props: ResourceCardProps) {
         aria-label={`${contentProps.title}: ${contentProps.description}`}
         className={className}
       >
-        <ResourceCardContent {...contentProps} />
+        <ResourceCardContent {...contentProps} variant={variant} />
       </article>
     )
   }
@@ -178,7 +188,7 @@ export function ResourceCard(props: ResourceCardProps) {
       rel="noreferrer noopener"
       className={interactiveClassName}
     >
-      <ResourceCardContent {...contentProps} />
+      <ResourceCardContent {...contentProps} variant={variant} />
     </a>
   )
 }

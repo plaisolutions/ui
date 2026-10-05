@@ -8,6 +8,7 @@ import {
   type DatasourceFolderCardProps,
 } from "./datasource-folder-card"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 import {
   getLocalizedOpenGraphValue,
   getResourceDescription,
@@ -70,6 +71,7 @@ function toResourceCardProps(
       ? getResourceDownloadUrl
       : undefined,
     requiresDownloadUrl,
+    locale,
   }
 }
 
@@ -101,6 +103,7 @@ function toFolderCardProps(
     resources: group.map((resource) =>
       toResourceCardProps(resource, locale, getResourceDownloadUrl),
     ),
+    locale,
   }
 }
 
@@ -215,7 +218,7 @@ export function DatasourceToolResources({
 
   return (
     <section
-      aria-label="Recursos de la fuente de datos"
+      aria-label={getUiCopy(locale).datasourceResources}
       className={joinClasses("flex flex-wrap gap-3", className)}
     >
       {cards.map((card) => (

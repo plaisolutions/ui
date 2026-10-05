@@ -24,6 +24,9 @@ const SUPPORTED_TOOL_LOCALES = new Set<SupportedToolLocale>([
 ])
 
 function getCurrentLocale() {
+  if (typeof document !== "undefined" && document.documentElement.lang) {
+    return document.documentElement.lang
+  }
   return typeof navigator === "undefined" ? "en" : navigator.language
 }
 

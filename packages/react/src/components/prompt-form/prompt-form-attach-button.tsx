@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes } from "react"
 import { useRef } from "react"
 import { Paperclip } from "../icons/paperclip"
+import { getUiCopy } from "../internal/ui-copy"
 import {
   PROMPT_FORM_FILE_ACCEPT,
   partitionPromptFormFiles,
@@ -9,6 +10,7 @@ import type { InvalidPromptFormFile } from "./file-attachments"
 import { PromptFormIconButton } from "./prompt-form"
 
 export type PromptFormAttachButtonProps = {
+  locale?: string | null
   onFilesSelected: (files: File[]) => void
   onInvalidFiles?: (invalidFiles: InvalidPromptFormFile[]) => void
   accept?: string
@@ -18,9 +20,10 @@ export type PromptFormAttachButtonProps = {
 export function PromptFormAttachButton({
   onFilesSelected,
   onInvalidFiles,
+  locale,
   accept = PROMPT_FORM_FILE_ACCEPT,
   disabled = false,
-  label = "Attach file",
+  label,
   ...props
 }: PromptFormAttachButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,7 +54,7 @@ export function PromptFormAttachButton({
       />
       <PromptFormIconButton
         type="button"
-        aria-label={label}
+        aria-label={label ?? getUiCopy(locale).attachFile}
         disabled={disabled}
         onClick={() => fileInputRef.current?.click()}
         {...props}

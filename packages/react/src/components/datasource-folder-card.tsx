@@ -3,6 +3,7 @@ import {
   DatasourceToolResultCardContent,
 } from "./datasource-tool-result-card"
 import { ResourceCard, type ResourceCardProps } from "./resource-card"
+import { getUiCopy } from "./internal/ui-copy"
 import {
   Sheet,
   SheetContent,
@@ -20,6 +21,7 @@ export type DatasourceFolderCardProps = {
   url?: string | null
   resources: ResourceCardProps[]
   variant?: "card" | "list"
+  locale?: string | null
 }
 
 export function DatasourceFolderCard({
@@ -30,7 +32,9 @@ export function DatasourceFolderCard({
   url,
   resources,
   variant = "card",
+  locale,
 }: DatasourceFolderCardProps) {
+  const copy = getUiCopy(locale)
   return (
     <Sheet>
       <SheetTrigger
@@ -45,10 +49,11 @@ export function DatasourceFolderCard({
           description={description}
           type={type}
           resourceCount={resources.length}
+          locale={locale}
         />
       </SheetTrigger>
 
-      <SheetContent closeLabel="Cerrar">
+      <SheetContent locale={locale}>
         <SheetHeader className="pr-10">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0">
@@ -72,13 +77,13 @@ export function DatasourceFolderCard({
               rel="noreferrer noopener"
               className="text-xs font-medium text-neutral-700 underline underline-offset-2"
             >
-              View
+              {copy.view}
             </a>
           ) : null}
         </SheetHeader>
 
-        <section className="mt-5" aria-label="Recursos">
-          <h3 className="text-xs font-medium leading-4">Ver</h3>
+        <section className="mt-5" aria-label={copy.resources}>
+          <h3 className="text-xs font-medium leading-4">{copy.view}</h3>
           <div className="mt-7 space-y-3">
             {resources.map((resource, index) => (
               <ResourceCard

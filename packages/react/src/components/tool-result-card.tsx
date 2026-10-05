@@ -10,10 +10,12 @@ import {
   isDatasourceResource,
 } from "./datasource-tool-resources"
 import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
+import { MemoryProposalCard } from "./memory-proposal-card"
 import { ToolError } from "./tool-error"
-import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 import { ToolResultAgentInvocationCard } from "./tool-result-agent-invocation-card"
 import { ToolResultBrowserCard } from "./tool-result-browser-card"
+import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 import { ToolResultExternalDatasourceCard } from "./tool-result-external-datasource-card"
 import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 import { ToolResultMcpCard } from "./tool-result-mcp-card"
@@ -21,7 +23,6 @@ import { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-ca
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
 import { ToolUseIndicator } from "./tool-use-indicator"
-import { MemoryProposalCard } from "./memory-proposal-card"
 
 export type ToolResultCardProps = {
   part: UIToolCallPart
@@ -80,6 +81,7 @@ export function ToolResultCard({
   getResourceDownloadUrl,
   memoryProposal,
 }: ToolResultCardProps) {
+  const copy = getUiCopy(locale)
   if (part.toolType === "memory_proposal") {
     const proposal = part.metadata?.proposal
     if (!memoryProposal || !proposal || typeof proposal !== "object")
@@ -109,13 +111,20 @@ export function ToolResultCard({
   const datasourceResources = getDatasourceResources(part)
 
   if (part.toolType === "email_send") {
-    return <ToolResultEmailSendCard part={part} className={className} />
+    return (
+      <ToolResultEmailSendCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
   }
 
   if (part.toolType === "agent_invocation") {
     return (
       <ToolResultAgentInvocationCard
         part={part}
+        locale={locale}
         className={className}
         onOpenThread={onOpenAgentThread}
       />
@@ -123,32 +132,68 @@ export function ToolResultCard({
   }
 
   if (part.toolType === "browser") {
-    return <ToolResultBrowserCard part={part} className={className} />
+    return (
+      <ToolResultBrowserCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
   }
 
   if (part.toolType === "external_datasource") {
     return (
-      <ToolResultExternalDatasourceCard part={part} className={className} />
+      <ToolResultExternalDatasourceCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
     )
   }
 
   if (part.toolType === "office_documents") {
-    return <ToolResultOfficeDocumentsCard part={part} className={className} />
+    return (
+      <ToolResultOfficeDocumentsCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
   }
 
   if (part.toolType === "http_request") {
-    return <ToolResultHttpRequestCard part={part} className={className} />
+    return (
+      <ToolResultHttpRequestCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
   }
   if (part.toolType === "mcp_tool") {
-    return <ToolResultMcpCard part={part} className={className} />
+    return (
+      <ToolResultMcpCard part={part} locale={locale} className={className} />
+    )
   }
 
   if (part.toolType === "workflow_dispatch") {
-    return <ToolResultWorkflowDispatchCard part={part} className={className} />
+    return (
+      <ToolResultWorkflowDispatchCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
   }
 
   if (part.toolType === "perplexity" || part.toolType === "firecrawl_search") {
-    return <ToolResultWebSearchCard part={part} className={className} />
+    return (
+      <ToolResultWebSearchCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
   }
 
   if (datasourceResources.length > 0) {
@@ -178,19 +223,19 @@ export function ToolResultCard({
       <header className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-semibold text-slate-900">{part.name}</h4>
         <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
-          completed
+          {copy.completed}
         </span>
       </header>
 
       {part.toolType ? (
         <p className="text-xs text-slate-600">
-          <span className="font-semibold">Type:</span> {part.toolType}
+          <span className="font-semibold">{copy.type}:</span> {part.toolType}
         </p>
       ) : null}
 
       <details open={detailsOpen} className="space-y-2">
         <summary className="cursor-pointer text-xs font-semibold text-slate-600">
-          Input
+          {copy.input}
         </summary>
         <pre className="overflow-x-auto rounded bg-slate-900 p-2 text-xs text-slate-100">
           {formatJson(part.input)}
@@ -200,12 +245,12 @@ export function ToolResultCard({
       {part.result !== undefined ? (
         <details open={detailsOpen} className="space-y-2">
           <summary className="cursor-pointer text-xs font-semibold text-slate-600">
-            Output
+            {copy.output}
           </summary>
           {officeMediaFiles.length > 0 ? (
             <div className="space-y-2 rounded border border-slate-200 bg-white p-3">
               <p className="text-xs font-semibold text-slate-700">
-                Generated files
+                {copy.generatedFiles}
               </p>
               <ul className="space-y-1">
                 {officeMediaFiles.map((file) => {

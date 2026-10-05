@@ -178,7 +178,8 @@ describe("PromptForm", () => {
 
     const progress = screen.getByRole("progressbar", { name: "Uploading" })
     expect(progress.getAttribute("aria-valuenow")).toBe("40")
-    expect(screen.getByText("Uploading: notes.pdf")).toBeTruthy()
+    expect(screen.queryByText("Uploading: notes.pdf")).toBeNull()
+    expect(screen.queryByText("40%")).toBeNull()
     expect(
       screen.getByRole("button", { name: "Send" }).hasAttribute("disabled"),
     ).toBe(true)
@@ -215,6 +216,7 @@ describe("PromptForm", () => {
     expect(
       screen.getByRole("progressbar", { name: "Processing upload" }),
     ).toBeTruthy()
-    expect(screen.getByText("Processing upload: notes.pdf")).toBeTruthy()
+    expect(screen.queryByText("Processing upload: notes.pdf")).toBeNull()
+    expect(screen.queryByText("100%")).toBeNull()
   })
 })

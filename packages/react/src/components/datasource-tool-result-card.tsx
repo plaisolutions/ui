@@ -1,7 +1,10 @@
+import { getUiCopy } from "./internal/ui-copy"
+
 export type DatasourceToolResultCardProps = {
   title: string
   description: string
   type: string
+  locale?: string | null
 }
 
 type DatasourceToolResultCardContentProps = DatasourceToolResultCardProps & {
@@ -44,7 +47,9 @@ export function DatasourceToolResultCardContent({
   type,
   icon,
   resourceCount,
+  locale,
 }: DatasourceToolResultCardContentProps) {
+  const copy = getUiCopy(locale)
   return (
     <>
       <header className="flex items-center gap-3">
@@ -62,7 +67,7 @@ export function DatasourceToolResultCardContent({
       <p className="mt-2 line-clamp-2 text-xs leading-4">{description}</p>
       {resourceCount === undefined ? null : (
         <p className="mt-2 text-xs leading-4 text-neutral-600">
-          {resourceCount} {resourceCount === 1 ? "Recurso" : "Recursos"}
+          {resourceCount} {resourceCount === 1 ? copy.resource : copy.resources}
         </p>
       )}
     </>
