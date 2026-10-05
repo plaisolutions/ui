@@ -1,8 +1,8 @@
 import {
   PlaiThreadTransport,
-  normalizePlaiThreadMessages,
   canShowAssistantTurnActions,
   getAssistantTurnContent,
+  normalizePlaiThreadMessages,
 } from "@plaisolutions/client"
 import {
   Clipboard,
@@ -88,9 +88,9 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     ],
   )
 
+  const isGenerating = status === "submitted" || status === "streaming"
   const isBusy =
-    status === "submitted" ||
-    status === "streaming" ||
+    isGenerating ||
     uploadState.status === "uploading" ||
     uploadState.status === "processing"
   const chatError =
@@ -212,7 +212,11 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
               const persistedMessageId = message.metadata?.persistedMessageId
               const turn = getAssistantTurnContent(message.parts)
               const text = turn.finalText
-              const isStreamingMessage = isBusy && message === messages.at(-1)
+              const isStreamingMessage =
+                isGenerating &&
+                message.role === "assistant" &&
+                message.metadata?.completed === false &&
+                message === messages.at(-1)
 
               return (
                 <Message
