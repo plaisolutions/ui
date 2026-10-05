@@ -301,10 +301,19 @@ describe("PlaiChat", () => {
       ),
     })
 
+    let receivedPartial = () => {}
+    const partial = new Promise<void>((resolve) => {
+      receivedPartial = resolve
+    })
+    const unsubscribe = chat.subscribe((state) => {
+      const part = state.messages[1]?.parts[0]
+      if (part?.type === "text" && part.text === "partial") receivedPartial()
+    })
     const sendPromise = chat.sendMessage({ text: "Hi" })
-    await new Promise((resolve) => setTimeout(resolve, 70))
+    await partial
     chat.stop()
     await sendPromise
+    unsubscribe()
 
     const state = chat.getState()
     expect(state.status).toBe("ready")
@@ -460,8 +469,12 @@ describe("PlaiChat", () => {
     await chat.rejectMemoryProposal({ proposalId: "proposal_1" })
 
     expect(getMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
-    expect(acceptMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
-    expect(rejectMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+    expect(acceptMemoryProposal).toHaveBeenCalledWith({
+      proposalId: "proposal_1",
+    })
+    expect(rejectMemoryProposal).toHaveBeenCalledWith({
+      proposalId: "proposal_1",
+    })
   })
 
   it("delegates resource download URL requests to its transport", async () => {

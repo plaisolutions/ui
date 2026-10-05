@@ -1,5 +1,7 @@
 import {
   PlaiThreadTransport,
+  canShowAssistantTurnActions,
+  getAssistantTurnContent,
   normalizePlaiThreadMessages,
 } from "@plaisolutions/client"
 import {
@@ -86,9 +88,9 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     ],
   )
 
+  const isGenerating = status === "submitted" || status === "streaming"
   const isBusy =
-    status === "submitted" ||
-    status === "streaming" ||
+    isGenerating ||
     uploadState.status === "uploading" ||
     uploadState.status === "processing"
   const chatError =
@@ -207,13 +209,14 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
               </div>
             ) : null}
             {messages.map((message) => {
-              const persistedMessageId =
-                message.metadata?.persistedMessageId ?? message.id
-              const text = message.parts
-                .filter((part) => part.type === "text")
-                .map((part) => (part.type === "text" ? part.text : ""))
-                .join("\n")
-              const isStreamingMessage = isBusy && message === messages.at(-1)
+              const persistedMessageId = message.metadata?.persistedMessageId
+              const turn = getAssistantTurnContent(message.parts)
+              const text = turn.finalText
+              const isStreamingMessage =
+                isGenerating &&
+                message.role === "assistant" &&
+                message.metadata?.completed === false &&
+                message === messages.at(-1)
 
               return (
                 <Message
@@ -241,10 +244,22 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                     readMoreLabel: "Read more",
                     readLessLabel: "Read less",
                     memoryProposal,
-                    renderText: (part) => <ChatMarkdown text={part.text} />,
+                    renderText: (part) =>
+                      message.role === "assistant" &&
+                      turn.hasFinalResponse &&
+                      turn.leadingParts.includes(part) ? (
+                        <details>
+                          <summary>Earlier draft</summary>
+                          <ChatMarkdown text={part.text} />
+                        </details>
+                      ) : (
+                        <ChatMarkdown text={part.text} />
+                      ),
                   }}
                   footer={
-                    message.role === "assistant" && text ? (
+                    persistedMessageId &&
+                    canShowAssistantTurnActions(message) &&
+                    !isStreamingMessage ? (
                       <MessageFooter className="message-actions">
                         <Clipboard
                           className="message-action"

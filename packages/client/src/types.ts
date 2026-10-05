@@ -5,6 +5,8 @@ export type Usage = {
 }
 
 export type UIMessageMetadata = {
+  /** True only after successful message_stop, or for normalized persisted history. */
+  completed?: boolean
   model?: string
   persistedMessageId?: string
   usage?: Usage

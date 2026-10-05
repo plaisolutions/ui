@@ -1221,3 +1221,18 @@ The SDK should be implemented as two separate npm packages inside one monorepo:
 `@plaisolutions/react` is a thin React adapter. It owns hooks such as `useChat`, but delegates protocol and state logic to `@plaisolutions/client`.
 
 This design gives Plai a clean foundation for custom UI development today while keeping the door open for future framework adapters and optional UI packages later.
+
+
+## Assistant turn presentation (P1–P3 update)
+
+See [agent-turn-rendering-spec.md](./agent-turn-rendering-spec.md) for the current contract.
+`normalizePlaiThreadMessages` groups consecutive assistant/legacy tool rows into one UIMessage,
+using the last persisted assistant id. The backend keeps its individual provider turns.
+`metadata.completed` is set after a successful message_stop (or history normalization);
+a persistedMessageId alone is insufficient to display actions.
+
+Use `getAssistantTurnContent(message.parts)` for leading/final parts and finalText, and
+`canShowAssistantTurnActions(message)` for the footer. Copy finalText only; preserve earlier
+drafts in an expandable view. Terminal guardrails never fall back to copying the draft.
+`resendMessage` appends a new turn; it does not replace or delete the prior answer.
+Custom hosts must adopt these presentation helpers/policies; grouping does not remove drafts.
