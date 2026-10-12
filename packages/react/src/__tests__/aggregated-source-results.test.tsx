@@ -119,6 +119,9 @@ describe("AggregatedSourceResults", () => {
       />,
     )
 
+    expect(
+      view.container.querySelector("section[data-source-results]"),
+    ).toBeTruthy()
     expect(within(view.container).getAllByRole("link")).toHaveLength(3)
     const overflow = within(view.container).getByRole("button", {
       name: "+1 fuente",
