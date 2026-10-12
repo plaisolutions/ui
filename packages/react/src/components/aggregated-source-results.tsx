@@ -171,6 +171,7 @@ export function AggregatedSourceResults({
   return (
     <section
       aria-label={pluralSources}
+      data-source-results=""
       className={joinClasses("flex flex-wrap gap-3", className)}
     >
       {visibleCards.map((source) => (
