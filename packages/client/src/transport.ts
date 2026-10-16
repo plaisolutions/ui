@@ -63,7 +63,12 @@ export class PlaiThreadTransport implements ChatTransport {
 
     if (!response.ok) {
       const body = await safeReadResponseText(response)
-      throw new HttpStatusError(response.status, response.statusText, body)
+      throw new HttpStatusError(
+        response.status,
+        response.statusText,
+        body,
+        response.headers,
+      )
     }
 
     if (!response.body) {
@@ -104,7 +109,12 @@ export class PlaiThreadTransport implements ChatTransport {
 
     if (!response.ok) {
       const body = await safeReadResponseText(response)
-      throw new HttpStatusError(response.status, response.statusText, body)
+      throw new HttpStatusError(
+        response.status,
+        response.statusText,
+        body,
+        response.headers,
+      )
     }
   }
 
@@ -151,7 +161,12 @@ export class PlaiThreadTransport implements ChatTransport {
 
     if (!response.ok) {
       const body = await safeReadResponseText(response)
-      throw new HttpStatusError(response.status, response.statusText, body)
+      throw new HttpStatusError(
+        response.status,
+        response.statusText,
+        body,
+        response.headers,
+      )
     }
 
     let payload: unknown
@@ -194,6 +209,7 @@ export class PlaiThreadTransport implements ChatTransport {
         response.status,
         response.statusText,
         responseBody,
+        response.headers,
       )
     }
 
@@ -255,8 +271,14 @@ export class PlaiThreadTransport implements ChatTransport {
       xhr.addEventListener("load", () => {
         cleanup()
         if (xhr.status < 200 || xhr.status >= 300) {
+          const retryAfter = xhr.getResponseHeader?.("Retry-After")
           reject(
-            new HttpStatusError(xhr.status, xhr.statusText, xhr.responseText),
+            new HttpStatusError(
+              xhr.status,
+              xhr.statusText,
+              xhr.responseText,
+              retryAfter ? { "Retry-After": retryAfter } : undefined,
+            ),
           )
           return
         }
@@ -356,6 +378,7 @@ export class PlaiThreadTransport implements ChatTransport {
         response.status,
         response.statusText,
         await safeReadResponseText(response),
+        response.headers,
       )
     }
 
@@ -367,9 +390,8 @@ export class PlaiThreadTransport implements ChatTransport {
         "The memory proposal response must be valid JSON.",
       )
     }
-    const proposal = action === "accept" && isRecord(payload)
-      ? payload.proposal
-      : payload
+    const proposal =
+      action === "accept" && isRecord(payload) ? payload.proposal : payload
     if (!isMemoryProposal(proposal)) {
       throw new ProtocolError("The memory proposal response is invalid.")
     }

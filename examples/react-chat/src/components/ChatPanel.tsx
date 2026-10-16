@@ -5,6 +5,7 @@ import {
   normalizePlaiThreadMessages,
 } from "@plaisolutions/client"
 import {
+  ChatError,
   Clipboard,
   Message,
   MessageAvatar,
@@ -69,6 +70,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     uploadFile,
     stop,
     hydrate,
+    clearError,
   } = useChat({ transport })
 
   const memoryProposal = useMemo(
@@ -93,8 +95,6 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     isGenerating ||
     uploadState.status === "uploading" ||
     uploadState.status === "processing"
-  const chatError =
-    actionError ?? (error ? `${error.type}: ${error.message}` : null)
 
   useEffect(() => {
     if (messages.length === 0) return
@@ -135,6 +135,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
 
   async function handleSubmit({ text, files }: PromptFormSubmitInput) {
     setActionError(null)
+    clearError()
 
     try {
       const documents = []
@@ -313,9 +314,10 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
 
       <div className="composer-dock">
         <div className="composer-container">
-          {chatError ? (
+          <ChatError error={error ?? uploadState.error} locale="en" />
+          {actionError ? (
             <p className="chat-error" role="alert">
-              {chatError}
+              {actionError}
             </p>
           ) : null}
           <PromptForm

@@ -2,6 +2,12 @@
 
 Framework-agnostic SDK for Plai SSE chat sessions.
 
+HTTP failures remain `type: "http_error"` and expose optional `status`, `code`,
+`retryAfterSeconds` and `periodEnd` on `chat.getState().error` and `onError`.
+Spending cap and rate-limit refusals never trigger automatic retries or insert
+synthetic messages. The original HTTP body remains available on the error's
+`cause` for diagnostics; use structured fields instead of parsing message text.
+
 ## Install
 
 ```bash

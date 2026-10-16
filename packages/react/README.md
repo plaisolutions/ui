@@ -5,6 +5,33 @@ React hooks for Plai chat, powered by `@plaisolutions/client`.
 `useChat` is the main API. Optional UI primitives are also exported for teams
 that don't want to build chat UI from scratch.
 
+## Chat errors
+
+Render the error exposed by `useChat` yourself or use the accessible, localized
+default component. It handles spending caps, rate limits, accounting outages and
+generic failures without modifying the conversation history or retrying requests.
+
+```tsx
+import { useChat } from "@plaisolutions/react"
+import { ChatError } from "@plaisolutions/react/components"
+
+const { error, sendMessage, clearError } = useChat({ transport })
+
+// Place inside the chat area:
+<ChatError error={error} locale="es" />
+
+// Clear the previous error before an explicit new attempt:
+async function submit(text: string) {
+  clearError()
+  await sendMessage({ text })
+}
+```
+
+`error` retains its existing type and adds optional HTTP `status`, backend `code`,
+`retryAfterSeconds` and `periodEnd`. `ChatError` accepts `title`, `children`,
+`className` and standard div attributes for customization. Passing null renders
+nothing. The server delay is informational, not a countdown or an automatic retry.
+
 ## Install
 
 ```bash
