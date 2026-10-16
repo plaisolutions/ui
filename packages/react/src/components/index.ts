@@ -1,3 +1,5 @@
+export { ChatError } from "./chat-error"
+export type { ChatErrorProps } from "./chat-error"
 export {
   MessageRoot,
   MessageAvatar,

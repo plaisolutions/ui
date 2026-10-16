@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { HttpStatusError } from "../errors"
+import { HttpStatusError, normalizeError } from "../errors"
 import { PlaiThreadTransport } from "../transport"
 import { streamFromString } from "./test-utils"
 
@@ -89,6 +89,34 @@ function createXhrMock({
 }
 
 describe("PlaiThreadTransport", () => {
+  it("preserves Retry-After headers before a stream starts", async () => {
+    const transport = new PlaiThreadTransport({
+      api: "https://api.example.com",
+      chatSessionId: "s",
+      threadId: "t",
+      fetch: vi.fn(
+        async () =>
+          new Response("", { status: 429, headers: { "Retry-After": "45" } }),
+      ),
+    })
+    let failure: unknown
+    try {
+      for await (const _event of transport.stream({
+        messages: [],
+        message: { text: "Hi" },
+        signal: new AbortController().signal,
+      })) {
+        throw new Error("Must not stream")
+      }
+    } catch (error) {
+      failure = error
+    }
+    expect(normalizeError(failure)).toMatchObject({
+      status: 429,
+      retryAfterSeconds: 45,
+    })
+  })
+
   it("streams events from invoke endpoint", async () => {
     const fetchMock = vi
       .fn()
@@ -676,9 +704,7 @@ describe("PlaiThreadTransport", () => {
       .mockResolvedValueOnce(
         Response.json({ proposal: { ...proposal, status: "ACCEPTED" } }),
       )
-      .mockResolvedValueOnce(
-        Response.json({ ...proposal, status: "REJECTED" }),
-      )
+      .mockResolvedValueOnce(Response.json({ ...proposal, status: "REJECTED" }))
     const transport = new PlaiThreadTransport({
       api: "https://api.plaisolutions.com/",
       chatSessionId: "session/1",

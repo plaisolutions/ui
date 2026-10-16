@@ -59,6 +59,10 @@ npm view @plaisolutions/react version
 
 ## Release Automation
 
+Chat failures can be rendered with `ChatError` from `@plaisolutions/react/components`
+or handled directly through `useChat().error`. See [Chat errors](docs/chat-errors.md)
+for structured fields, localization, recovery and compatibility with older backends.
+
 This repo is configured with:
 
 - `.github/workflows/ci.yml`: lint, typecheck, test, build on PRs/push to `main`.

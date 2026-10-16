@@ -1,7 +1,11 @@
 import { renderHook, act, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import type { ChatTransport, PlaiSseEvent } from "@plaisolutions/client"
+import {
+  PlaiThreadTransport,
+  type ChatTransport,
+  type PlaiSseEvent,
+} from "@plaisolutions/client"
 import { useChat } from "../use-chat"
 
 function createTransport(events: PlaiSseEvent[], delayMs = 0): ChatTransport {
@@ -21,6 +25,44 @@ function createTransport(events: PlaiSseEvent[], delayMs = 0): ChatTransport {
 }
 
 describe("useChat", () => {
+  it("exposes structured HTTP errors without synthetic messages or automatic retries", async () => {
+    const onError = vi.fn()
+    const fetch = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            code: "rate_limit_exceeded",
+            detail: "Slow down",
+            retry_after_seconds: 30,
+          }),
+          { status: 429, headers: { "Retry-After": "30" } },
+        ),
+    )
+    const transport = new PlaiThreadTransport({
+      api: "https://api.example.com",
+      chatSessionId: "s",
+      threadId: "t",
+      fetch,
+    })
+    const { result } = renderHook(() => useChat({ transport, onError }))
+    await act(async () => {
+      await result.current.sendMessage({ text: "Hello" })
+    })
+    expect(result.current.error).toMatchObject({
+      type: "http_error",
+      status: 429,
+      code: "rate_limit_exceeded",
+      retryAfterSeconds: 30,
+    })
+    expect(onError).toHaveBeenCalledWith(result.current.error)
+    expect(result.current.messages).toHaveLength(1)
+    expect(result.current.messages[0].role).toBe("user")
+    expect(fetch).toHaveBeenCalledTimes(1)
+    act(() => result.current.clearError())
+    expect(result.current.error).toBeNull()
+    expect(result.current.status).toBe("ready")
+  })
+
   it("returns initial ready state", () => {
     const transport = createTransport([])
     const { result } = renderHook(() => useChat({ transport }))
@@ -268,8 +310,12 @@ describe("useChat", () => {
     })
 
     expect(getMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
-    expect(acceptMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
-    expect(rejectMemoryProposal).toHaveBeenCalledWith({ proposalId: "proposal_1" })
+    expect(acceptMemoryProposal).toHaveBeenCalledWith({
+      proposalId: "proposal_1",
+    })
+    expect(rejectMemoryProposal).toHaveBeenCalledWith({
+      proposalId: "proposal_1",
+    })
   })
 
   it("exposes getResourceDownloadUrl from the chat instance", async () => {

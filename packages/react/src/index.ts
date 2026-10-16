@@ -1,5 +1,6 @@
 export { useChat } from "./use-chat"
 export {
+  ChatError,
   DatasourceToolResultCard,
   DatasourceFolderCard,
   DatasourceToolResources,
@@ -68,6 +69,7 @@ export {
 } from "./components/icons"
 export type { UseChatOptions, UseChatResult } from "./use-chat"
 export type {
+  ChatErrorProps,
   DatasourceToolResultCardProps,
   DatasourceFolderCardProps,
   DatasourceToolResourcesProps,

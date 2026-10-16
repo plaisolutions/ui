@@ -424,6 +424,13 @@ export type PlaiChatError = {
     | "abort_error"
     | "protocol_error"
   message: string
+  /** Stable backend code, when the HTTP response provides one. */
+  code?: string
+  status?: number
+  /** Server-provided delay, in seconds; does not trigger an automatic retry. */
+  retryAfterSeconds?: number
+  /** ISO date of the spending cap's next monthly period. */
+  periodEnd?: string
   cause?: unknown
 }
 
