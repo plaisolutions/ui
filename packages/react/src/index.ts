@@ -1,5 +1,11 @@
 export { useChat } from "./use-chat"
 export {
+  useChatRegistryBusy,
+  useOwnedChatRegistry,
+  useRegistryChat,
+  useStreamCoordinator,
+} from "./use-chat-registry"
+export {
   ChatError,
   DatasourceToolResultCard,
   DatasourceFolderCard,
