@@ -1,4 +1,18 @@
 export { PlaiChat } from "./chat"
+export { StreamCoordinator } from "./coordinator"
+export type {
+  StreamCoordinatorOptions,
+  StreamCoordinatorSnapshot,
+} from "./coordinator"
+export { ChatRegistry, ChatRegistryError, isChatStateBusy } from "./registry"
+export type {
+  ChatInvocation,
+  ChatInvocationOutcome,
+  ChatInvocationSettled,
+  ChatRegistryErrorCode,
+  ChatRegistryHooks,
+  ChatRegistryOptions,
+} from "./registry"
 export { ProtocolError, HttpStatusError, normalizeError } from "./errors"
 export {
   createInitialInternalState,

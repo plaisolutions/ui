@@ -88,6 +88,13 @@ export class PlaiChat {
 
   private state: InternalChatState
 
+  /** Published snapshot: the same reference until the state really changes. */
+  private snapshot: ChatState
+
+  private readonly initialSnapshot: ChatState
+
+  private revision = 0
+
   private abortController: AbortController | null = null
 
   private uploadAbortController: AbortController | null = null
@@ -97,10 +104,23 @@ export class PlaiChat {
   constructor(options: PlaiChatOptions) {
     this.options = options
     this.state = createInitialInternalState(options.initialMessages ?? [])
+    this.snapshot = toPublicChatState(this.state)
+    this.initialSnapshot = this.snapshot
   }
 
+  /** Returns the same object between reads until the state changes. */
   getState(): ChatState {
-    return toPublicChatState(this.state)
+    return this.snapshot
+  }
+
+  /** State the instance was created with, for server snapshots during hydration. */
+  getInitialState(): ChatState {
+    return this.initialSnapshot
+  }
+
+  /** Monotonic counter that increases on every state change, hydration included. */
+  getRevision(): number {
+    return this.revision
   }
 
   subscribe(listener: ChatStateListener): () => void {
@@ -442,7 +462,9 @@ export class PlaiChat {
 
   private setState(nextState: InternalChatState): void {
     this.state = nextState
-    const publicState = toPublicChatState(nextState)
+    this.snapshot = toPublicChatState(nextState)
+    this.revision += 1
+    const publicState = this.snapshot
     for (const listener of this.listeners) {
       listener(publicState)
     }

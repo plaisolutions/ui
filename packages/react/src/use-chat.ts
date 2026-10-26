@@ -16,9 +16,15 @@ import type {
   UIMessage,
   Usage,
 } from "@plaisolutions/client"
-import { useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react"
 
-export type UseChatOptions = {
+type OwnedChatOptions = {
   transport: ChatTransport
   /** Changes identity when the host switches to a different persisted thread. */
   conversationId?: string
@@ -26,7 +32,24 @@ export type UseChatOptions = {
   generateId?: () => string
   onEvent?: (event: PlaiSseEvent) => void
   onError?: (error: PlaiChatError) => void
+  chat?: never
 }
+
+type ExternalChatOptions = {
+  /**
+   * Instance owned by the host (for example a `ChatRegistry`). The hook only
+   * subscribes to it: unmounting never stops its stream.
+   */
+  chat: PlaiChat
+  transport?: never
+  conversationId?: never
+  initialMessages?: never
+  generateId?: never
+  onEvent?: never
+  onError?: never
+}
+
+export type UseChatOptions = OwnedChatOptions | ExternalChatOptions
 
 export type UseChatResult = {
   messages: UIMessage[]
@@ -52,9 +75,11 @@ export type UseChatResult = {
 export function useChat(options: UseChatOptions): UseChatResult {
   const optionsRef = useRef(options)
   optionsRef.current = options
+  const external = options.chat
   const { transport, conversationId } = options
 
-  const chat = useMemo(() => {
+  const owned = useMemo(() => {
+    if (external || !transport) return null
     // The explicit identity deliberately creates a new state machine when a
     // host changes persisted threads while reusing the same transport class.
     void conversationId
@@ -67,20 +92,24 @@ export function useChat(options: UseChatOptions): UseChatResult {
       onEvent: (event) => optionsRef.current.onEvent?.(event),
       onError: (error) => optionsRef.current.onError?.(error),
     })
-  }, [conversationId, transport])
+  }, [external, conversationId, transport])
 
-  const [state, setState] = useState(() => chat.getState())
+  const chat = (external ?? owned) as PlaiChat
+
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => chat.subscribe(onStoreChange),
+    [chat],
+  )
+  const getSnapshot = useCallback(() => chat.getState(), [chat])
+  const getServerSnapshot = useCallback(() => chat.getInitialState(), [chat])
+  const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   useEffect(() => {
-    setState(chat.getState())
-    return chat.subscribe(setState)
-  }, [chat])
-
-  useEffect(() => {
+    if (!owned) return
     return () => {
-      chat.stop()
+      owned.stop()
     }
-  }, [chat])
+  }, [owned])
 
   const actions = useMemo(
     () => ({
