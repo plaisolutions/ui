@@ -9,7 +9,7 @@ const meta: Meta<typeof ToolResultPersonalConnectorCard> = {
   parameters: { layout: "padded" },
   decorators: [
     (Story) => (
-      <div style={{ maxWidth: 560 }}>
+      <div>
         <Story />
       </div>
     ),

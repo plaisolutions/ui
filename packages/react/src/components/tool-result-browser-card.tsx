@@ -59,7 +59,7 @@ export function ToolResultBrowserCard({
     typeof credits === "number"
       ? `${credits} ${credits === 1 ? copy.credit : copy.credits}`
       : null
-  const subtitle = [scraperLabel, creditsLabel].filter(Boolean).join(" · ")
+  const subtitle = scraperLabel
   const failed = part.state === "error"
   const pending = part.state === "pending"
   const canExpand = Boolean(preview || error || url)
@@ -76,7 +76,7 @@ export function ToolResultBrowserCard({
         <Globe className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
         <span className="font-medium text-neutral-800">{copy.browser}</span>
         {subtitle ? (
-          <span className="min-w-0 truncate text-xs text-neutral-500">
+          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
             {subtitle}
           </span>
         ) : null}

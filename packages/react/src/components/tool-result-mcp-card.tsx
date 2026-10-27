@@ -1,40 +1,44 @@
-import type { UIMcpToolCallPart } from "@plaisolutions/client"
-import { CheckCircle2, Plug, XCircle } from "lucide-react"
-import { formatToolErrorDetails } from "./internal/format-tool-error-details"
-import { joinClasses } from "./internal/join-classes"
-import { getUiCopy } from "./internal/ui-copy"
+import type { UIMcpToolCallPart } from "@plaisolutions/client";
+import { CheckCircle2, Plug, XCircle } from "lucide-react";
+import { formatToolErrorDetails } from "./internal/format-tool-error-details";
+import { joinClasses } from "./internal/join-classes";
+import { getUiCopy } from "./internal/ui-copy";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./sheet"
+} from "./sheet";
 
 export type ToolResultMcpCardProps = {
-  part: UIMcpToolCallPart
-  className?: string
-  locale?: string | null
-}
+  part: UIMcpToolCallPart;
+  className?: string;
+  locale?: string | null;
+};
 
 function text(value: unknown) {
-  if (typeof value === "string") return value
-  if (value == null) return null
+  if (typeof value === "string") return value;
+  if (value == null) return null;
   try {
-    return JSON.stringify(value, null, 2)
+    return JSON.stringify(value, null, 2);
   } catch {
-    return null
+    return null;
   }
 }
 
-export function ToolResultMcpCard({ part, className, locale }: ToolResultMcpCardProps) {
-  const copy = getUiCopy(locale)
-  const meta = part.metadata
-  const server = meta?.mcp_server_url ?? meta?.server_name
-  const tool = meta?.mcp_tool_name ?? meta?.tool_name ?? part.name
-  const result = text(part.result)
-  const error = formatToolErrorDetails(part.errorDetails)
-  const failed = part.state === "error"
+export function ToolResultMcpCard({
+  part,
+  className,
+  locale,
+}: ToolResultMcpCardProps) {
+  const copy = getUiCopy(locale);
+  const meta = part.metadata;
+  const server = meta?.mcp_server_url ?? meta?.server_name;
+  const tool = meta?.mcp_tool_name ?? meta?.tool_name ?? part.name;
+  const result = text(part.result);
+  const error = formatToolErrorDetails(part.errorDetails);
+  const failed = part.state === "error";
   return (
     <Sheet>
       <SheetTrigger
@@ -50,7 +54,9 @@ export function ToolResultMcpCard({ part, className, locale }: ToolResultMcpCard
             aria-hidden="true"
           />
           <span className="truncate font-medium">MCP</span>
-          <span className="min-w-0 truncate text-neutral-600">{tool}</span>
+          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+            {tool}
+          </span>
           <span
             className={joinClasses(
               "ml-auto shrink-0",
@@ -92,11 +98,12 @@ export function ToolResultMcpCard({ part, className, locale }: ToolResultMcpCard
           ) : null}
           {error ? (
             <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              <span className="font-semibold">{copy.errorDetails}:</span> {error}
+              <span className="font-semibold">{copy.errorDetails}:</span>{" "}
+              {error}
             </p>
           ) : null}
         </section>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

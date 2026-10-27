@@ -267,7 +267,7 @@ export function ToolResultCard({
     >
       <header className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-semibold text-slate-900">{part.name}</h4>
-        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
+        <span className="rounded-full border uppercase border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800">
           {copy.completed}
         </span>
       </header>

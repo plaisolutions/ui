@@ -1,63 +1,64 @@
-import type { UIEmailSendToolCallPart } from "@plaisolutions/client"
-import { useState } from "react"
-import { formatToolErrorDetails } from "./internal/format-tool-error-details"
-import { joinClasses } from "./internal/join-classes"
-import { getUiCopy, getUiStatusLabel } from "./internal/ui-copy"
+import type { UIEmailSendToolCallPart } from "@plaisolutions/client";
+import { useState } from "react";
+import { formatToolErrorDetails } from "./internal/format-tool-error-details";
+import { joinClasses } from "./internal/join-classes";
+import { getUiCopy, getUiStatusLabel } from "./internal/ui-copy";
+import { Minus, Plus } from "lucide-react";
 
 export type ToolResultEmailSendCardProps = {
-  part: UIEmailSendToolCallPart
-  className?: string
-  locale?: string | null
-}
+  part: UIEmailSendToolCallPart;
+  className?: string;
+  locale?: string | null;
+};
 
 type EmailSendInputView = {
-  to: string[]
-  subject: string | null
-  text: string | null
-}
+  to: string[];
+  subject: string | null;
+  text: string | null;
+};
 
 type EmailSendResultView = {
-  status: string | null
-  recipientsCount: number | null
-  subject: string | null
-  receiptProvider: string | null
-  receiptMessageId: string | null
-  receiptRawStatus: string | null
-  raw: string | null
-}
+  status: string | null;
+  recipientsCount: number | null;
+  subject: string | null;
+  receiptProvider: string | null;
+  receiptMessageId: string | null;
+  receiptRawStatus: string | null;
+  raw: string | null;
+};
 
 function asObject(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null
+    return null;
   }
-  return value as Record<string, unknown>
+  return value as Record<string, unknown>;
 }
 
 function toStringOrNull(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 function toNumberOrNull(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function parseEmailSendInput(
   part: UIEmailSendToolCallPart,
 ): EmailSendInputView {
-  const input = asObject(part.input)
+  const input = asObject(part.input);
   if (!input) {
-    return { to: [], subject: null, text: null }
+    return { to: [], subject: null, text: null };
   }
 
   const recipients = Array.isArray(input.to)
     ? input.to.filter((item): item is string => typeof item === "string")
-    : []
+    : [];
 
   return {
     to: recipients,
     subject: toStringOrNull(input.subject),
     text: toStringOrNull(input.text),
-  }
+  };
 }
 
 function parseEmailSendResult(
@@ -71,29 +72,29 @@ function parseEmailSendResult(
     receiptMessageId: null,
     receiptRawStatus: null,
     raw: null,
-  }
+  };
 
   if (part.result === undefined || part.result === null) {
-    return initial
+    return initial;
   }
 
-  let resultObject = asObject(part.result)
-  let raw: string | null = null
+  let resultObject = asObject(part.result);
+  let raw: string | null = null;
 
   if (!resultObject && typeof part.result === "string") {
     try {
-      const parsed = JSON.parse(part.result) as unknown
-      resultObject = asObject(parsed)
+      const parsed = JSON.parse(part.result) as unknown;
+      resultObject = asObject(parsed);
     } catch {
-      raw = part.result
+      raw = part.result;
     }
   }
 
   if (!resultObject) {
-    return { ...initial, raw }
+    return { ...initial, raw };
   }
 
-  const receipt = asObject(resultObject.receipt)
+  const receipt = asObject(resultObject.receipt);
 
   return {
     status: toStringOrNull(resultObject.status),
@@ -103,7 +104,7 @@ function parseEmailSendResult(
     receiptMessageId: receipt ? toStringOrNull(receipt.message_id) : null,
     receiptRawStatus: receipt ? toStringOrNull(receipt.raw_status) : null,
     raw,
-  }
+  };
 }
 
 export function ToolResultEmailSendCard({
@@ -111,18 +112,18 @@ export function ToolResultEmailSendCard({
   className,
   locale,
 }: ToolResultEmailSendCardProps) {
-  const copy = getUiCopy(locale)
-  const [isExpanded, setIsExpanded] = useState(false)
-  const emailInput = parseEmailSendInput(part)
-  const emailResult = parseEmailSendResult(part)
-  const errorDetails = formatToolErrorDetails(part.errorDetails)
+  const copy = getUiCopy(locale);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const emailInput = parseEmailSendInput(part);
+  const emailResult = parseEmailSendResult(part);
+  const errorDetails = formatToolErrorDetails(part.errorDetails);
 
   const statusClass =
     part.state === "error"
       ? "border-rose-200 bg-rose-50 text-rose-800"
       : part.state === "pending"
-        ? "border-amber-200 bg-amber-50 text-amber-800"
-        : "border-emerald-200 bg-emerald-50 text-emerald-800"
+      ? "border-amber-200 bg-amber-50 text-amber-800"
+      : "border-emerald-200 bg-emerald-50 text-emerald-800";
 
   return (
     <section
@@ -138,7 +139,7 @@ export function ToolResultEmailSendCard({
         <div className="flex items-center gap-2">
           <span
             className={joinClasses(
-              "rounded-full border px-2 py-0.5 text-xs font-medium",
+              "rounded-full uppercase border px-2 py-0.5 text-xs",
               statusClass,
             )}
           >
@@ -152,20 +153,24 @@ export function ToolResultEmailSendCard({
             className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-100"
             onClick={() => setIsExpanded((previous) => !previous)}
           >
-            <span className="inline-block">{isExpanded ? "^" : "v"}</span>
+            {isExpanded ? (
+              <Minus className="h-3 w-3" aria-hidden="true" />
+            ) : (
+              <Plus className="h-3 w-3" aria-hidden="true" />
+            )}
           </button>
         </div>
       </header>
 
       {emailInput.subject ? (
-        <div className="space-y-1">
-          <p className="text-xs font-semibold text-slate-600">{copy.subject}</p>
-          <p className="text-sm text-slate-900">{emailInput.subject}</p>
+        <div className="flex items-center gap-1">
+          <p className="text-xs font-semibold text-slate-600">{copy.subject}:</p>
+          <p className="text-xs text-slate-900">{emailInput.subject}</p>
         </div>
       ) : null}
 
-      <div className="space-y-1">
-        <p className="text-xs font-semibold text-slate-600">{copy.to}</p>
+        <div className="flex items-center gap-1">
+        <p className="text-xs font-semibold text-slate-600">{copy.to}:</p>
         {emailInput.to.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {emailInput.to.map((recipient) => (
@@ -178,7 +183,7 @@ export function ToolResultEmailSendCard({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">{copy.noRecipientsProvided}</p>
+          <p className="text-xs text-slate-500">{copy.noRecipientsProvided}</p>
         )}
       </div>
 
@@ -189,26 +194,28 @@ export function ToolResultEmailSendCard({
       >
         {emailInput.text ? (
           <div className="space-y-1">
-            <p className="text-xs font-semibold text-slate-600">{copy.body}</p>
-            <p className="whitespace-pre-wrap rounded border border-slate-200 bg-slate-50 p-2 text-sm text-slate-700">
+            <p className="text-xs font-semibold text-slate-600">{copy.body}:</p>
+            <p className="whitespace-pre-wrap rounded border border-slate-200 bg-white p-2 text-sm text-slate-700">
               {emailInput.text}
             </p>
           </div>
         ) : null}
 
         {part.result !== undefined ? (
-          <div className="space-y-2 rounded border border-slate-200 bg-white p-3">
+          <div className="space-y-2 rounded border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               {copy.delivery}
             </p>
             {emailResult.status ? (
-              <p className="text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">{copy.status}:</span>{" "}
+              <p className="text-xs text-slate-700">
+                <span className="font-semibold text-slate-900">
+                  {copy.status}:
+                </span>{" "}
                 {emailResult.status}
               </p>
             ) : null}
             {emailResult.recipientsCount !== null ? (
-              <p className="text-sm text-slate-700">
+              <p className="text-xs text-slate-700">
                 <span className="font-semibold text-slate-900">
                   {copy.recipients}:
                 </span>{" "}
@@ -216,13 +223,15 @@ export function ToolResultEmailSendCard({
               </p>
             ) : null}
             {emailResult.receiptProvider ? (
-              <p className="text-sm text-slate-700">
-                <span className="font-semibold text-slate-900">{copy.provider}:</span>{" "}
+              <p className="text-xs text-slate-700">
+                <span className="font-semibold text-slate-900">
+                  {copy.provider}:
+                </span>{" "}
                 {emailResult.receiptProvider}
               </p>
             ) : null}
             {emailResult.receiptMessageId ? (
-              <p className="break-all text-sm text-slate-700">
+              <p className="break-all text-xs text-slate-700">
                 <span className="font-semibold text-slate-900">
                   {copy.messageId}:
                 </span>{" "}
@@ -230,7 +239,7 @@ export function ToolResultEmailSendCard({
               </p>
             ) : null}
             {emailResult.receiptRawStatus ? (
-              <p className="text-sm text-slate-700">
+              <p className="text-xs text-slate-700">
                 <span className="font-semibold text-slate-900">
                   {copy.rawStatus}:
                 </span>{" "}
@@ -238,7 +247,7 @@ export function ToolResultEmailSendCard({
               </p>
             ) : null}
             {emailResult.raw ? (
-              <p className="whitespace-pre-wrap text-sm text-slate-700">
+              <p className="whitespace-pre-wrap text-xs text-slate-700">
                 {emailResult.raw}
               </p>
             ) : null}
@@ -248,9 +257,10 @@ export function ToolResultEmailSendCard({
 
       {errorDetails ? (
         <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-          <span className="font-semibold">{copy.errorDetails}:</span> {errorDetails}
+          <span className="font-semibold">{copy.errorDetails}:</span>{" "}
+          {errorDetails}
         </p>
       ) : null}
     </section>
-  )
+  );
 }
