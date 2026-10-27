@@ -1,0 +1,177 @@
+import type { UIPersonalConnectorToolCallPart } from "@plaisolutions/client"
+import { ToolResultPersonalConnectorCard } from "@plaisolutions/react/components"
+import type { Meta, StoryObj } from "@storybook/react"
+
+const meta: Meta<typeof ToolResultPersonalConnectorCard> = {
+  title: "Components/ToolResultPersonalConnectorCard",
+  component: ToolResultPersonalConnectorCard,
+  tags: ["autodocs"],
+  parameters: { layout: "padded" },
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 560 }}>
+        <Story />
+      </div>
+    ),
+  ],
+}
+
+export default meta
+
+type Story = StoryObj<typeof ToolResultPersonalConnectorCard>
+
+const gmail = {
+  provider: "google",
+  capability: "gmail",
+  label: "Gmail",
+  account_email: "dani@plai.ai",
+}
+
+function part(
+  name: string,
+  metadata: UIPersonalConnectorToolCallPart["metadata"],
+  input: unknown = {},
+): UIPersonalConnectorToolCallPart {
+  return {
+    type: "tool-call",
+    id: `tool_${name}`,
+    name,
+    toolType: "personal_connector",
+    input,
+    state: "completed",
+    metadata: { type: "personal_connector", ...metadata },
+  }
+}
+
+const today = new Date()
+const at = (hours: number, minutes = 0, dayOffset = 0) => {
+  const date = new Date(today)
+  date.setDate(date.getDate() + dayOffset)
+  date.setHours(hours, minutes, 0, 0)
+  return date.toISOString()
+}
+
+export const SearchMail: Story = {
+  args: {
+    locale: "es",
+    part: part(
+      "gmail_search",
+      {
+        connector: gmail,
+        action: "search",
+        result: [
+          {
+            id: "m-1",
+            from: "Ana Pérez <ana@acme.com>",
+            subject: "Presupuesto Q4 revisado",
+            snippet:
+              "Hola Dani, te adjunto la versión revisada con los cambios que comentamos…",
+            date: at(9, 42),
+            unread: true,
+            link: "https://mail.google.com/mail/#all/m-1",
+          },
+          {
+            id: "m-2",
+            from: "Jira <jira@acme.atlassian.net>",
+            subject: "[PLAI-1234] Conectores personales: revisión de UX",
+            snippet: "Marta ha comentado en la incidencia…",
+            date: at(8, 15),
+            unread: true,
+            link: "https://mail.google.com/mail/#all/m-2",
+          },
+          {
+            id: "m-3",
+            from: "Carlos Ruiz <carlos@cliente.com>",
+            subject: "Re: Demo del jueves",
+            snippet: "Perfecto, nos vemos el jueves a las 10.",
+            date: at(18, 5, -1),
+            link: "https://mail.google.com/mail/#all/m-3",
+          },
+        ],
+      },
+      { query: "is:unread newer_than:2d" },
+    ),
+  },
+}
+
+export const ReadMail: Story = {
+  args: {
+    locale: "es",
+    part: part("gmail_read", {
+      connector: gmail,
+      action: "read",
+      result: {
+        id: "m-1",
+        from: "Ana Pérez <ana@acme.com>",
+        to: "dani@plai.ai",
+        cc: "finanzas@acme.com",
+        subject: "Presupuesto Q4 revisado",
+        date: at(9, 42),
+        body:
+          "Hola Dani,\n\nTe adjunto la versión revisada del presupuesto del Q4 con los cambios que comentamos en la reunión del lunes. " +
+          "He ajustado las partidas de infraestructura y he movido la formación al Q1.\n\n".repeat(
+            3,
+          ) +
+          "Un saludo,\nAna",
+        link: "https://mail.google.com/mail/#all/m-1",
+      },
+    }),
+  },
+}
+
+export const ListEvents: Story = {
+  args: {
+    locale: "es",
+    part: part("google_calendar_list_events", {
+      connector: {
+        ...gmail,
+        capability: "google_calendar",
+        label: "Google Calendar",
+      },
+      action: "list_events",
+      result: [
+        {
+          id: "e-1",
+          title: "Daily",
+          start: at(9),
+          end: at(9, 15),
+          attendees: ["a@plai.ai", "b@plai.ai", "c@plai.ai"],
+          link: "https://calendar.google.com/",
+          online_meeting_url: "https://meet.google.com/abc-defg-hij",
+        },
+        {
+          id: "e-2",
+          title: "Demo con Cliente",
+          start: at(10, 0, 1),
+          end: at(11, 0, 1),
+          location: "Oficina Barcelona",
+          attendees: ["carlos@cliente.com"],
+          link: "https://calendar.google.com/",
+        },
+        { id: "e-3", title: "Offsite", start: "2026-12-18", all_day: true },
+      ],
+    }),
+  },
+}
+
+export const DraftSaved: Story = {
+  args: {
+    locale: "es",
+    part: part(
+      "gmail_create_draft",
+      {
+        connector: gmail,
+        action: "create_draft",
+        result: {
+          draft_id: "d-1",
+          link: "https://mail.google.com/mail/#drafts",
+        },
+      },
+      {
+        to: ["carlos@cliente.com"],
+        subject: "Propuesta de colaboración",
+        body: "…",
+      },
+    ),
+  },
+}

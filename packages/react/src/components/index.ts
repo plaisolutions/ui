@@ -129,6 +129,11 @@ export { ToolResultMcpCard } from "./tool-result-mcp-card"
 export type { ToolResultMcpCardProps } from "./tool-result-mcp-card"
 export { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
 export type { ToolResultOfficeDocumentsCardProps } from "./tool-result-office-documents-card"
+export {
+  ToolResultPersonalConnectorCard,
+  hasPersonalConnectorView,
+} from "./tool-result-personal-connector-card"
+export type { ToolResultPersonalConnectorCardProps } from "./tool-result-personal-connector-card"
 export { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 export type { ToolResultWebSearchCardProps } from "./tool-result-web-search-card"
 export { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"

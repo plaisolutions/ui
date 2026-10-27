@@ -20,6 +20,10 @@ import { ToolResultExternalDatasourceCard } from "./tool-result-external-datasou
 import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 import { ToolResultMcpCard } from "./tool-result-mcp-card"
 import { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
+import {
+  ToolResultPersonalConnectorCard,
+  hasPersonalConnectorView,
+} from "./tool-result-personal-connector-card"
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
 import { ToolUseIndicator } from "./tool-use-indicator"
@@ -173,6 +177,19 @@ export function ToolResultCard({
   if (part.toolType === "mcp_tool") {
     return (
       <ToolResultMcpCard part={part} locale={locale} className={className} />
+    )
+  }
+
+  if (
+    part.toolType === "personal_connector" &&
+    hasPersonalConnectorView(part)
+  ) {
+    return (
+      <ToolResultPersonalConnectorCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
     )
   }
 

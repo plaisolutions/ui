@@ -205,6 +205,81 @@ export type McpToolResultMetadata = {
   [key: string]: unknown
 }
 
+export type PersonalConnectorCapability =
+  | "gmail"
+  | "google_calendar"
+  | "outlook_mail"
+  | "outlook_calendar"
+
+/** Personal account (the user's own Gmail, Outlook...) a tool acted on. */
+export type PersonalConnectorInfo = {
+  provider: "google" | "microsoft" | (string & {})
+  capability: PersonalConnectorCapability | (string & {})
+  label: string
+  account_email?: string | null
+}
+
+export type PersonalConnectorMailSummary = {
+  id: string
+  thread_id?: string | null
+  from?: string | null
+  to?: string | null
+  subject?: string | null
+  /** ISO 8601. */
+  date?: string | null
+  snippet?: string | null
+  unread?: boolean
+  link?: string | null
+}
+
+export type PersonalConnectorMailMessage = PersonalConnectorMailSummary & {
+  cc?: string | null
+  body?: string | null
+}
+
+export type PersonalConnectorEvent = {
+  id: string
+  title?: string | null
+  /** ISO 8601 date-time, or a date for all-day events. */
+  start?: string | null
+  end?: string | null
+  all_day?: boolean
+  location?: string | null
+  description?: string | null
+  attendees?: string[]
+  organizer?: string | null
+  link?: string | null
+  online_meeting_url?: string | null
+}
+
+export type PersonalConnectorDraft = {
+  draft_id?: string | null
+  link?: string | null
+}
+
+/**
+ * Result of a personal connector tool. `result` holds the normalized data for
+ * the action (same shape for Google and Microsoft); `error` is set instead
+ * when the call failed ("needs_reauth": the user must reconnect the account).
+ */
+export type PersonalConnectorToolResultMetadata = {
+  type?: "personal_connector"
+  connector?: PersonalConnectorInfo
+  action?:
+    | "search"
+    | "read"
+    | "send"
+    | "create_draft"
+    | "list_events"
+    | "create_event"
+    | "update_event"
+    | "delete_event"
+    | (string & {})
+  result?: unknown
+  error?: "needs_reauth" | "provider" | (string & {})
+  [key: string]: unknown
+}
+
 export type AgentInvocationToolResultMetadata = {
   type?: "agent_invocation"
   agent_id?: string
@@ -288,6 +363,7 @@ export type UIToolCallMetadata =
   | PerplexityToolResultMetadata
   | FirecrawlSearchToolResultMetadata
   | MemoryProposalToolMetadata
+  | PersonalConnectorToolResultMetadata
   | Record<string, unknown>
 
 export type UIToolType =
@@ -302,7 +378,9 @@ export type UIToolType =
   | "mcp_tool"
   | "office_documents"
   | "perplexity"
+  | "personal_connector"
   | "structured_datasource"
+  | "tool_confirmation"
   | "workflow_dispatch"
   | "unknown"
 
@@ -363,6 +441,12 @@ export type UIPerplexityToolCallPart = UIBaseToolCallPart<
   "perplexity",
   PerplexityToolResultMetadata
 >
+export type UIPersonalConnectorToolCallPart = UIBaseToolCallPart<
+  "personal_connector",
+  PersonalConnectorToolResultMetadata
+>
+export type UIToolConfirmationToolCallPart =
+  UIBaseToolCallPart<"tool_confirmation">
 export type UIStructuredDatasourceToolCallPart =
   UIBaseToolCallPart<"structured_datasource">
 export type UIWorkflowDispatchToolCallPart = UIBaseToolCallPart<
@@ -388,7 +472,9 @@ export type UIToolCallPart =
   | UIMcpToolCallPart
   | UIOfficeDocumentsToolCallPart
   | UIPerplexityToolCallPart
+  | UIPersonalConnectorToolCallPart
   | UIStructuredDatasourceToolCallPart
+  | UIToolConfirmationToolCallPart
   | UIWorkflowDispatchToolCallPart
   | UIUnknownToolCallPart
 

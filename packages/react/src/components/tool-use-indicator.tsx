@@ -2,6 +2,11 @@ import type { UIToolCallPart, UIToolType } from "@plaisolutions/client"
 import type { HTMLAttributes } from "react"
 import { joinClasses } from "./internal/join-classes"
 import {
+  type PersonalConnectorCopy,
+  fillCopy,
+  getPersonalConnectorCopy,
+} from "./internal/personal-connector-copy"
+import {
   getSupportedToolLocale,
   type SupportedToolLocale,
 } from "./internal/tool-locale"
@@ -29,7 +34,9 @@ const TOOL_USE_ACTIONS: Record<UIToolType, ToolUseAction> = {
   mcp_tool: "request",
   office_documents: "documents",
   perplexity: "web",
+  personal_connector: "tool",
   structured_datasource: "query",
+  tool_confirmation: "tool",
   workflow_dispatch: "workflow",
   unknown: "tool",
 }
@@ -150,10 +157,50 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
 }
 
+const PERSONAL_CONNECTOR_SERVICES: Record<string, string> = {
+  gmail: "Gmail",
+  google_calendar: "Google Calendar",
+  outlook_mail: "Outlook Mail",
+  outlook_calendar: "Outlook Calendar",
+}
+
+const PERSONAL_CONNECTOR_ACTIONS: Record<string, keyof PersonalConnectorCopy> =
+  {
+    search: "searchingMail",
+    read: "readingMail",
+    list_events: "checkingCalendar",
+    create_draft: "savingDraft",
+    send: "preparingMail",
+    create_event: "preparingEvent",
+    update_event: "preparingEvent",
+    delete_event: "preparingEvent",
+  }
+
+// Connector tools are named "{capability}_{action}", plus "_2"... when the user
+// has several accounts of the same service.
+const PERSONAL_CONNECTOR_TOOL_NAME =
+  /^(gmail|google_calendar|outlook_mail|outlook_calendar)_(.+?)(?:_\d+)?$/
+
+function getPersonalConnectorLabel(name: string, locale?: string | null) {
+  const match = PERSONAL_CONNECTOR_TOOL_NAME.exec(name)
+  const key = match ? PERSONAL_CONNECTOR_ACTIONS[match[2]] : undefined
+  if (!match || !key) return null
+  return fillCopy(getPersonalConnectorCopy(locale)[key], {
+    service: PERSONAL_CONNECTOR_SERVICES[match[1]],
+  })
+}
+
 export function getToolUseLabel(
   part: Pick<UIToolCallPart, "name" | "toolType">,
   locale?: string | null,
 ) {
+  if (part.toolType === "personal_connector") {
+    const label = getPersonalConnectorLabel(part.name, locale)
+    if (label) return label
+  }
+  if (part.toolType === "tool_confirmation") {
+    return getPersonalConnectorCopy(locale).runningConfirmed
+  }
   const action = part.toolType
     ? (TOOL_USE_ACTIONS[part.toolType] ?? "tool")
     : "tool"
