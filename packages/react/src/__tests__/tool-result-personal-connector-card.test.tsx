@@ -56,7 +56,7 @@ describe("ToolResultPersonalConnectorCard", () => {
     )
 
     expect(screen.getByText("Gmail")).toBeTruthy()
-    expect(screen.getByText("· me@gmail.com")).toBeTruthy()
+    expect(screen.getByText("me@gmail.com")).toBeTruthy()
     expect(screen.getByText("2 emails")).toBeTruthy()
     expect(screen.getAllByText("Ana Pérez")).toHaveLength(2)
     expect(screen.getByLabelText("Unread")).toBeTruthy()
@@ -327,7 +327,9 @@ describe("ToolResultPersonalConnectorCard", () => {
     )
 
     expect(screen.getByText("Email sent")).toBeTruthy()
-    expect(screen.getByText("Gmail · me@gmail.com")).toBeTruthy()
+    expect(screen.getByText("me@gmail.com").parentElement?.textContent).toBe(
+      "Gmailme@gmail.com",
+    )
     expect(
       screen.getByRole("link", { name: /Open email/ }).getAttribute("href"),
     ).toBe("https://mail.google.com/mail/#all/m-9")

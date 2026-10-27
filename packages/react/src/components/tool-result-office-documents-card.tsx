@@ -1,27 +1,27 @@
-import { CheckCircle2, File, FileText, XCircle } from "lucide-react";
+import { CheckCircle2, File, FileText, XCircle } from "lucide-react"
 import type {
   OfficeDocumentMediaFile,
   UIOfficeDocumentsToolCallPart,
-} from "@plaisolutions/client";
+} from "@plaisolutions/client"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./sheet";
-import { formatToolErrorDetails } from "./internal/format-tool-error-details";
-import { joinClasses } from "./internal/join-classes";
-import { getUiCopy } from "./internal/ui-copy";
+} from "./sheet"
+import { formatToolErrorDetails } from "./internal/format-tool-error-details"
+import { joinClasses } from "./internal/join-classes"
+import { getUiCopy } from "./internal/ui-copy"
 
 export type ToolResultOfficeDocumentsCardProps = {
-  part: UIOfficeDocumentsToolCallPart;
-  className?: string;
-  locale?: string | null;
-};
+  part: UIOfficeDocumentsToolCallPart
+  className?: string
+  locale?: string | null
+}
 
 function getFiles(part: UIOfficeDocumentsToolCallPart) {
-  const files = part.metadata?.media_files;
+  const files = part.metadata?.media_files
   return Array.isArray(files)
     ? files.filter(
         (file): file is OfficeDocumentMediaFile =>
@@ -29,28 +29,28 @@ function getFiles(part: UIOfficeDocumentsToolCallPart) {
           typeof file === "object" &&
           typeof file.id === "string",
       )
-    : [];
+    : []
 }
 
 function getExtension(file: OfficeDocumentMediaFile) {
-  const name = file.name ?? file.pathname ?? "";
-  const extension = name.split(".").pop()?.toLowerCase();
-  if (extension && extension !== name.toLowerCase()) return extension;
-  const mime = file.content_type ?? "";
-  if (mime.includes("pdf")) return "pdf";
-  if (mime.includes("wordprocessingml")) return "docx";
-  if (mime.includes("spreadsheetml")) return "xlsx";
-  if (mime.includes("presentationml")) return "pptx";
-  return null;
+  const name = file.name ?? file.pathname ?? ""
+  const extension = name.split(".").pop()?.toLowerCase()
+  if (extension && extension !== name.toLowerCase()) return extension
+  const mime = file.content_type ?? ""
+  if (mime.includes("pdf")) return "pdf"
+  if (mime.includes("wordprocessingml")) return "docx"
+  if (mime.includes("spreadsheetml")) return "xlsx"
+  if (mime.includes("presentationml")) return "pptx"
+  return null
 }
 
 function iconClass(extension: string | null) {
-  if (extension === "pdf") return "text-rose-500";
-  if (["doc", "docx"].includes(extension ?? "")) return "text-blue-600";
+  if (extension === "pdf") return "text-rose-500"
+  if (["doc", "docx"].includes(extension ?? "")) return "text-blue-600"
   if (["xls", "xlsx", "csv"].includes(extension ?? ""))
-    return "text-emerald-600";
-  if (["ppt", "pptx"].includes(extension ?? "")) return "text-orange-600";
-  return "text-neutral-500";
+    return "text-emerald-600"
+  if (["ppt", "pptx"].includes(extension ?? "")) return "text-orange-600"
+  return "text-neutral-500"
 }
 
 export function ToolResultOfficeDocumentsCard({
@@ -58,16 +58,16 @@ export function ToolResultOfficeDocumentsCard({
   className,
   locale,
 }: ToolResultOfficeDocumentsCardProps) {
-  const copy = getUiCopy(locale);
-  const files = getFiles(part);
-  const errorDetails = formatToolErrorDetails(part.errorDetails);
-  const fileLabel = files.length === 1 ? copy.file : copy.files;
+  const copy = getUiCopy(locale)
+  const files = getFiles(part)
+  const errorDetails = formatToolErrorDetails(part.errorDetails)
+  const fileLabel = files.length === 1 ? copy.file : copy.files
   const statusClass =
     part.state === "error"
       ? "text-rose-600"
       : part.state === "pending"
-      ? "text-amber-600"
-      : "text-emerald-600";
+        ? "text-amber-600"
+        : "text-emerald-600"
 
   return (
     <Sheet>
@@ -104,8 +104,8 @@ export function ToolResultOfficeDocumentsCard({
         </SheetHeader>
         <section className="mt-6 space-y-3" aria-label={copy.generatedFiles}>
           {files.map((file) => {
-            const extension = getExtension(file);
-            const label = file.name ?? file.pathname ?? file.id;
+            const extension = getExtension(file)
+            const label = file.name ?? file.pathname ?? file.id
             const content = (
               <div
                 key={file.id}
@@ -127,7 +127,7 @@ export function ToolResultOfficeDocumentsCard({
                   ) : null}
                 </div>
               </div>
-            );
+            )
             return file.url ? (
               <a
                 key={file.id}
@@ -140,7 +140,7 @@ export function ToolResultOfficeDocumentsCard({
               </a>
             ) : (
               <div key={file.id}>{content}</div>
-            );
+            )
           })}
           {files.length === 0 && part.state === "pending" ? (
             <p className="text-sm text-neutral-600">{copy.creatingDocuments}</p>
@@ -157,5 +157,5 @@ export function ToolResultOfficeDocumentsCard({
         </section>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

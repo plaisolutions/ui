@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { ToolResultCard } from "../components"
 
 describe("ToolResultBrowserCard", () => {
-  it("expands the scraped preview with its source URL and scraper credits", () => {
+  it("expands the scraped preview with its source URL and scraper", () => {
     const view = render(
       <ToolResultCard
         part={{
@@ -24,7 +24,8 @@ describe("ToolResultBrowserCard", () => {
     )
 
     const card = screen.getByRole("region", { name: "Browser result" })
-    expect(within(card).getByText("Firecrawl · 2 credits")).toBeTruthy()
+    expect(within(card).getByText("Firecrawl")).toBeTruthy()
+    expect(within(card).queryByText(/credits/)).toBeNull()
 
     fireEvent.click(
       within(card).getByRole("button", { name: "Expand browser result" }),

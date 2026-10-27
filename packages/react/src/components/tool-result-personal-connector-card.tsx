@@ -8,7 +8,7 @@ import type {
   PersonalConnectorToolResultMetadata,
   UIPersonalConnectorToolCallPart,
   UIToolConfirmationToolCallPart,
-} from "@plaisolutions/client";
+} from "@plaisolutions/client"
 import {
   CalendarDays,
   CheckCircle2,
@@ -17,80 +17,80 @@ import {
   Mail,
   Video,
   XCircle,
-} from "lucide-react";
-import { type ReactNode, useState } from "react";
-import { joinClasses } from "./internal/join-classes";
+} from "lucide-react"
+import { type ReactNode, useState } from "react"
+import { joinClasses } from "./internal/join-classes"
 import {
   type PersonalConnectorCopy,
   fillCopy,
   getPersonalConnectorCopy,
-} from "./internal/personal-connector-copy";
+} from "./internal/personal-connector-copy"
 
 export type ToolResultPersonalConnectorCardProps = {
-  part: UIPersonalConnectorToolCallPart;
-  locale?: string | null;
-  className?: string;
-};
+  part: UIPersonalConnectorToolCallPart
+  locale?: string | null
+  className?: string
+}
 
-const COLLAPSED_ITEMS = 5;
-const COLLAPSED_BODY_CHARS = 600;
+const COLLAPSED_ITEMS = 5
+const COLLAPSED_BODY_CHARS = 600
 
 type View =
   | { kind: "mail-list"; messages: PersonalConnectorMailSummary[] }
   | { kind: "mail"; message: PersonalConnectorMailMessage }
   | { kind: "events"; events: PersonalConnectorEvent[] }
   | {
-      kind: "draft";
-      link: string | null;
-      to: string[];
-      subject: string | null;
-      body: string | null;
+      kind: "draft"
+      link: string | null
+      to: string[]
+      subject: string | null
+      body: string | null
     }
   | { kind: "pending-mail"; pending: PendingConfirmation }
   | {
-      kind: "pending-event";
-      operation: "create_event" | "update_event" | "delete_event";
-      pending: PendingConfirmation;
-    };
+      kind: "pending-event"
+      operation: "create_event" | "update_event" | "delete_event"
+      pending: PendingConfirmation
+    }
 
 const EVENT_OPERATIONS = [
   "create_event",
   "update_event",
   "delete_event",
-] as const;
-type EventOperation = (typeof EVENT_OPERATIONS)[number];
+] as const
+type EventOperation = (typeof EVENT_OPERATIONS)[number]
 
 function isEventOperation(value: unknown): value is EventOperation {
-  return EVENT_OPERATIONS.includes(value as EventOperation);
+  return EVENT_OPERATIONS.includes(value as EventOperation)
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
-    : null;
+    : null
 }
 
 function text(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
+  return typeof value === "string" && value.trim().length > 0 ? value : null
 }
 
 function hasId(value: unknown): value is { id: string } {
-  return typeof asRecord(value)?.id === "string";
+  return typeof asRecord(value)?.id === "string"
 }
 
 function getView(part: UIPersonalConnectorToolCallPart): View | null {
   const metadata = asRecord(
     part.metadata,
-  ) as PersonalConnectorToolResultMetadata | null;
-  if (!metadata || metadata.error) return null;
-  const result = metadata.result;
+  ) as PersonalConnectorToolResultMetadata | null
+  if (!metadata || metadata.error) return null
+  const result = metadata.result
 
-  const pending = asRecord(metadata.pending_confirmation);
+  const pending = asRecord(metadata.pending_confirmation)
   if (pending) {
-    const confirmation = pending as PendingConfirmation;
-    if (!asRecord(confirmation.action)) return null;
+    const confirmation = pending as PendingConfirmation
+    if (!asRecord(confirmation.action)) return null
     if (metadata.action === "send") {
-      return { kind: "pending-mail", pending: confirmation };
+      return { kind: "pending-mail", pending: confirmation }
     }
     return isEventOperation(metadata.action)
       ? {
@@ -98,7 +98,7 @@ function getView(part: UIPersonalConnectorToolCallPart): View | null {
           operation: metadata.action,
           pending: confirmation,
         }
-      : null;
+      : null
   }
 
   switch (metadata.action) {
@@ -108,20 +108,20 @@ function getView(part: UIPersonalConnectorToolCallPart): View | null {
             kind: "mail-list",
             messages: result.filter(hasId) as PersonalConnectorMailSummary[],
           }
-        : null;
+        : null
     case "read":
       return hasId(result)
         ? { kind: "mail", message: result as PersonalConnectorMailMessage }
-        : null;
+        : null
     case "list_events":
       return Array.isArray(result)
         ? {
             kind: "events",
             events: result.filter(hasId) as PersonalConnectorEvent[],
           }
-        : null;
+        : null
     case "create_draft": {
-      const input = asRecord(part.input);
+      const input = asRecord(part.input)
       return {
         kind: "draft",
         link: text(asRecord(result)?.link),
@@ -130,10 +130,10 @@ function getView(part: UIPersonalConnectorToolCallPart): View | null {
           : [],
         subject: text(input?.subject),
         body: text(input?.body),
-      };
+      }
     }
     default:
-      return null;
+      return null
   }
 }
 
@@ -141,20 +141,20 @@ function getView(part: UIPersonalConnectorToolCallPart): View | null {
 export function hasPersonalConnectorView(
   part: UIPersonalConnectorToolCallPart,
 ) {
-  return part.state === "completed" && getView(part) !== null;
+  return part.state === "completed" && getView(part) !== null
 }
 
 function getConnector(
   part: UIPersonalConnectorToolCallPart,
 ): PersonalConnectorInfo | null {
-  const connector = asRecord(asRecord(part.metadata)?.connector);
+  const connector = asRecord(asRecord(part.metadata)?.connector)
   return connector && typeof connector.label === "string"
     ? (connector as PersonalConnectorInfo)
-    : null;
+    : null
 }
 
 function isCalendar(connector: PersonalConnectorInfo | null) {
-  return connector?.capability.includes("calendar") ?? false;
+  return connector?.capability.includes("calendar") ?? false
 }
 
 // ── Dates ──────────────────────────────────────────────────────────────────
@@ -164,24 +164,24 @@ function dateFormatter(
   options: Intl.DateTimeFormatOptions,
 ) {
   try {
-    return new Intl.DateTimeFormat(locale ?? undefined, options);
+    return new Intl.DateTimeFormat(locale ?? undefined, options)
   } catch {
-    return new Intl.DateTimeFormat(undefined, options);
+    return new Intl.DateTimeFormat(undefined, options)
   }
 }
 
 /** All-day values come as "YYYY-MM-DD": read them as local dates, not UTC. */
 function parseDate(value: string | null | undefined): Date | null {
-  if (!value) return null;
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!value) return null
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
   const date = dateOnly
     ? new Date(
         Number(dateOnly[1]),
         Number(dateOnly[2]) - 1,
         Number(dateOnly[3]),
       )
-    : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+    : new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -189,39 +189,39 @@ function isSameDay(a: Date, b: Date) {
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
-  );
+  )
 }
 
 function formatMailDate(
   value: string | null | undefined,
   locale?: string | null,
 ) {
-  const date = parseDate(value);
-  if (!date) return value ?? null;
+  const date = parseDate(value)
+  if (!date) return value ?? null
   return isSameDay(date, new Date())
     ? dateFormatter(locale, { hour: "2-digit", minute: "2-digit" }).format(date)
-    : dateFormatter(locale, { day: "numeric", month: "short" }).format(date);
+    : dateFormatter(locale, { day: "numeric", month: "short" }).format(date)
 }
 
 function formatFullDate(
   value: string | null | undefined,
   locale?: string | null,
 ) {
-  const date = parseDate(value);
-  if (!date) return value ?? null;
+  const date = parseDate(value)
+  if (!date) return value ?? null
   return dateFormatter(locale, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(date);
+  }).format(date)
 }
 
 // ── Shared pieces ──────────────────────────────────────────────────────────
 
 /** "Ana Pérez <ana@acme.com>" → "Ana Pérez". */
 function displayName(address: string | null | undefined) {
-  if (!address) return null;
-  const match = /^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/.exec(address);
-  return match ? match[1] : address;
+  if (!address) return null
+  const match = /^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/.exec(address)
+  return match ? match[1] : address
 }
 
 function count(
@@ -230,7 +230,7 @@ function count(
   one: string,
   other: string,
 ) {
-  return n === 1 ? one : fillCopy(other, { count: n });
+  return n === 1 ? one : fillCopy(other, { count: n })
 }
 
 function ExternalAnchor({
@@ -239,10 +239,10 @@ function ExternalAnchor({
   children,
   label,
 }: {
-  href: string;
-  className?: string;
-  children: ReactNode;
-  label?: string;
+  href: string
+  className?: string
+  children: ReactNode
+  label?: string
 }) {
   return (
     <a
@@ -257,7 +257,7 @@ function ExternalAnchor({
     >
       {children}
     </a>
-  );
+  )
 }
 
 function ShowAllToggle({
@@ -266,12 +266,12 @@ function ShowAllToggle({
   onToggle,
   copy,
 }: {
-  total: number;
-  expanded: boolean;
-  onToggle: () => void;
-  copy: PersonalConnectorCopy;
+  total: number
+  expanded: boolean
+  onToggle: () => void
+  copy: PersonalConnectorCopy
 }) {
-  if (total <= COLLAPSED_ITEMS) return null;
+  if (total <= COLLAPSED_ITEMS) return null
   return (
     <button
       type="button"
@@ -280,7 +280,7 @@ function ShowAllToggle({
     >
       {expanded ? copy.showLess : fillCopy(copy.showAll, { count: total })}
     </button>
-  );
+  )
 }
 
 // ── Mail ───────────────────────────────────────────────────────────────────
@@ -290,9 +290,9 @@ function MailRow({
   locale,
   copy,
 }: {
-  message: PersonalConnectorMailSummary;
-  locale?: string | null;
-  copy: PersonalConnectorCopy;
+  message: PersonalConnectorMailSummary
+  locale?: string | null
+  copy: PersonalConnectorCopy
 }) {
   const content = (
     <>
@@ -332,9 +332,9 @@ function MailRow({
         </p>
       ) : null}
     </>
-  );
+  )
 
-  const className = "block space-y-0.5 px-3 py-2";
+  const className = "block space-y-0.5 px-3 py-2"
   return message.link ? (
     <a
       href={message.link}
@@ -346,7 +346,7 @@ function MailRow({
     </a>
   ) : (
     <div className={className}>{content}</div>
-  );
+  )
 }
 
 function MailList({
@@ -354,17 +354,15 @@ function MailList({
   locale,
   copy,
 }: {
-  messages: PersonalConnectorMailSummary[];
-  locale?: string | null;
-  copy: PersonalConnectorCopy;
+  messages: PersonalConnectorMailSummary[]
+  locale?: string | null
+  copy: PersonalConnectorCopy
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false)
   if (messages.length === 0) {
-    return (
-      <p className="px-3 py-3 text-sm text-neutral-600">{copy.noEmails}</p>
-    );
+    return <p className="px-3 py-3 text-sm text-neutral-600">{copy.noEmails}</p>
   }
-  const visible = expanded ? messages : messages.slice(0, COLLAPSED_ITEMS);
+  const visible = expanded ? messages : messages.slice(0, COLLAPSED_ITEMS)
   return (
     <>
       <ul className="divide-y divide-neutral-100">
@@ -381,7 +379,7 @@ function MailList({
         copy={copy}
       />
     </>
-  );
+  )
 }
 
 function MailMessageView({
@@ -390,18 +388,18 @@ function MailMessageView({
   locale,
   copy,
 }: {
-  message: PersonalConnectorMailMessage;
-  connector: PersonalConnectorInfo | null;
-  locale?: string | null;
-  copy: PersonalConnectorCopy;
+  message: PersonalConnectorMailMessage
+  connector: PersonalConnectorInfo | null
+  locale?: string | null
+  copy: PersonalConnectorCopy
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const body = text(message.body);
-  const long = (body?.length ?? 0) > COLLAPSED_BODY_CHARS;
+  const [expanded, setExpanded] = useState(false)
+  const body = text(message.body)
+  const long = (body?.length ?? 0) > COLLAPSED_BODY_CHARS
   const shownBody =
     body && long && !expanded
       ? `${body.slice(0, COLLAPSED_BODY_CHARS).trimEnd()}…`
-      : body;
+      : body
 
   return (
     <div className="space-y-3 px-3 py-3">
@@ -451,7 +449,7 @@ function MailMessageView({
         ) : null}
       </div>
     </div>
-  );
+  )
 }
 
 // ── Calendar ───────────────────────────────────────────────────────────────
@@ -461,31 +459,31 @@ function eventTime(
   locale: string | null | undefined,
   copy: PersonalConnectorCopy,
 ) {
-  if (event.all_day) return copy.allDay;
-  const start = parseDate(event.start);
-  const end = parseDate(event.end);
-  if (!start) return null;
-  const time = dateFormatter(locale, { hour: "2-digit", minute: "2-digit" });
+  if (event.all_day) return copy.allDay
+  const start = parseDate(event.start)
+  const end = parseDate(event.end)
+  if (!start) return null
+  const time = dateFormatter(locale, { hour: "2-digit", minute: "2-digit" })
   return end
     ? `${time.format(start)} – ${time.format(end)}`
-    : time.format(start);
+    : time.format(start)
 }
 
 function groupByDay(events: PersonalConnectorEvent[]) {
-  const groups: { day: Date | null; events: PersonalConnectorEvent[] }[] = [];
+  const groups: { day: Date | null; events: PersonalConnectorEvent[] }[] = []
   for (const event of events) {
-    const day = parseDate(event.start);
-    const last = groups[groups.length - 1];
+    const day = parseDate(event.start)
+    const last = groups[groups.length - 1]
     if (
       last &&
       ((last.day && day && isSameDay(last.day, day)) || (!last.day && !day))
     ) {
-      last.events.push(event);
+      last.events.push(event)
     } else {
-      groups.push({ day, events: [event] });
+      groups.push({ day, events: [event] })
     }
   }
-  return groups;
+  return groups
 }
 
 function EventRow({
@@ -493,17 +491,17 @@ function EventRow({
   locale,
   copy,
 }: {
-  event: PersonalConnectorEvent;
-  locale?: string | null;
-  copy: PersonalConnectorCopy;
+  event: PersonalConnectorEvent
+  locale?: string | null
+  copy: PersonalConnectorCopy
 }) {
-  const attendees = event.attendees?.length ?? 0;
+  const attendees = event.attendees?.length ?? 0
   const details = [
     text(event.location),
     attendees > 0
       ? count(copy, attendees, copy.attendeesOne, copy.attendeesOther)
       : null,
-  ].filter(Boolean);
+  ].filter(Boolean)
 
   return (
     <li className="flex gap-3 px-3 py-2">
@@ -541,7 +539,7 @@ function EventRow({
         </ExternalAnchor>
       ) : null}
     </li>
-  );
+  )
 }
 
 function Agenda({
@@ -549,22 +547,20 @@ function Agenda({
   locale,
   copy,
 }: {
-  events: PersonalConnectorEvent[];
-  locale?: string | null;
-  copy: PersonalConnectorCopy;
+  events: PersonalConnectorEvent[]
+  locale?: string | null
+  copy: PersonalConnectorCopy
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false)
   if (events.length === 0) {
-    return (
-      <p className="px-3 py-3 text-sm text-neutral-600">{copy.noEvents}</p>
-    );
+    return <p className="px-3 py-3 text-sm text-neutral-600">{copy.noEvents}</p>
   }
-  const visible = expanded ? events : events.slice(0, COLLAPSED_ITEMS);
+  const visible = expanded ? events : events.slice(0, COLLAPSED_ITEMS)
   const dayFormat = dateFormatter(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
-  });
+  })
 
   return (
     <>
@@ -596,7 +592,7 @@ function Agenda({
         copy={copy}
       />
     </>
-  );
+  )
 }
 
 // ── Card ───────────────────────────────────────────────────────────────────
@@ -605,12 +601,12 @@ function CollapsibleBody({
   body,
   copy,
 }: {
-  body: string | null;
-  copy: PersonalConnectorCopy;
+  body: string | null
+  copy: PersonalConnectorCopy
 }) {
-  const [expanded, setExpanded] = useState(false);
-  if (!body) return null;
-  const long = body.length > COLLAPSED_BODY_CHARS;
+  const [expanded, setExpanded] = useState(false)
+  if (!body) return null
+  const long = body.length > COLLAPSED_BODY_CHARS
   return (
     <div className="space-y-1">
       <p className="whitespace-pre-wrap break-words text-sm leading-6 text-neutral-800">
@@ -628,15 +624,15 @@ function CollapsibleBody({
         </button>
       ) : null}
     </div>
-  );
+  )
 }
 
 function DraftView({
   view,
   copy,
 }: {
-  view: Extract<View, { kind: "draft" }>;
-  copy: PersonalConnectorCopy;
+  view: Extract<View, { kind: "draft" }>
+  copy: PersonalConnectorCopy
 }) {
   return (
     <div className="space-y-2 px-3 py-3">
@@ -661,7 +657,7 @@ function DraftView({
         </ExternalAnchor>
       ) : null}
     </div>
-  );
+  )
 }
 
 // ── Pending confirmation ───────────────────────────────────────────────────
@@ -669,7 +665,7 @@ function DraftView({
 function strings(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
-    : [];
+    : []
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -682,19 +678,19 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
         {children}
       </dd>
     </div>
-  );
+  )
 }
 
 function PendingMailView({
   pending,
   copy,
 }: {
-  pending: PendingConfirmation;
-  copy: PersonalConnectorCopy;
+  pending: PendingConfirmation
+  copy: PersonalConnectorCopy
 }) {
-  const mail = pending.action;
-  const to = strings(mail.to);
-  const cc = strings(mail.cc);
+  const mail = pending.action
+  const to = strings(mail.to)
+  const cc = strings(mail.cc)
   return (
     <div className="space-y-3 px-3 py-3">
       <dl className="space-y-1.5">
@@ -713,7 +709,7 @@ function PendingMailView({
         <CollapsibleBody body={text(mail.body)} copy={copy} />
       </div>
     </div>
-  );
+  )
 }
 
 function formatRange(
@@ -723,25 +719,25 @@ function formatRange(
   locale: string | null | undefined,
   copy: PersonalConnectorCopy,
 ) {
-  const from = parseDate(text(start));
-  if (!from) return null;
+  const from = parseDate(text(start))
+  if (!from) return null
   const day = dateFormatter(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
-  }).format(from);
-  if (allDay) return `${day} · ${copy.allDay}`;
-  const time = dateFormatter(locale, { hour: "2-digit", minute: "2-digit" });
-  const to = parseDate(text(end));
+  }).format(from)
+  if (allDay) return `${day} · ${copy.allDay}`
+  const time = dateFormatter(locale, { hour: "2-digit", minute: "2-digit" })
+  const to = parseDate(text(end))
   return to
     ? `${day} · ${time.format(from)} – ${time.format(to)}`
-    : `${day} · ${time.format(from)}`;
+    : `${day} · ${time.format(from)}`
 }
 
 /** Old value struck through next to the new one; only the new one if unknown. */
 function Change({ before, after }: { before: ReactNode; after: ReactNode }) {
   if (before === null || before === undefined || before === after) {
-    return <>{after}</>;
+    return <>{after}</>
   }
   return (
     <span className="flex flex-wrap items-baseline gap-x-2">
@@ -749,7 +745,7 @@ function Change({ before, after }: { before: ReactNode; after: ReactNode }) {
       <span aria-hidden="true">→</span>
       <span>{after}</span>
     </span>
-  );
+  )
 }
 
 function PendingEventView({
@@ -758,15 +754,14 @@ function PendingEventView({
   locale,
   copy,
 }: {
-  operation: EventOperation;
-  pending: PendingConfirmation;
-  locale?: string | null;
-  copy: PersonalConnectorCopy;
+  operation: EventOperation
+  pending: PendingConfirmation
+  locale?: string | null
+  copy: PersonalConnectorCopy
 }) {
-  const action = pending.action;
-  const current = asRecord(pending.current) as PersonalConnectorEvent | null;
-  const has = (key: string) =>
-    action[key] !== undefined && action[key] !== null;
+  const action = pending.action
+  const current = asRecord(pending.current) as PersonalConnectorEvent | null
+  const has = (key: string) => action[key] !== undefined && action[key] !== null
 
   if (operation === "delete_event") {
     return (
@@ -794,21 +789,21 @@ function PendingEventView({
           </p>
         ) : null}
       </div>
-    );
+    )
   }
 
-  const isUpdate = operation === "update_event";
+  const isUpdate = operation === "update_event"
   const before = (key: keyof PersonalConnectorEvent) =>
-    isUpdate && current ? (current[key] as unknown) : null;
-  const attendees = strings(action.attendees);
-  const timesChanged = has("start") || has("end");
+    isUpdate && current ? (current[key] as unknown) : null
+  const attendees = strings(action.attendees)
+  const timesChanged = has("start") || has("end")
   const newWhen = formatRange(
     action.start ?? current?.start,
     action.end ?? current?.end,
     Boolean(current?.all_day) && !timesChanged,
     locale,
     copy,
-  );
+  )
   const oldWhen =
     isUpdate && current && timesChanged
       ? formatRange(
@@ -818,7 +813,7 @@ function PendingEventView({
           locale,
           copy,
         )
-      : null;
+      : null
 
   return (
     <div className="space-y-2 px-3 py-3">
@@ -873,7 +868,7 @@ function PendingEventView({
         <p className="text-xs text-neutral-600">{copy.attendeesNotified}</p>
       ) : null}
     </div>
-  );
+  )
 }
 
 function PendingBadge({ copy }: { copy: PersonalConnectorCopy }) {
@@ -882,7 +877,7 @@ function PendingBadge({ copy }: { copy: PersonalConnectorCopy }) {
       <Clock className="h-3 w-3" aria-hidden="true" />
       {copy.awaitingConfirmation}
     </span>
-  );
+  )
 }
 
 function PendingFooter({ copy }: { copy: PersonalConnectorCopy }) {
@@ -890,7 +885,7 @@ function PendingFooter({ copy }: { copy: PersonalConnectorCopy }) {
     <p className="border-t border-amber-100 bg-amber-50/60 px-3 py-2 text-xs text-neutral-700">
       {copy.confirmHint}
     </p>
-  );
+  )
 }
 
 function headerCount(view: View, copy: PersonalConnectorCopy) {
@@ -900,7 +895,7 @@ function headerCount(view: View, copy: PersonalConnectorCopy) {
       view.messages.length,
       copy.emailCountOne,
       copy.emailCountOther,
-    );
+    )
   }
   if (view.kind === "events") {
     return count(
@@ -908,9 +903,9 @@ function headerCount(view: View, copy: PersonalConnectorCopy) {
       view.events.length,
       copy.eventCountOne,
       copy.eventCountOther,
-    );
+    )
   }
-  return null;
+  return null
 }
 
 export function ToolResultPersonalConnectorCard({
@@ -918,15 +913,15 @@ export function ToolResultPersonalConnectorCard({
   locale,
   className,
 }: ToolResultPersonalConnectorCardProps) {
-  const view = getView(part);
-  if (!view) return null;
+  const view = getView(part)
+  if (!view) return null
 
-  const copy = getPersonalConnectorCopy(locale);
-  const connector = getConnector(part);
-  const Icon = isCalendar(connector) ? CalendarDays : Mail;
-  const total = headerCount(view, copy);
+  const copy = getPersonalConnectorCopy(locale)
+  const connector = getConnector(part)
+  const Icon = isCalendar(connector) ? CalendarDays : Mail
+  const total = headerCount(view, copy)
   const isPending =
-    view.kind === "pending-mail" || view.kind === "pending-event";
+    view.kind === "pending-mail" || view.kind === "pending-event"
 
   return (
     <section
@@ -983,7 +978,7 @@ export function ToolResultPersonalConnectorCard({
       )}
       {isPending ? <PendingFooter copy={copy} /> : null}
     </section>
-  );
+  )
 }
 
 // ── Confirmed actions ──────────────────────────────────────────────────────
@@ -993,42 +988,42 @@ const DONE_LABELS: Record<string, keyof PersonalConnectorCopy> = {
   create_event: "eventCreated",
   update_event: "eventUpdated",
   delete_event: "eventDeleted",
-};
+}
 
 function getConfirmedActions(part: UIToolConfirmationToolCallPart) {
-  const actions = asRecord(part.metadata)?.actions;
+  const actions = asRecord(part.metadata)?.actions
   return Array.isArray(actions)
     ? (actions.filter(
         (action) => typeof asRecord(action)?.action_id === "string",
       ) as ConfirmedAction[])
-    : [];
+    : []
 }
 
 /** Whether the confirmation result can be shown as a list of outcomes. */
 export function hasToolConfirmationView(part: UIToolConfirmationToolCallPart) {
-  return part.state !== "pending" && getConfirmedActions(part).length > 0;
+  return part.state !== "pending" && getConfirmedActions(part).length > 0
 }
 
 function ConfirmedActionRow({
   action,
   copy,
 }: {
-  action: ConfirmedAction;
-  copy: PersonalConnectorCopy;
+  action: ConfirmedAction
+  copy: PersonalConnectorCopy
 }) {
   const metadata = asRecord(
     action.metadata,
-  ) as PersonalConnectorToolResultMetadata | null;
+  ) as PersonalConnectorToolResultMetadata | null
   const connector = asRecord(
     metadata?.connector,
-  ) as PersonalConnectorInfo | null;
-  const operation = typeof metadata?.action === "string" ? metadata.action : "";
-  const doneKey = DONE_LABELS[operation];
-  const failed = action.status === "failed";
+  ) as PersonalConnectorInfo | null
+  const operation = typeof metadata?.action === "string" ? metadata.action : ""
+  const doneKey = DONE_LABELS[operation]
+  const failed = action.status === "failed"
   const label = doneKey
     ? copy[doneKey]
-    : fillCopy(copy.actionDone, { tool: action.tool_name });
-  const link = text(asRecord(metadata?.result)?.link);
+    : fillCopy(copy.actionDone, { tool: action.tool_name })
+  const link = text(asRecord(metadata?.result)?.link)
 
   return (
     <li className="flex items-start gap-2 px-3 py-2">
@@ -1067,23 +1062,23 @@ function ConfirmedActionRow({
         </ExternalAnchor>
       ) : null}
     </li>
-  );
+  )
 }
 
 export type ToolResultToolConfirmationCardProps = {
-  part: UIToolConfirmationToolCallPart;
-  locale?: string | null;
-  className?: string;
-};
+  part: UIToolConfirmationToolCallPart
+  locale?: string | null
+  className?: string
+}
 
 export function ToolResultToolConfirmationCard({
   part,
   locale,
   className,
 }: ToolResultToolConfirmationCardProps) {
-  const actions = getConfirmedActions(part);
-  if (actions.length === 0) return null;
-  const copy = getPersonalConnectorCopy(locale);
+  const actions = getConfirmedActions(part)
+  if (actions.length === 0) return null
+  const copy = getPersonalConnectorCopy(locale)
   return (
     <ul
       className={joinClasses(
@@ -1101,30 +1096,30 @@ export function ToolResultToolConfirmationCard({
         />
       ))}
     </ul>
-  );
+  )
 }
 
 // ── Any other tool awaiting confirmation (HTTP, MCP, workflows...) ─────────
 
 export function getPendingConfirmation(part: {
-  metadata?: unknown;
+  metadata?: unknown
 }): PendingConfirmation | null {
-  const pending = asRecord(asRecord(part.metadata)?.pending_confirmation);
+  const pending = asRecord(asRecord(part.metadata)?.pending_confirmation)
   return pending && asRecord(pending.action)
     ? (pending as PendingConfirmation)
-    : null;
+    : null
 }
 
 function formatValue(value: unknown) {
-  if (typeof value === "string") return value;
-  return JSON.stringify(value, null, 2);
+  if (typeof value === "string") return value
+  return JSON.stringify(value, null, 2)
 }
 
 export type ToolResultPendingConfirmationCardProps = {
-  part: { id: string; name: string; state: string; metadata?: unknown };
-  locale?: string | null;
-  className?: string;
-};
+  part: { id: string; name: string; state: string; metadata?: unknown }
+  locale?: string | null
+  className?: string
+}
 
 /** Generic preview of a held tool call: its name and the exact arguments. */
 export function ToolResultPendingConfirmationCard({
@@ -1132,13 +1127,13 @@ export function ToolResultPendingConfirmationCard({
   locale,
   className,
 }: ToolResultPendingConfirmationCardProps) {
-  const pending = getPendingConfirmation(part);
-  if (!pending) return null;
-  const copy = getPersonalConnectorCopy(locale);
+  const pending = getPendingConfirmation(part)
+  if (!pending) return null
+  const copy = getPersonalConnectorCopy(locale)
   const entries = Object.entries(pending.action).filter(
     ([key, value]) =>
       key !== "operation" && value !== null && value !== undefined,
-  );
+  )
   return (
     <section
       className={joinClasses(
@@ -1167,5 +1162,5 @@ export function ToolResultPendingConfirmationCard({
       ) : null}
       <PendingFooter copy={copy} />
     </section>
-  );
+  )
 }

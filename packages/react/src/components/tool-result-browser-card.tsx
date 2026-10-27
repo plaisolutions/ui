@@ -1,5 +1,12 @@
 import type { UIBrowserToolCallPart } from "@plaisolutions/client"
-import { CheckCircle2, Globe, LoaderCircle, Minus, Plus, XCircle } from "lucide-react"
+import {
+  CheckCircle2,
+  Globe,
+  LoaderCircle,
+  Minus,
+  Plus,
+  XCircle,
+} from "lucide-react"
 import { useState } from "react"
 import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
@@ -54,11 +61,6 @@ export function ToolResultBrowserCard({
   const scraperLabel = metadata?.scraper_type
     ? SCRAPER_LABELS[metadata.scraper_type]
     : null
-  const credits = metadata?.scraper_api_tokens ?? metadata?.firecrawl_credits
-  const creditsLabel =
-    typeof credits === "number"
-      ? `${credits} ${credits === 1 ? copy.credit : copy.credits}`
-      : null
   const subtitle = scraperLabel
   const failed = part.state === "error"
   const pending = part.state === "pending"
@@ -73,7 +75,10 @@ export function ToolResultBrowserCard({
       aria-label={copy.browserResult}
     >
       <div className="flex items-center gap-2 px-3 py-2 text-sm">
-        <Globe className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
+        <Globe
+          className="h-4 w-4 shrink-0 text-neutral-500"
+          aria-hidden="true"
+        />
         <span className="font-medium text-neutral-800">{copy.browser}</span>
         {subtitle ? (
           <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
@@ -97,7 +102,9 @@ export function ToolResultBrowserCard({
           {canExpand ? (
             <button
               type="button"
-              aria-label={expanded ? copy.collapseBrowserResult : copy.expandBrowserResult}
+              aria-label={
+                expanded ? copy.collapseBrowserResult : copy.expandBrowserResult
+              }
               aria-expanded={expanded}
               className="flex h-5 w-5 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
               onClick={() => setExpanded((value) => !value)}
@@ -130,7 +137,8 @@ export function ToolResultBrowserCard({
           ) : null}
           {error ? (
             <p className="text-xs text-rose-700">
-              <span className="font-semibold">{copy.errorDetails}:</span> {error}
+              <span className="font-semibold">{copy.errorDetails}:</span>{" "}
+              {error}
             </p>
           ) : null}
         </div>
