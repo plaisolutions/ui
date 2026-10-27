@@ -1,6 +1,6 @@
 import type { UIToolCallPart } from "@plaisolutions/client"
-import { fireEvent, render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, it } from "vitest"
 import { ToolResultCard, getToolUseLabel } from "../components"
 
 const gmail = {
@@ -41,6 +41,8 @@ function mail(index: number, extra: Record<string, unknown> = {}) {
 }
 
 describe("ToolResultPersonalConnectorCard", () => {
+  afterEach(cleanup)
+
   it("lists found emails with sender, subject and a link to each", () => {
     render(
       <ToolResultCard
@@ -172,13 +174,195 @@ describe("ToolResultPersonalConnectorCard", () => {
     render(
       <ToolResultCard
         locale="en"
-        part={connectorPart("gmail_send", {
-          pending_confirmation: { action_id: "a-1" },
+        part={connectorPart("gmail_archive", {
+          connector: gmail,
+          action: "archive",
+          result: { ok: true },
         })}
       />,
     )
 
-    expect(screen.getByRole("heading", { name: "gmail_send" })).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "gmail_archive" })).toBeTruthy()
+  })
+
+  it("previews an email awaiting confirmation instead of showing it as completed", () => {
+    render(
+      <ToolResultCard
+        locale="es"
+        part={connectorPart("gmail_send", {
+          connector: gmail,
+          action: "send",
+          pending_confirmation: {
+            action_id: "a-1",
+            tool_name: "gmail_send",
+            action: {
+              operation: "send",
+              to: ["ana@acme.com"],
+              cc: ["finanzas@acme.com"],
+              subject: "Presupuesto",
+              body: "Hola Ana, te envío el presupuesto.",
+            },
+          },
+        })}
+      />,
+    )
+
+    expect(screen.getByText("Pendiente de tu confirmación")).toBeTruthy()
+    expect(screen.queryByText("Completed")).toBeNull()
+    expect(screen.getByText("ana@acme.com")).toBeTruthy()
+    expect(screen.getByText("finanzas@acme.com")).toBeTruthy()
+    expect(screen.getByText("Presupuesto")).toBeTruthy()
+    expect(screen.getByText("Hola Ana, te envío el presupuesto.")).toBeTruthy()
+    expect(screen.getByText(/Responde «sí» para confirmar/)).toBeTruthy()
+  })
+
+  it("shows what an event update changes against the current event", () => {
+    render(
+      <ToolResultCard
+        locale="en"
+        part={connectorPart("google_calendar_update_event", {
+          connector: {
+            ...gmail,
+            capability: "google_calendar",
+            label: "Google Calendar",
+          },
+          action: "update_event",
+          pending_confirmation: {
+            action_id: "a-2",
+            tool_name: "google_calendar_update_event",
+            action: {
+              operation: "update_event",
+              event_id: "e-1",
+              location: "Room B",
+            },
+            current: {
+              id: "e-1",
+              title: "Demo",
+              start: "2026-01-15T10:00:00",
+              end: "2026-01-15T11:00:00",
+              location: "Room A",
+            },
+          },
+        })}
+      />,
+    )
+
+    expect(screen.getByText("Event change")).toBeTruthy()
+    expect(screen.getByText("Demo")).toBeTruthy()
+    expect(screen.getByText("Room A").className).toContain("line-through")
+    expect(screen.getByText("Room B")).toBeTruthy()
+    expect(screen.queryByText("When")).toBeNull()
+  })
+
+  it("strikes through an event that will be deleted and warns about attendees", () => {
+    render(
+      <ToolResultCard
+        locale="en"
+        part={connectorPart("google_calendar_delete_event", {
+          connector: {
+            ...gmail,
+            capability: "google_calendar",
+            label: "Google Calendar",
+          },
+          action: "delete_event",
+          pending_confirmation: {
+            action_id: "a-3",
+            tool_name: "google_calendar_delete_event",
+            action: { operation: "delete_event", event_id: "e-1" },
+            current: {
+              id: "e-1",
+              title: "Demo",
+              start: "2026-01-15T10:00:00",
+              attendees: ["carlos@cliente.com"],
+            },
+          },
+        })}
+      />,
+    )
+
+    expect(screen.getByText("Delete event")).toBeTruthy()
+    expect(screen.getByText("Demo").className).toContain("line-through")
+    expect(screen.getByText("Attendees will be notified.")).toBeTruthy()
+  })
+
+  it("shows the outcome of each confirmed action, failures included", () => {
+    render(
+      <ToolResultCard
+        locale="en"
+        part={{
+          type: "tool-call",
+          id: "tool_confirm",
+          name: "confirm_pending_actions",
+          toolType: "tool_confirmation",
+          input: {},
+          state: "error",
+          metadata: {
+            type: "tool_confirmation",
+            actions: [
+              {
+                action_id: "a-1",
+                tool_name: "gmail_send",
+                status: "executed",
+                metadata: {
+                  type: "personal_connector",
+                  connector: gmail,
+                  action: "send",
+                  result: {
+                    id: "m-9",
+                    link: "https://mail.google.com/mail/#all/m-9",
+                  },
+                },
+              },
+              {
+                action_id: "a-2",
+                tool_name: "google_calendar_create_event",
+                status: "failed",
+                error: "Provider error 403: Forbidden",
+                metadata: null,
+              },
+            ],
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Email sent")).toBeTruthy()
+    expect(screen.getByText("Gmail · me@gmail.com")).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: /Open email/ }).getAttribute("href"),
+    ).toBe("https://mail.google.com/mail/#all/m-9")
+    expect(
+      screen.getByText("Failed: google_calendar_create_event done"),
+    ).toBeTruthy()
+    expect(screen.getByText("Provider error 403: Forbidden")).toBeTruthy()
+  })
+
+  it("holds any other confirm-policy tool as pending, with its arguments", () => {
+    render(
+      <ToolResultCard
+        locale="en"
+        part={{
+          type: "tool-call",
+          id: "tool_mcp",
+          name: "crm_delete_contact",
+          toolType: "mcp_tool",
+          input: { contact_id: "c-1" },
+          state: "completed",
+          metadata: {
+            pending_confirmation: {
+              action_id: "a-4",
+              tool_name: "crm_delete_contact",
+              action: { contact_id: "c-1" },
+            },
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText("crm_delete_contact")).toBeTruthy()
+    expect(screen.getByText("Awaiting your confirmation")).toBeTruthy()
+    expect(screen.getByText("contact_id")).toBeTruthy()
+    expect(screen.getByText("c-1")).toBeTruthy()
   })
 })
 

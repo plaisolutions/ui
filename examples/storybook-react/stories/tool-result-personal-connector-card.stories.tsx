@@ -175,3 +175,83 @@ export const DraftSaved: Story = {
     ),
   },
 }
+
+export const PendingSend: Story = {
+  args: {
+    locale: "es",
+    part: part("gmail_send", {
+      connector: gmail,
+      action: "send",
+      pending_confirmation: {
+        action_id: "a-1",
+        tool_name: "gmail_send",
+        action: {
+          operation: "send",
+          to: ["carlos@cliente.com"],
+          cc: ["ana@plai.ai"],
+          subject: "Propuesta de colaboración",
+          body: "Hola Carlos,\n\nComo hablamos ayer, te envío la propuesta con el alcance y el calendario.\n\nUn saludo,\nDani",
+        },
+      },
+    }),
+  },
+}
+
+export const PendingEventUpdate: Story = {
+  args: {
+    locale: "es",
+    part: part("google_calendar_update_event", {
+      connector: {
+        ...gmail,
+        capability: "google_calendar",
+        label: "Google Calendar",
+      },
+      action: "update_event",
+      pending_confirmation: {
+        action_id: "a-2",
+        tool_name: "google_calendar_update_event",
+        action: {
+          operation: "update_event",
+          event_id: "e-2",
+          start: at(12, 0, 1),
+          end: at(13, 0, 1),
+          location: "Google Meet",
+        },
+        current: {
+          id: "e-2",
+          title: "Demo con Cliente",
+          start: at(10, 0, 1),
+          end: at(11, 0, 1),
+          location: "Oficina Barcelona",
+          attendees: ["carlos@cliente.com"],
+        },
+      },
+    }),
+  },
+}
+
+export const PendingEventDelete: Story = {
+  args: {
+    locale: "es",
+    part: part("google_calendar_delete_event", {
+      connector: {
+        ...gmail,
+        capability: "google_calendar",
+        label: "Google Calendar",
+      },
+      action: "delete_event",
+      pending_confirmation: {
+        action_id: "a-3",
+        tool_name: "google_calendar_delete_event",
+        action: { operation: "delete_event", event_id: "e-2" },
+        current: {
+          id: "e-2",
+          title: "Demo con Cliente",
+          start: at(10, 0, 1),
+          end: at(11, 0, 1),
+          attendees: ["carlos@cliente.com"],
+        },
+      },
+    }),
+  },
+}

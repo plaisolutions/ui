@@ -258,6 +258,19 @@ export type PersonalConnectorDraft = {
 }
 
 /**
+ * An action held until the user confirms it (send an email, change the
+ * calendar, or any tool with a "confirm" approval policy). Nothing ran yet.
+ */
+export type PendingConfirmation = {
+  action_id: string
+  tool_name: string
+  /** The exact arguments that will run, plus `operation` for connector tools. */
+  action: Record<string, unknown>
+  /** What the action will change as it is now, e.g. the event to update. */
+  current?: unknown
+}
+
+/**
  * Result of a personal connector tool. `result` holds the normalized data for
  * the action (same shape for Google and Microsoft); `error` is set instead
  * when the call failed ("needs_reauth": the user must reconnect the account).
@@ -277,6 +290,27 @@ export type PersonalConnectorToolResultMetadata = {
     | (string & {})
   result?: unknown
   error?: "needs_reauth" | "provider" | (string & {})
+  /** Set when the call only prepared the action: it waits for confirmation. */
+  pending_confirmation?: PendingConfirmation
+  [key: string]: unknown
+}
+
+export type ConfirmedAction = {
+  action_id: string
+  tool_name: string
+  status: "executed" | "failed"
+  error?: string | null
+  /** Metadata of the tool that ran, e.g. a personal connector result. */
+  metadata?:
+    | PersonalConnectorToolResultMetadata
+    | Record<string, unknown>
+    | null
+}
+
+/** Result of running the actions the user confirmed. */
+export type ToolConfirmationToolResultMetadata = {
+  type?: "tool_confirmation"
+  actions?: ConfirmedAction[]
   [key: string]: unknown
 }
 
@@ -364,6 +398,7 @@ export type UIToolCallMetadata =
   | FirecrawlSearchToolResultMetadata
   | MemoryProposalToolMetadata
   | PersonalConnectorToolResultMetadata
+  | ToolConfirmationToolResultMetadata
   | Record<string, unknown>
 
 export type UIToolType =
@@ -445,8 +480,10 @@ export type UIPersonalConnectorToolCallPart = UIBaseToolCallPart<
   "personal_connector",
   PersonalConnectorToolResultMetadata
 >
-export type UIToolConfirmationToolCallPart =
-  UIBaseToolCallPart<"tool_confirmation">
+export type UIToolConfirmationToolCallPart = UIBaseToolCallPart<
+  "tool_confirmation",
+  ToolConfirmationToolResultMetadata
+>
 export type UIStructuredDatasourceToolCallPart =
   UIBaseToolCallPart<"structured_datasource">
 export type UIWorkflowDispatchToolCallPart = UIBaseToolCallPart<

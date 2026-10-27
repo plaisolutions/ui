@@ -21,8 +21,12 @@ import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 import { ToolResultMcpCard } from "./tool-result-mcp-card"
 import { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
 import {
+  ToolResultPendingConfirmationCard,
   ToolResultPersonalConnectorCard,
+  ToolResultToolConfirmationCard,
+  getPendingConfirmation,
   hasPersonalConnectorView,
+  hasToolConfirmationView,
 } from "./tool-result-personal-connector-card"
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
@@ -107,8 +111,32 @@ export function ToolResultCard({
     )
   }
 
+  // Before the generic error: when every confirmed action failed, the card
+  // still says which one and why.
+  if (part.toolType === "tool_confirmation" && hasToolConfirmationView(part)) {
+    return (
+      <ToolResultToolConfirmationCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
+  }
+
   if (part.state === "error") {
     return <ToolError part={part} locale={locale} className={className} />
+  }
+
+  // A held call (HTTP, MCP, workflow... with a "confirm" policy) ran nothing
+  // yet: never show it as completed.
+  if (part.toolType !== "personal_connector" && getPendingConfirmation(part)) {
+    return (
+      <ToolResultPendingConfirmationCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
   }
 
   const officeMediaFiles = getOfficeDocumentMediaFiles(part)
