@@ -1,45 +1,45 @@
-import type { UIWorkflowDispatchToolCallPart } from "@plaisolutions/client";
-import { CheckCircle2, Workflow, XCircle } from "lucide-react";
-import { formatToolErrorDetails } from "./internal/format-tool-error-details";
-import { joinClasses } from "./internal/join-classes";
-import { getUiCopy, getUiStatusLabel } from "./internal/ui-copy";
+import type { UIWorkflowDispatchToolCallPart } from "@plaisolutions/client"
+import { CheckCircle2, Workflow, XCircle } from "lucide-react"
+import { formatToolErrorDetails } from "./internal/format-tool-error-details"
+import { joinClasses } from "./internal/join-classes"
+import { getUiCopy, getUiStatusLabel } from "./internal/ui-copy"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./sheet";
+} from "./sheet"
 
 export type ToolResultWorkflowDispatchCardProps = {
-  part: UIWorkflowDispatchToolCallPart;
-  className?: string;
-  locale?: string | null;
-};
+  part: UIWorkflowDispatchToolCallPart
+  className?: string
+  locale?: string | null
+}
 
 type WorkflowDispatchResult = {
-  executionId?: string;
-  workflowId?: string;
-  workflowName?: string;
-  status?: string;
-};
+  executionId?: string
+  workflowId?: string
+  workflowName?: string
+  status?: string
+}
 
 function parseResult(value: unknown): WorkflowDispatchResult {
-  let parsed = value;
+  let parsed = value
 
   if (typeof value === "string") {
     try {
-      parsed = JSON.parse(value);
+      parsed = JSON.parse(value)
     } catch {
-      return {};
+      return {}
     }
   }
 
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return {};
+    return {}
   }
 
-  const result = parsed as Record<string, unknown>;
+  const result = parsed as Record<string, unknown>
   return {
     executionId:
       typeof result.execution_id === "string" ? result.execution_id : undefined,
@@ -50,17 +50,17 @@ function parseResult(value: unknown): WorkflowDispatchResult {
         ? result.workflow_name_slug
         : undefined,
     status: typeof result.status === "string" ? result.status : undefined,
-  };
+  }
 }
 
 function formatResult(value: unknown) {
-  if (typeof value === "string") return value;
-  if (value == null) return null;
+  if (typeof value === "string") return value
+  if (value == null) return null
 
   try {
-    return JSON.stringify(value, null, 2);
+    return JSON.stringify(value, null, 2)
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -69,13 +69,13 @@ export function ToolResultWorkflowDispatchCard({
   className,
   locale,
 }: ToolResultWorkflowDispatchCardProps) {
-  const copy = getUiCopy(locale);
-  const result = parseResult(part.result);
-  const workflowName = result.workflowName ?? part.name;
-  const status = getUiStatusLabel(result.status ?? part.state, copy);
-  const failed = part.state === "error";
-  const output = formatResult(part.result);
-  const error = formatToolErrorDetails(part.errorDetails);
+  const copy = getUiCopy(locale)
+  const result = parseResult(part.result)
+  const workflowName = result.workflowName ?? part.name
+  const status = getUiStatusLabel(result.status ?? part.state, copy)
+  const failed = part.state === "error"
+  const output = formatResult(part.result)
+  const error = formatToolErrorDetails(part.errorDetails)
 
   return (
     <Sheet>
@@ -155,5 +155,5 @@ export function ToolResultWorkflowDispatchCard({
         </section>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

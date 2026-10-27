@@ -85,8 +85,9 @@ export function ToolResultAgentInvocationCard({
             aria-hidden="true"
           />
           <span className="shrink-0 font-medium">{copy.agent}</span>
-                    <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
-{agentName}</span>
+          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+            {agentName}
+          </span>
           <span className="ml-auto shrink-0">
             {pending ? (
               <LoaderCircle
