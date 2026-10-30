@@ -268,6 +268,16 @@ export type PendingConfirmation = {
   action: Record<string, unknown>
   /** What the action will change as it is now, e.g. the event to update. */
   current?: unknown
+  /** Card layout. Presentation only: it never grants permissions. */
+  kind?: "mail" | "calendar" | "generic" | (string & {})
+  /** Selects the confirm button's verb: send, create, update, delete. */
+  operation?: "send" | "create" | "update" | "delete" | (string & {}) | null
+  /** Fields the user may edit from the card (empty until editing ships). */
+  editable?: string[]
+  /** When the user can no longer decide (server time, ISO 8601). */
+  expires_at?: string
+  /** Version when the action was prepared; the current one comes from the server. */
+  state_version?: number
 }
 
 /**
@@ -295,10 +305,29 @@ export type PersonalConnectorToolResultMetadata = {
   [key: string]: unknown
 }
 
+/** Persisted state of an action awaiting (or past) the user's confirmation. */
+export type ToolConfirmationStatus =
+  | "pending"
+  | "executing"
+  | "executed"
+  | "failed"
+  | "rejected"
+  | "superseded"
+  | "invalidated"
+  | "unknown"
+  | "expired"
+
 export type ConfirmedAction = {
   action_id: string
-  tool_name: string
-  status: "executed" | "failed"
+  /** Null when the action was not found for this user and thread. */
+  tool_name: string | null
+  /** `not_found` is a lookup result, never a stored state. */
+  status: ToolConfirmationStatus | "not_found"
+  /** Grows on every state change; older answers must not override newer ones. */
+  state_version?: number | null
+  /** False when the action had already been decided (double click, resend). */
+  decision_applied?: boolean
+  /** "tool_unavailable": the action's tool is not available in this invocation. */
   error?: string | null
   /** Metadata of the tool that ran, e.g. a personal connector result. */
   metadata?:
@@ -612,11 +641,59 @@ export type SendMessageDocument =
       filename?: string | null
     }
 
+/** The user's decision on a pending action card. */
+export type ToolDecision = {
+  action_id: string
+  decision: "confirm" | "reject"
+}
+
 export type SendMessageInput = {
   text: string
   enabledTools?: string[]
   documents?: SendMessageDocument[]
+  /** Decisions applied before the model runs. `text` may be empty with them. */
+  toolDecisions?: ToolDecision[]
+  /** Client id of a submission with decisions; required with `toolDecisions`. */
+  decisionRequestId?: string
 }
+
+export type DecideToolActionsOptions = {
+  /** Optional text sent with the decisions; the model reads it after them. */
+  text?: string
+  enabledTools?: string[]
+}
+
+/** One action as returned by the thread's tool_confirmations endpoint. */
+export type ToolConfirmationItem = {
+  action_id: string
+  tool_name: string
+  status: ToolConfirmationStatus
+  state_version: number
+  expires_at: string
+  decided_at?: string | null
+  decided_via?: string | null
+  superseded_by_action_id?: string | null
+  error?: string | null
+  can_confirm: boolean
+  can_reject: boolean
+  pending_confirmation?: PendingConfirmation | null
+  metadata?: Record<string, unknown> | null
+}
+
+export type ToolConfirmationsResponse = {
+  server_time: string
+  items: ToolConfirmationItem[]
+}
+
+export type GetToolConfirmationsInput = {
+  /** Only these actions (max 50); without it, the thread's latest 50. */
+  actionIds?: string[]
+  signal?: AbortSignal
+}
+
+export type GetToolConfirmationsFn = (
+  input: GetToolConfirmationsInput,
+) => Promise<ToolConfirmationsResponse>
 
 export type ResendMessageInput = {
   messageId: string
@@ -692,6 +769,7 @@ export interface ChatTransport {
   acceptMemoryProposal?: ResolveMemoryProposalFn
   rejectMemoryProposal?: ResolveMemoryProposalFn
   getResourceDownloadUrl?: GetResourceDownloadUrlFn
+  getToolConfirmations?: GetToolConfirmationsFn
   transcribeAudio?: TranscribeAudioFn
   uploadFile?(request: UploadFileTransportRequest): Promise<MediaFile>
 }

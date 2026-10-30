@@ -31,6 +31,7 @@ import {
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
 import { ToolUseIndicator } from "./tool-use-indicator"
+import type { ToolConfirmationProps } from "./tool-confirmation-controls"
 
 export type ToolResultCardProps = {
   part: UIToolCallPart
@@ -43,6 +44,8 @@ export type ToolResultCardProps = {
     actions: MemoryProposalActions
     activeAgentId: string
   }
+  /** Enables confirm/cancel buttons on actions awaiting confirmation. */
+  toolConfirmation?: ToolConfirmationProps
 }
 
 function formatJson(value: unknown) {
@@ -88,6 +91,7 @@ export function ToolResultCard({
   onOpenAgentThread,
   getResourceDownloadUrl,
   memoryProposal,
+  toolConfirmation,
 }: ToolResultCardProps) {
   const copy = getUiCopy(locale)
   if (part.toolType === "memory_proposal") {
@@ -135,6 +139,7 @@ export function ToolResultCard({
         part={part}
         locale={locale}
         className={className}
+        toolConfirmation={toolConfirmation}
       />
     )
   }
@@ -217,6 +222,7 @@ export function ToolResultCard({
         part={part}
         locale={locale}
         className={className}
+        toolConfirmation={toolConfirmation}
       />
     )
   }

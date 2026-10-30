@@ -1,4 +1,17 @@
-export { PlaiChat } from "./chat"
+export { PlaiChat, toolDecisionsInput } from "./chat"
+export {
+  OPEN_TOOL_CONFIRMATION_STATUSES,
+  ToolConfirmationStore,
+  isHiddenMessage,
+  pendingActionIds,
+  pendingConfirmationOf,
+  toolConfirmationAt,
+} from "./tool-confirmations"
+export type {
+  ToolConfirmationListener,
+  ToolConfirmationSnapshot,
+  ToolConfirmationState,
+} from "./tool-confirmations"
 export { StreamCoordinator } from "./coordinator"
 export type {
   StreamCoordinatorOptions,
@@ -83,6 +96,13 @@ export type {
   PendingConfirmation,
   ConfirmedAction,
   ToolConfirmationToolResultMetadata,
+  ToolConfirmationStatus,
+  ToolConfirmationItem,
+  ToolConfirmationsResponse,
+  ToolDecision,
+  DecideToolActionsOptions,
+  GetToolConfirmationsInput,
+  GetToolConfirmationsFn,
   MediaFile,
   OfficeDocumentMediaFile,
   OfficeDocumentsToolMetadata,

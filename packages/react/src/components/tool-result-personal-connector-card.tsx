@@ -25,11 +25,20 @@ import {
   fillCopy,
   getPersonalConnectorCopy,
 } from "./internal/personal-connector-copy"
+import {
+  ConfirmationBadge,
+  PendingConfirmationFooter,
+  type ToolConfirmationProps,
+  statusLabel,
+  useToolConfirmationState,
+} from "./tool-confirmation-controls"
 
 export type ToolResultPersonalConnectorCardProps = {
   part: UIPersonalConnectorToolCallPart
   locale?: string | null
   className?: string
+  /** Enables confirm/cancel buttons on actions awaiting confirmation. */
+  toolConfirmation?: ToolConfirmationProps
 }
 
 const COLLAPSED_ITEMS = 5
@@ -871,23 +880,6 @@ function PendingEventView({
   )
 }
 
-function PendingBadge({ copy }: { copy: PersonalConnectorCopy }) {
-  return (
-    <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-medium text-amber-800">
-      <Clock className="h-3 w-3" aria-hidden="true" />
-      {copy.awaitingConfirmation}
-    </span>
-  )
-}
-
-function PendingFooter({ copy }: { copy: PersonalConnectorCopy }) {
-  return (
-    <p className="border-t border-amber-100 bg-amber-50/60 px-3 py-2 text-xs text-neutral-700">
-      {copy.confirmHint}
-    </p>
-  )
-}
-
 function headerCount(view: View, copy: PersonalConnectorCopy) {
   if (view.kind === "mail-list") {
     return count(
@@ -912,8 +904,14 @@ export function ToolResultPersonalConnectorCard({
   part,
   locale,
   className,
+  toolConfirmation,
 }: ToolResultPersonalConnectorCardProps) {
   const view = getView(part)
+  const pending =
+    view?.kind === "pending-mail" || view?.kind === "pending-event"
+      ? view.pending
+      : null
+  const confirmationState = useToolConfirmationState(pending, toolConfirmation)
   if (!view) return null
 
   const copy = getPersonalConnectorCopy(locale)
@@ -947,7 +945,7 @@ export function ToolResultPersonalConnectorCard({
           </span>
         ) : null}
         {isPending ? (
-          <PendingBadge copy={copy} />
+          <ConfirmationBadge state={confirmationState} copy={copy} />
         ) : total ? (
           <span className="ml-auto shrink-0">{total}</span>
         ) : null}
@@ -976,7 +974,13 @@ export function ToolResultPersonalConnectorCard({
       ) : (
         <DraftView view={view} copy={copy} />
       )}
-      {isPending ? <PendingFooter copy={copy} /> : null}
+      {pending ? (
+        <PendingConfirmationFooter
+          pending={pending}
+          toolConfirmation={toolConfirmation}
+          copy={copy}
+        />
+      ) : null}
     </section>
   )
 }
@@ -1020,28 +1024,47 @@ function ConfirmedActionRow({
   const operation = typeof metadata?.action === "string" ? metadata.action : ""
   const doneKey = DONE_LABELS[operation]
   const failed = action.status === "failed"
+  const executed = action.status === "executed"
   const label = doneKey
     ? copy[doneKey]
-    : fillCopy(copy.actionDone, { tool: action.tool_name })
+    : fillCopy(copy.actionDone, { tool: action.tool_name ?? "" })
   const link = text(asRecord(metadata?.result)?.link)
+  // Not run now: cancelled, already decided, tool unavailable, not found...
+  const outcome =
+    action.error === "tool_unavailable"
+      ? copy.toolUnavailable
+      : statusLabel(action.status, copy)
+  const title = executed
+    ? label
+    : failed
+      ? `${copy.actionFailed}: ${label}`
+      : action.tool_name
+        ? `${outcome}: ${action.tool_name}`
+        : outcome
 
   return (
-    <li className="flex items-start gap-2 px-3 py-2">
+    <li
+      className="flex items-start gap-2 px-3 py-2"
+      data-confirmation-status={action.status}
+    >
       {failed ? (
         <XCircle
           className="mt-0.5 h-4 w-4 shrink-0 text-rose-600"
           aria-hidden="true"
         />
-      ) : (
+      ) : executed ? (
         <CheckCircle2
           className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
           aria-hidden="true"
         />
+      ) : (
+        <Clock
+          className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500"
+          aria-hidden="true"
+        />
       )}
       <div className="min-w-0 flex-1 space-y-0.5">
-        <p className="text-sm font-medium text-neutral-950">
-          {failed ? `${copy.actionFailed}: ${label}` : label}
-        </p>
+        <p className="text-sm font-medium text-neutral-950">{title}</p>
         {connector ? (
           <div className="flex items-center gap-2 truncate text-xs text-neutral-500">
             {connector.label}
@@ -1056,7 +1079,7 @@ function ConfirmedActionRow({
           <p className="line-clamp-2 text-xs text-rose-700">{action.error}</p>
         ) : null}
       </div>
-      {!failed && link ? (
+      {executed && link ? (
         <ExternalAnchor href={link} className="shrink-0">
           {operation === "send" ? copy.openEmail : copy.openEvent}
         </ExternalAnchor>
@@ -1119,6 +1142,8 @@ export type ToolResultPendingConfirmationCardProps = {
   part: { id: string; name: string; state: string; metadata?: unknown }
   locale?: string | null
   className?: string
+  /** Enables confirm/cancel buttons. */
+  toolConfirmation?: ToolConfirmationProps
 }
 
 /** Generic preview of a held tool call: its name and the exact arguments. */
@@ -1126,8 +1151,10 @@ export function ToolResultPendingConfirmationCard({
   part,
   locale,
   className,
+  toolConfirmation,
 }: ToolResultPendingConfirmationCardProps) {
   const pending = getPendingConfirmation(part)
+  const confirmationState = useToolConfirmationState(pending, toolConfirmation)
   if (!pending) return null
   const copy = getPersonalConnectorCopy(locale)
   const entries = Object.entries(pending.action).filter(
@@ -1147,7 +1174,7 @@ export function ToolResultPendingConfirmationCard({
         <span className="truncate font-mono font-medium text-neutral-900">
           {part.name}
         </span>
-        <PendingBadge copy={copy} />
+        <ConfirmationBadge state={confirmationState} copy={copy} />
       </header>
       {entries.length > 0 ? (
         <dl className="space-y-1.5 px-3 py-3">
@@ -1160,7 +1187,11 @@ export function ToolResultPendingConfirmationCard({
           ))}
         </dl>
       ) : null}
-      <PendingFooter copy={copy} />
+      <PendingConfirmationFooter
+        pending={pending}
+        toolConfirmation={toolConfirmation}
+        copy={copy}
+      />
     </section>
   )
 }

@@ -12,6 +12,7 @@ const { useChatMock, getThreadMock } = vi.hoisted(() => ({
 vi.mock("@plaisolutions/react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@plaisolutions/react")>()),
   useChat: useChatMock,
+  useToolConfirmationSync: vi.fn(() => ({ error: null, refresh: vi.fn() })),
 }))
 
 vi.mock("../api", () => ({ getThread: getThreadMock }))
@@ -55,6 +56,9 @@ function mockChatState({
     uploadFile: vi.fn(),
     stop: vi.fn(),
     hydrate: vi.fn(),
+    chat: {},
+    toolConfirmations: { items: {}, serverOffsetMs: 0 },
+    decideToolActions: vi.fn(),
   })
 }
 

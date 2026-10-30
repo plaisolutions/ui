@@ -16,6 +16,7 @@ import {
 import { joinClasses } from "./internal/join-classes"
 import { getUiCopy } from "./internal/ui-copy"
 import { ToolResultCard } from "./tool-result-card"
+import type { ToolConfirmationProps } from "./tool-confirmation-controls"
 import { Thinking } from "./thinking"
 
 export type MessageRootProps = HTMLAttributes<HTMLElement> & {
@@ -147,6 +148,11 @@ export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
     actions: MemoryProposalActions
     activeAgentId: string
   }
+  /**
+   * Confirm/cancel buttons on actions awaiting confirmation. Bind it to the
+   * thread these messages belong to. Without it cards keep the text hint.
+   */
+  toolConfirmation?: ToolConfirmationProps
   renderText?: (
     part: Extract<UIMessagePart, { type: "text" }>,
     context: { message: UIMessage; isStreaming: boolean },
@@ -214,6 +220,7 @@ function renderPart(
   thinkingLabel?: string,
   completedThinkingLabel?: string,
   textClassName?: string,
+  toolConfirmation?: ToolConfirmationProps,
 ) {
   const copy = getUiCopy(locale)
   if (part.type === "text") {
@@ -306,6 +313,7 @@ function renderPart(
         onOpenAgentThread={onOpenAgentThread}
         getResourceDownloadUrl={getResourceDownloadUrl}
         memoryProposal={memoryProposal}
+        toolConfirmation={toolConfirmation}
       />
     )
   }
@@ -426,6 +434,7 @@ export function MessageParts({
   getResourceDownloadUrl,
   locale,
   memoryProposal,
+  toolConfirmation,
   renderText,
   renderToolCall,
   renderThinking,
@@ -514,6 +523,7 @@ export function MessageParts({
               thinkingLabel,
               completedThinkingLabel,
               textClassName,
+              toolConfirmation,
             )
           ),
         )

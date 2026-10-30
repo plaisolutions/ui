@@ -3,11 +3,13 @@ import type { StreamCoordinator } from "./coordinator"
 import { normalizeError } from "./errors"
 import type {
   ChatState,
+  DecideToolActionsOptions,
   MediaFile,
   PlaiChatError,
   PlaiSseEvent,
   ResendMessageInput,
   SendMessageInput,
+  ToolDecision,
   UploadFileOptions,
 } from "./types"
 
@@ -52,6 +54,11 @@ export type ChatInvocation = {
   uploadFile: (file: File, options?: UploadFileOptions) => Promise<MediaFile>
   sendMessage: (input: SendMessageInput) => Promise<void>
   resendMessage: (input: ResendMessageInput) => Promise<void>
+  /** Confirm or reject pending actions (see `PlaiChat.decideToolActions`). */
+  decideToolActions: (
+    decisions: ToolDecision[],
+    options?: DecideToolActionsOptions,
+  ) => Promise<void>
 }
 
 export type ChatInvocationOutcome = "completed" | "error" | "cancelled"
@@ -365,6 +372,10 @@ export class ChatRegistry {
       sendMessage: async (input) => {
         claimSend()
         await chat.sendMessage(input)
+      },
+      decideToolActions: async (decisions, options) => {
+        claimSend()
+        await chat.decideToolActions(decisions, options)
       },
       resendMessage: async (input) => {
         claimSend()

@@ -1,4 +1,8 @@
-import type { GetResourceDownloadUrlFn, UIMessage } from "@plaisolutions/client"
+import {
+  type GetResourceDownloadUrlFn,
+  type UIMessage,
+  isHiddenMessage,
+} from "@plaisolutions/client"
 import type { HTMLAttributes, ReactNode } from "react"
 import { AssistantMessage } from "./assistant-message"
 import { joinClasses } from "./internal/join-classes"
@@ -54,6 +58,9 @@ export function Message(props: MessageProps) {
     className,
     ...rootProps
   } = props
+  // The technical message that only carried card decisions is never shown.
+  if (isHiddenMessage(message)) return null
+
   const routedMessagePartsProps = getResourceDownloadUrl
     ? { ...messagePartsProps, getResourceDownloadUrl }
     : messagePartsProps

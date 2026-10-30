@@ -255,3 +255,97 @@ export const PendingEventDelete: Story = {
     }),
   },
 }
+
+const inHalfAnHour = new Date(Date.now() + 30 * 60_000).toISOString()
+
+const pendingSendPart = part("gmail_send", {
+  connector: gmail,
+  action: "send",
+  pending_confirmation: {
+    action_id: "a-1",
+    tool_name: "gmail_send",
+    kind: "mail",
+    operation: "send",
+    editable: [],
+    expires_at: inHalfAnHour,
+    state_version: 1,
+    action: {
+      operation: "send",
+      to: ["carlos@cliente.com"],
+      subject: "Propuesta",
+      body: "Hola Carlos,\n\nTe adjunto la propuesta revisada.\n\nUn saludo",
+    },
+  },
+})
+
+function confirmationState(
+  status: "pending" | "executed" | "rejected" | "expired",
+) {
+  const open = status === "pending"
+  return {
+    items: {
+      "a-1": {
+        actionId: "a-1",
+        toolName: "gmail_send",
+        status,
+        stateVersion: open ? 1 : 3,
+        expiresAt: inHalfAnHour,
+        canConfirm: open,
+        canReject: open,
+        error: null,
+        metadata: null,
+        pendingConfirmation: null,
+        source: "server" as const,
+      },
+    },
+    serverOffsetMs: 0,
+  }
+}
+
+/** With `toolConfirmation`: Send / Cancel buttons and a server-based countdown. */
+export const PendingSendWithButtons: Story = {
+  args: {
+    locale: "es",
+    part: pendingSendPart,
+    toolConfirmation: {
+      states: confirmationState("pending"),
+      decide: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+      },
+    },
+  },
+}
+
+/** State not verified yet: no decision until the server answers. */
+export const PendingSendVerifying: Story = {
+  args: {
+    locale: "es",
+    part: pendingSendPart,
+    toolConfirmation: {
+      states: { items: {}, serverOffsetMs: 0 },
+      decide: async () => {},
+    },
+  },
+}
+
+export const PendingSendSent: Story = {
+  args: {
+    locale: "es",
+    part: pendingSendPart,
+    toolConfirmation: {
+      states: confirmationState("executed"),
+      decide: async () => {},
+    },
+  },
+}
+
+export const PendingSendCancelled: Story = {
+  args: {
+    locale: "es",
+    part: pendingSendPart,
+    toolConfirmation: {
+      states: confirmationState("rejected"),
+      decide: async () => {},
+    },
+  },
+}
