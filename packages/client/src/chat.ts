@@ -5,10 +5,18 @@ import {
   reduceChatState,
   toPublicChatState,
 } from "./reducer"
+import {
+  OPEN_TOOL_CONFIRMATION_STATUSES,
+  ToolConfirmationStore,
+  isHiddenMessage,
+  pendingActionIds,
+} from "./tool-confirmations"
 import type {
   ChatState,
   ChatStateListener,
+  DecideToolActionsOptions,
   GetResourceDownloadUrlInput,
+  GetToolConfirmationsInput,
   InputFileMetadata,
   InternalChatState,
   PlaiChatOptions,
@@ -19,6 +27,7 @@ import type {
   MediaFile,
   MemoryProposal,
   MemoryProposalActionInput,
+  ToolDecision,
   UploadFileOptions,
   UIMessage,
   UIMessagePart,
@@ -101,6 +110,12 @@ export class PlaiChat {
 
   private isStopping = false
 
+  /**
+   * State of the actions awaiting the user's confirmation in this chat, fed by
+   * the stream and by `refreshToolConfirmations`. Cards read it to show buttons.
+   */
+  readonly toolConfirmations = new ToolConfirmationStore()
+
   constructor(options: PlaiChatOptions) {
     this.options = options
     this.state = createInitialInternalState(options.initialMessages ?? [])
@@ -163,6 +178,9 @@ export class PlaiChat {
       })) {
         this.options.onEvent?.(event)
         this.setState(reduceChatState(this.state, event))
+        if (event.type === "tool_result") {
+          this.toolConfirmations.applyToolResult(event.metadata)
+        }
         if (event.type === "message_stop") {
           didReceiveMessageStop = true
         }
@@ -198,6 +216,51 @@ export class PlaiChat {
     }
   }
 
+  /**
+   * Confirm or reject pending actions from their cards. The backend applies the
+   * decisions before the model, which then answers with the result. Without
+   * `text` no user bubble is shown: the persisted message is hidden.
+   */
+  async decideToolActions(
+    decisions: ToolDecision[],
+    options: DecideToolActionsOptions = {},
+  ): Promise<void> {
+    await this.sendMessage(toolDecisionsInput(decisions, options))
+  }
+
+  /**
+   * Read the persisted state of the held actions shown in this chat (or of
+   * `actionIds`). Call it after loading history and when the tab regains focus:
+   * without it, cards of an older turn cannot know whether they were decided.
+   */
+  async refreshToolConfirmations(
+    input: GetToolConfirmationsInput = {},
+  ): Promise<void> {
+    const getToolConfirmations = this.options.transport.getToolConfirmations
+    if (!getToolConfirmations) {
+      throw new Error(
+        "The configured chat transport does not support tool confirmations.",
+      )
+    }
+    const actionIds = input.actionIds ?? this.openActionIds()
+    if (actionIds.length === 0) return
+    for (let start = 0; start < actionIds.length; start += 50) {
+      const response = await getToolConfirmations.call(
+        this.options.transport,
+        { actionIds: actionIds.slice(start, start + 50), signal: input.signal },
+      )
+      this.toolConfirmations.applyServer(response)
+    }
+  }
+
+  /** Held actions shown here whose state is unknown or may still change. */
+  private openActionIds(): string[] {
+    return pendingActionIds(this.state.messages).filter((actionId) => {
+      const state = this.toolConfirmations.get(actionId)
+      return !state || OPEN_TOOL_CONFIRMATION_STATUSES.has(state.status)
+    })
+  }
+
   /** Append a new turn using the user message that precedes an assistant response. */
   async resendMessage(input: ResendMessageInput): Promise<void> {
     const assistantIndex = this.state.messages.findIndex(
@@ -215,7 +278,8 @@ export class PlaiChat {
     let userMessage: UIMessage | undefined
     for (let index = assistantIndex - 1; index >= 0; index -= 1) {
       const candidate = this.state.messages[index]
-      if (candidate?.role === "user") {
+      // A hidden message only carried card decisions: they cannot be resent.
+      if (candidate?.role === "user" && !isHiddenMessage(candidate)) {
         userMessage = candidate
         break
       }
@@ -455,6 +519,7 @@ export class PlaiChat {
 
   reset(): void {
     this.stop()
+    this.toolConfirmations.clear()
     this.setState(
       createInitialInternalState(this.options.initialMessages ?? []),
     )
@@ -516,7 +581,11 @@ export class PlaiChat {
       })
     }
 
-    if (parts.length === 0) {
+    const decisions = input.toolDecisions ?? []
+    // Only decisions: like the persisted one, the message is hidden.
+    const hidden = decisions.length > 0 && parts.length === 0
+
+    if (parts.length === 0 && !hidden) {
       parts.push({
         type: "text",
         text: input.text,
@@ -529,9 +598,54 @@ export class PlaiChat {
       parts,
       metadata: {
         createdAt: new Date(),
+        ...(decisions.length > 0
+          ? {
+              metadata: {
+                tool_decisions: decisions.map(({ action_id, decision }) => ({
+                  action_id,
+                  decision,
+                })),
+                decision_request_id: input.decisionRequestId,
+                ...(hidden ? { hidden: true } : {}),
+              },
+            }
+          : {}),
       },
     }
   }
+}
+
+/** Message input for a submission with decisions, with a fresh request id. */
+export function toolDecisionsInput(
+  decisions: ToolDecision[],
+  options: DecideToolActionsOptions = {},
+): SendMessageInput {
+  if (decisions.length === 0) {
+    throw new Error("At least one tool decision is required.")
+  }
+  return {
+    text: options.text?.trim() ? options.text : "",
+    enabledTools: options.enabledTools,
+    toolDecisions: decisions,
+    decisionRequestId: createRequestId(),
+  }
+}
+
+function createRequestId(): string {
+  const cryptoApi = globalThis.crypto
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID()
+  const bytes = new Uint8Array(16)
+  if (cryptoApi?.getRandomValues) {
+    cryptoApi.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
+  }
+  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x40
+  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"))
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`
 }
 
 function createIdleUploadState() {

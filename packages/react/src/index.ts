@@ -1,5 +1,13 @@
 export { useChat } from "./use-chat"
 export {
+  useToolConfirmationSync,
+  useToolConfirmations,
+} from "./use-tool-confirmations"
+export type {
+  ToolConfirmationSync,
+  UseToolConfirmationSyncOptions,
+} from "./use-tool-confirmations"
+export {
   useChatRegistryBusy,
   useOwnedChatRegistry,
   useRegistryChat,
@@ -124,6 +132,7 @@ export type {
   ToolResultHttpRequestCardProps,
   ToolResultMcpCardProps,
   ToolResultOfficeDocumentsCardProps,
+  ToolConfirmationProps,
   ToolResultPendingConfirmationCardProps,
   ToolResultPersonalConnectorCardProps,
   ToolResultToolConfirmationCardProps,

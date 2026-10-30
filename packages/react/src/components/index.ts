@@ -142,6 +142,11 @@ export type {
   ToolResultPersonalConnectorCardProps,
   ToolResultToolConfirmationCardProps,
 } from "./tool-result-personal-connector-card"
+export {
+  ConfirmationBadge,
+  PendingConfirmationFooter,
+} from "./tool-confirmation-controls"
+export type { ToolConfirmationProps } from "./tool-confirmation-controls"
 export { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 export type { ToolResultWebSearchCardProps } from "./tool-result-web-search-card"
 export { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"

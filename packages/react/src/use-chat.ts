@@ -2,7 +2,9 @@ import { PlaiChat } from "@plaisolutions/client"
 import type {
   ChatStatus,
   ChatTransport,
+  DecideToolActionsOptions,
   FileUploadState,
+  GetToolConfirmationsInput,
   GetResourceDownloadUrlFn,
   GetMemoryProposalFn,
   PlaiChatError,
@@ -11,6 +13,8 @@ import type {
   ResolveMemoryProposalFn,
   ResendMessageInput,
   SendMessageInput,
+  ToolConfirmationSnapshot,
+  ToolDecision,
   TranscribeAudioFn,
   UploadFileFn,
   UIMessage,
@@ -23,6 +27,7 @@ import {
   useRef,
   useSyncExternalStore,
 } from "react"
+import { useToolConfirmations } from "./use-tool-confirmations"
 
 type OwnedChatOptions = {
   transport: ChatTransport
@@ -52,12 +57,21 @@ type ExternalChatOptions = {
 export type UseChatOptions = OwnedChatOptions | ExternalChatOptions
 
 export type UseChatResult = {
+  /** The underlying instance, e.g. for `useToolConfirmationSync`. */
+  chat: PlaiChat
   messages: UIMessage[]
   status: ChatStatus
   error: PlaiChatError | null
   usage: Usage | null
   uploadState: FileUploadState
+  /** State of the actions awaiting the user's confirmation (cards). */
+  toolConfirmations: ToolConfirmationSnapshot
   sendMessage: (input: SendMessageInput) => Promise<void>
+  decideToolActions: (
+    decisions: ToolDecision[],
+    options?: DecideToolActionsOptions,
+  ) => Promise<void>
+  refreshToolConfirmations: (input?: GetToolConfirmationsInput) => Promise<void>
   rateMessage: (input: RateMessageInput) => Promise<void>
   getMemoryProposal: GetMemoryProposalFn
   acceptMemoryProposal: ResolveMemoryProposalFn
@@ -103,6 +117,7 @@ export function useChat(options: UseChatOptions): UseChatResult {
   const getSnapshot = useCallback(() => chat.getState(), [chat])
   const getServerSnapshot = useCallback(() => chat.getInitialState(), [chat])
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const toolConfirmations = useToolConfirmations(chat)
 
   useEffect(() => {
     if (!owned) return
@@ -114,6 +129,8 @@ export function useChat(options: UseChatOptions): UseChatResult {
   const actions = useMemo(
     () => ({
       sendMessage: chat.sendMessage.bind(chat),
+      decideToolActions: chat.decideToolActions.bind(chat),
+      refreshToolConfirmations: chat.refreshToolConfirmations.bind(chat),
       rateMessage: chat.rateMessage.bind(chat),
       getMemoryProposal: chat.getMemoryProposal.bind(chat),
       acceptMemoryProposal: chat.acceptMemoryProposal.bind(chat),
@@ -131,11 +148,13 @@ export function useChat(options: UseChatOptions): UseChatResult {
   )
 
   return {
+    chat,
     messages: state.messages,
     status: state.status,
     error: state.error,
     usage: state.usage,
     uploadState: state.uploadState,
+    toolConfirmations,
     ...actions,
   }
 }

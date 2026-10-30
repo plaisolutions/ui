@@ -4,12 +4,14 @@ import type {
   ChatTransport,
   ChatTransportRequest,
   GetResourceDownloadUrlInput,
+  GetToolConfirmationsInput,
   MemoryProposal,
   MemoryProposalActionInput,
   MediaFile,
   PlaiSseEvent,
   RateMessageInput,
   SendMessageDocument,
+  ToolConfirmationsResponse,
   UploadFileTransportRequest,
 } from "./types"
 
@@ -50,6 +52,15 @@ export class PlaiThreadTransport implements ChatTransport {
         : {}),
       ...(request.message.documents && request.message.documents.length > 0
         ? { documents: request.message.documents.map(serializeDocument) }
+        : {}),
+      ...(request.message.toolDecisions &&
+      request.message.toolDecisions.length > 0
+        ? {
+            tool_decisions: request.message.toolDecisions.map(
+              ({ action_id, decision }) => ({ action_id, decision }),
+            ),
+            decision_request_id: request.message.decisionRequestId,
+          }
         : {}),
     }
 
@@ -179,6 +190,73 @@ export class PlaiThreadTransport implements ChatTransport {
     }
 
     return normalizeResourceDownloadUrl(payload)
+  }
+
+  /** State of this thread's actions awaiting (or past) the user's confirmation. */
+  async getToolConfirmations({
+    actionIds,
+    signal,
+  }: GetToolConfirmationsInput = {}): Promise<ToolConfirmationsResponse> {
+    const fetchImpl = this.options.fetch ?? globalThis.fetch
+    if (!fetchImpl) {
+      throw new Error("No fetch implementation available.")
+    }
+    const { api, chatSessionId, threadId } = this.options
+    if (!chatSessionId || !threadId) {
+      throw new Error(
+        "A chatSessionId and threadId are required to read tool confirmations.",
+      )
+    }
+    const base = api.endsWith("/") ? api.slice(0, -1) : api
+    const query = new URLSearchParams()
+    for (const actionId of actionIds ?? []) {
+      query.append("action_ids", actionId)
+    }
+    const queryString = query.toString()
+    const suffix = queryString ? `?${queryString}` : ""
+
+    const headers = await this.resolveHeaders()
+    headers.delete("Content-Type")
+    headers.set("Accept", "application/json")
+
+    const response = await fetchImpl(
+      `${base}/chat_sessions/${encodeURIComponent(chatSessionId)}/threads/${encodeURIComponent(threadId)}/tool_confirmations${suffix}`,
+      {
+        method: "GET",
+        headers,
+        credentials: this.options.credentials,
+        signal,
+      },
+    )
+
+    if (!response.ok) {
+      const body = await safeReadResponseText(response)
+      throw new HttpStatusError(
+        response.status,
+        response.statusText,
+        body,
+        response.headers,
+      )
+    }
+
+    let payload: unknown
+    try {
+      payload = await response.json()
+    } catch {
+      throw new ProtocolError(
+        "The tool confirmations response must be valid JSON.",
+      )
+    }
+    if (
+      !isRecord(payload) ||
+      typeof payload.server_time !== "string" ||
+      !Array.isArray(payload.items)
+    ) {
+      throw new ProtocolError(
+        "The tool confirmations response must have server_time and items.",
+      )
+    }
+    return payload as ToolConfirmationsResponse
   }
 
   async transcribeAudio(audio: Blob, signal?: AbortSignal): Promise<string> {

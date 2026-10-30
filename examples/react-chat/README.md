@@ -103,6 +103,34 @@ return (
 );
 ```
 
+### Confirming actions from their cards
+
+Actions that need the user's confirmation (send an email, change the calendar,
+tools with a `confirm` policy) show **Send / Create / Save changes / Delete**
+and **Cancel** buttons when you pass `toolConfirmation`. The decision travels in
+the next invoke of the same thread; the agent answers with the result.
+
+```tsx
+const { chat, toolConfirmations, decideToolActions, status } = useChat({ transport });
+
+// Reads the persisted state on load, focus and while an action is open.
+useToolConfirmationSync(chat);
+
+<Message
+  message={message}
+  messagePartsProps={{
+    toolConfirmation: {
+      states: toolConfirmations,
+      decide: (decisions) => decideToolActions(decisions),
+      disabled: status === "submitted" || status === "streaming",
+    },
+  }}
+/>;
+```
+
+The message that only carries the decisions is hidden (`isHiddenMessage`).
+Without `toolConfirmation`, cards keep asking the user to reply "yes".
+
 ## Setup
 
 1. Enter your project bearer token, agent ID, and external ref.

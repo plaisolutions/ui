@@ -16,6 +16,7 @@ import {
   ThumbDown,
   ThumbUp,
   useChat,
+  useToolConfirmationSync,
 } from "@plaisolutions/react"
 import type {
   InvalidPromptFormFile,
@@ -55,6 +56,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
   )
 
   const {
+    chat,
     messages,
     status,
     error,
@@ -71,6 +73,8 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     stop,
     hydrate,
     clearError,
+    toolConfirmations,
+    decideToolActions,
   } = useChat({ transport })
 
   const memoryProposal = useMemo(
@@ -95,6 +99,19 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
     isGenerating ||
     uploadState.status === "uploading" ||
     uploadState.status === "processing"
+
+  // Confirm/cancel actions from their cards; the state is read from the server
+  // on load, focus and while some action is still open.
+  useToolConfirmationSync(chat)
+  const toolConfirmation = useMemo(
+    () => ({
+      states: toolConfirmations,
+      decide: (decisions: Parameters<typeof decideToolActions>[0]) =>
+        decideToolActions(decisions),
+      disabled: isBusy,
+    }),
+    [decideToolActions, isBusy, toolConfirmations],
+  )
 
   useEffect(() => {
     if (messages.length === 0) return
@@ -245,6 +262,7 @@ export function ChatPanel({ session, config, onDisconnect }: ChatPanelProps) {
                     readMoreLabel: "Read more",
                     readLessLabel: "Read less",
                     memoryProposal,
+                    toolConfirmation,
                     renderText: (part) =>
                       message.role === "assistant" &&
                       turn.hasFinalResponse &&
