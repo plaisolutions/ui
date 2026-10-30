@@ -130,6 +130,17 @@ export type { ToolResultMcpCardProps } from "./tool-result-mcp-card"
 export { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
 export type { ToolResultOfficeDocumentsCardProps } from "./tool-result-office-documents-card"
 export {
+  ConversationFilesList,
+  ConversationFilesSheet,
+  getConversationFiles,
+} from "./conversation-files"
+export type {
+  ConversationFile,
+  ConversationFiles,
+  ConversationFilesListProps,
+  ConversationFilesSheetProps,
+} from "./conversation-files"
+export {
   ToolResultPendingConfirmationCard,
   ToolResultPersonalConnectorCard,
   ToolResultToolConfirmationCard,
