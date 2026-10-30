@@ -10,6 +10,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./sheet"
+import { FileDownloadButton } from "./internal/file-download-button"
+import { getFileExtension, getFileIconClass } from "./internal/file-display"
 import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
 import { getUiCopy } from "./internal/ui-copy"
@@ -33,24 +35,11 @@ function getFiles(part: UIOfficeDocumentsToolCallPart) {
 }
 
 function getExtension(file: OfficeDocumentMediaFile) {
-  const name = file.name ?? file.pathname ?? ""
-  const extension = name.split(".").pop()?.toLowerCase()
-  if (extension && extension !== name.toLowerCase()) return extension
-  const mime = file.content_type ?? ""
-  if (mime.includes("pdf")) return "pdf"
-  if (mime.includes("wordprocessingml")) return "docx"
-  if (mime.includes("spreadsheetml")) return "xlsx"
-  if (mime.includes("presentationml")) return "pptx"
-  return null
+  return getFileExtension(file.name ?? file.pathname, file.content_type)
 }
 
-function iconClass(extension: string | null) {
-  if (extension === "pdf") return "text-rose-500"
-  if (["doc", "docx"].includes(extension ?? "")) return "text-blue-600"
-  if (["xls", "xlsx", "csv"].includes(extension ?? ""))
-    return "text-emerald-600"
-  if (["ppt", "pptx"].includes(extension ?? "")) return "text-orange-600"
-  return "text-neutral-500"
+function getLabel(file: OfficeDocumentMediaFile) {
+  return file.name ?? file.pathname ?? file.id
 }
 
 export function ToolResultOfficeDocumentsCard({
@@ -68,6 +57,52 @@ export function ToolResultOfficeDocumentsCard({
       : part.state === "pending"
         ? "text-amber-600"
         : "text-emerald-600"
+
+  const singleFile =
+    part.state === "completed" && files.length === 1 && !errorDetails
+      ? files[0]
+      : undefined
+
+  if (singleFile) {
+    const extension = getExtension(singleFile)
+    const label = getLabel(singleFile)
+    return (
+      <section
+        aria-label={`${copy.officeDocuments}: ${label}`}
+        className={joinClasses(
+          "flex w-full items-center gap-3 overflow-hidden rounded-lg border border-neutral-200 bg-white px-3 py-2 text-left font-normal text-neutral-950",
+          className,
+        )}
+      >
+        <File
+          className={joinClasses(
+            "h-6 w-6 shrink-0",
+            getFileIconClass(extension),
+          )}
+          aria-hidden="true"
+        />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{label}</p>
+          <p className="truncate text-[11px] text-neutral-500">
+            {copy.officeDocuments}
+            {extension ? ` · ${extension.toUpperCase()}` : null}
+          </p>
+        </div>
+        {singleFile.url ? (
+          <FileDownloadButton
+            file={{ url: singleFile.url, name: singleFile.name }}
+            label={label}
+            copy={copy}
+          />
+        ) : (
+          <CheckCircle2
+            className="ml-auto h-4 w-4 shrink-0 text-emerald-600"
+            aria-hidden="true"
+          />
+        )}
+      </section>
+    )
+  }
 
   return (
     <Sheet>
@@ -105,8 +140,8 @@ export function ToolResultOfficeDocumentsCard({
         <section className="mt-6 space-y-3" aria-label={copy.generatedFiles}>
           {files.map((file) => {
             const extension = getExtension(file)
-            const label = file.name ?? file.pathname ?? file.id
-            const content = (
+            const label = getLabel(file)
+            return (
               <div
                 key={file.id}
                 className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3"
@@ -114,7 +149,7 @@ export function ToolResultOfficeDocumentsCard({
                 <File
                   className={joinClasses(
                     "h-8 w-8 shrink-0",
-                    iconClass(extension),
+                    getFileIconClass(extension),
                   )}
                   aria-hidden="true"
                 />
@@ -126,20 +161,14 @@ export function ToolResultOfficeDocumentsCard({
                     </p>
                   ) : null}
                 </div>
+                {file.url ? (
+                  <FileDownloadButton
+                    file={{ url: file.url, name: file.name }}
+                    label={label}
+                    copy={copy}
+                  />
+                ) : null}
               </div>
-            )
-            return file.url ? (
-              <a
-                key={file.id}
-                href={file.url}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="block hover:bg-neutral-50"
-              >
-                {content}
-              </a>
-            ) : (
-              <div key={file.id}>{content}</div>
             )
           })}
           {files.length === 0 && part.state === "pending" ? (

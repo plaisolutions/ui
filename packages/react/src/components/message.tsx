@@ -13,6 +13,7 @@ import {
   isCompletedSourceToolPart,
   type SourceToolPart,
 } from "./aggregated-source-results"
+import { getFilenameFromUrl } from "./internal/file-display"
 import { joinClasses } from "./internal/join-classes"
 import { getUiCopy } from "./internal/ui-copy"
 import { ToolResultCard } from "./tool-result-card"
@@ -173,19 +174,6 @@ export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
 }
 
 const DEFAULT_COLLAPSE_THRESHOLD = 600
-
-function getFilenameFromUrl(url: string): string | undefined {
-  try {
-    const parsed = new URL(url)
-    const pathname = decodeURIComponent(parsed.pathname)
-    const basename = pathname.split("/").pop()?.trim()
-    return basename || undefined
-  } catch {
-    const cleanedUrl = url.split("?")[0]?.split("#")[0] ?? ""
-    const basename = cleanedUrl.split("/").pop()?.trim()
-    return basename || undefined
-  }
-}
 
 function getDisplayExtension(label?: string) {
   if (!label) return undefined

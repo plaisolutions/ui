@@ -182,12 +182,59 @@ describe("ToolResultCard", () => {
       />,
     )
 
+    expect(
+      screen.getByRole("region", {
+        name: "Office documents: monthly-report.docx",
+      }),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Download: monthly-report.docx" }),
+    ).toBeTruthy()
+    expect(screen.queryByRole("link")).toBeNull()
+    expect(
+      screen.queryByRole("button", { name: "Office documents: 1 file" }),
+    ).toBeNull()
+  })
+
+  it("lists several generated office documents in the sheet with download buttons", () => {
+    render(
+      <ToolResultCard
+        part={{
+          type: "tool-call",
+          id: "tool_3b",
+          name: "office_documents",
+          toolType: "office_documents",
+          input: { query: "Create report and deck" },
+          state: "completed",
+          metadata: {
+            type: "office_documents",
+            media_files: [
+              {
+                id: "mf_1",
+                name: "report.docx",
+                url: "https://example.com/report.docx",
+              },
+              {
+                id: "mf_2",
+                name: "deck.pptx",
+                url: "https://example.com/deck.pptx",
+              },
+            ],
+          },
+        }}
+      />,
+    )
+
     fireEvent.click(
-      screen.getByRole("button", { name: "Office documents: 1 file" }),
+      screen.getByRole("button", { name: "Office documents: 2 files" }),
     )
     expect(
-      screen.getByRole("link", { name: /monthly-report\.docx/ }),
+      screen.getByRole("button", { name: "Download: report.docx" }),
     ).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Download: deck.pptx" }),
+    ).toBeTruthy()
+    expect(screen.queryByRole("link")).toBeNull()
   })
 
   it("renders a dedicated card for email_send tool calls", () => {
