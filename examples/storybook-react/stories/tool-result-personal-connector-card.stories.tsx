@@ -210,6 +210,9 @@ export const PendingEventUpdate: Story = {
       pending_confirmation: {
         action_id: "a-2",
         tool_name: "google_calendar_update_event",
+        kind: "calendar",
+        operation: "update",
+        editable: [],
         action: {
           operation: "update_event",
           event_id: "e-2",
@@ -243,6 +246,9 @@ export const PendingEventDelete: Story = {
       pending_confirmation: {
         action_id: "a-3",
         tool_name: "google_calendar_delete_event",
+        kind: "calendar",
+        operation: "delete",
+        editable: [],
         action: { operation: "delete_event", event_id: "e-2" },
         current: {
           id: "e-2",
@@ -280,13 +286,15 @@ const pendingSendPart = part("gmail_send", {
 
 function confirmationState(
   status: "pending" | "executed" | "rejected" | "expired",
+  actionId = "a-1",
+  toolName = "gmail_send",
 ) {
   const open = status === "pending"
   return {
     items: {
-      "a-1": {
-        actionId: "a-1",
-        toolName: "gmail_send",
+      [actionId]: {
+        actionId,
+        toolName,
         status,
         stateVersion: open ? 1 : 3,
         expiresAt: inHalfAnHour,
@@ -345,6 +353,36 @@ export const PendingSendCancelled: Story = {
     part: pendingSendPart,
     toolConfirmation: {
       states: confirmationState("rejected"),
+      decide: async () => {},
+    },
+  },
+}
+
+/** Event update with `toolConfirmation`: "Guardar cambios" / "Cancelar". */
+export const PendingEventUpdateWithButtons: Story = {
+  args: {
+    ...PendingEventUpdate.args,
+    toolConfirmation: {
+      states: confirmationState(
+        "pending",
+        "a-2",
+        "google_calendar_update_event",
+      ),
+      decide: async () => {},
+    },
+  },
+}
+
+/** Event delete with `toolConfirmation`: destructive "Eliminar" / "Cancelar". */
+export const PendingEventDeleteWithButtons: Story = {
+  args: {
+    ...PendingEventDelete.args,
+    toolConfirmation: {
+      states: confirmationState(
+        "pending",
+        "a-3",
+        "google_calendar_delete_event",
+      ),
       decide: async () => {},
     },
   },

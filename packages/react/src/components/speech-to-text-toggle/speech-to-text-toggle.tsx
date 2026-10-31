@@ -91,7 +91,7 @@ export function SpeechToTextToggle({
       aria-busy={isRequesting || isTranscribing}
       disabled={disabled || isRequesting || isTranscribing}
       className={joinClasses(
-        isListening && !isTranscribing ? "text-red-600" : undefined,
+        isListening && !isTranscribing ? "text-danger" : undefined,
         className,
       )}
       onClick={(event) => {

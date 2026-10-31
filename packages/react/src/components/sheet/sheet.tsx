@@ -312,7 +312,7 @@ export const SheetContent = forwardRef<HTMLDialogElement, SheetContentProps>(
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy ?? labelledBy}
         aria-describedby={ariaDescribedBy ?? describedBy}
-        className="plai-sheet-overlay fixed inset-0 m-0 h-full max-h-none w-full max-w-none border-0 bg-black/80 p-0"
+        className="plai-sheet-overlay fixed inset-0 m-0 h-full max-h-none w-full max-w-none border-0 bg-overlay p-0"
         onCancel={(event) => {
           onCancel?.(event)
           if (!event.defaultPrevented) {
@@ -332,7 +332,7 @@ export const SheetContent = forwardRef<HTMLDialogElement, SheetContentProps>(
           data-state={state}
           data-side={side}
           className={joinClasses(
-            "plai-sheet-content fixed overflow-y-auto border-neutral-200 bg-white px-6 py-5 text-neutral-950 shadow-2xl outline-none",
+            "plai-sheet-content fixed overflow-y-auto border-border bg-surface px-6 py-5 text-foreground shadow-2xl outline-none",
             getSideClasses(side),
             className,
           )}
@@ -345,7 +345,7 @@ export const SheetContent = forwardRef<HTMLDialogElement, SheetContentProps>(
           {showCloseButton ? (
             <SheetClose
               aria-label={closeLabel ?? getUiCopy(locale).close}
-              className="absolute right-4 top-2 rounded-sm p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+              className="absolute right-4 top-2 rounded-sm p-1 text-muted transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <X className="h-5 w-5" />
             </SheetClose>
@@ -438,7 +438,7 @@ export const SheetDescription = forwardRef<
       ref={forwardedRef}
       id={resolvedId}
       data-slot="sheet-description"
-      className={joinClasses("text-sm text-neutral-600", className)}
+      className={joinClasses("text-sm text-secondary", className)}
     />
   )
 })

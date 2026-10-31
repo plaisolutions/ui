@@ -29,7 +29,7 @@ export function Reload({
       type={type}
       aria-label={resolvedLabel}
       className={joinClasses(
-        "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-not-allowed disabled:opacity-40",
+        "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-strong transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40",
         className,
       )}
       {...props}

@@ -7,6 +7,124 @@
 
 @source "./**/*.{ts,tsx}";
 
+/*
+ * Semantic color tokens. Components use these utilities (bg-surface,
+ * text-muted, border-danger-border…) instead of raw palette classes, so the
+ * light and dark themes are defined in one place. Light values point at the
+ * original palette, so the light theme keeps its previous look. Dark values
+ * apply under `.dark`; hosts can override any `--plai-*` variable.
+ */
+@theme {
+  --color-surface: var(--plai-surface);
+  --color-surface-muted: var(--plai-surface-muted);
+  --color-surface-subtle: var(--plai-surface-subtle);
+  --color-surface-hover: var(--plai-surface-hover);
+  --color-inverse: var(--plai-inverse);
+  --color-inverse-hover: var(--plai-inverse-hover);
+  --color-inverse-foreground: var(--plai-inverse-foreground);
+  --color-overlay: var(--plai-overlay);
+  --color-border: var(--plai-border);
+  --color-border-strong: var(--plai-border-strong);
+  --color-border-inverse: var(--plai-border-inverse);
+  --color-divider: var(--plai-divider);
+  --color-ring: var(--plai-ring);
+  --color-foreground: var(--plai-foreground);
+  --color-strong: var(--plai-strong);
+  --color-secondary: var(--plai-secondary);
+  --color-muted: var(--plai-muted);
+
+  --color-danger: var(--plai-danger);
+  --color-danger-strong: var(--plai-danger-strong);
+  --color-danger-subtle: var(--plai-danger-subtle);
+  --color-danger-border: var(--plai-danger-border);
+  --color-warning: var(--plai-warning);
+  --color-warning-strong: var(--plai-warning-strong);
+  --color-warning-subtle: var(--plai-warning-subtle);
+  --color-warning-border: var(--plai-warning-border);
+  --color-success: var(--plai-success);
+  --color-success-strong: var(--plai-success-strong);
+  --color-success-subtle: var(--plai-success-subtle);
+  --color-success-border: var(--plai-success-border);
+  --color-info: var(--plai-info);
+  --color-info-strong: var(--plai-info-strong);
+  --color-info-subtle: var(--plai-info-subtle);
+  --color-info-border: var(--plai-info-border);
+}
+
+:root {
+  --plai-surface: var(--color-white);
+  --plai-surface-muted: var(--color-neutral-50);
+  --plai-surface-subtle: var(--color-neutral-100);
+  --plai-surface-hover: var(--color-neutral-200);
+  --plai-inverse: var(--color-neutral-950);
+  --plai-inverse-hover: var(--color-neutral-800);
+  --plai-inverse-foreground: var(--color-white);
+  --plai-overlay: rgb(0 0 0 / 0.8);
+  --plai-border: var(--color-neutral-200);
+  --plai-border-strong: var(--color-neutral-300);
+  --plai-border-inverse: var(--color-neutral-950);
+  --plai-divider: var(--color-neutral-100);
+  --plai-ring: var(--color-neutral-950);
+  --plai-foreground: var(--color-neutral-950);
+  --plai-strong: var(--color-neutral-700);
+  --plai-secondary: var(--color-neutral-600);
+  --plai-muted: var(--color-neutral-500);
+
+  --plai-danger: var(--color-rose-600);
+  --plai-danger-strong: var(--color-rose-700);
+  --plai-danger-subtle: var(--color-rose-50);
+  --plai-danger-border: var(--color-rose-200);
+  --plai-warning: var(--color-amber-600);
+  --plai-warning-strong: var(--color-amber-700);
+  --plai-warning-subtle: var(--color-amber-50);
+  --plai-warning-border: var(--color-amber-200);
+  --plai-success: var(--color-emerald-600);
+  --plai-success-strong: var(--color-emerald-700);
+  --plai-success-subtle: var(--color-emerald-50);
+  --plai-success-border: var(--color-emerald-200);
+  --plai-info: var(--color-blue-600);
+  --plai-info-strong: var(--color-blue-700);
+  --plai-info-subtle: var(--color-blue-50);
+  --plai-info-border: var(--color-blue-200);
+}
+
+.dark {
+  --plai-surface: hsl(222 47.4% 11.2%);
+  --plai-surface-muted: hsl(222 42.6% 12.8%);
+  --plai-surface-subtle: hsl(222 37.4% 15.2%);
+  --plai-surface-hover: hsl(220 33.3% 24.7%);
+  --plai-inverse: hsl(60 9.1% 97.8%);
+  --plai-inverse-hover: hsl(0 0% 85%);
+  --plai-inverse-foreground: hsl(222 47.4% 11.2%);
+  --plai-overlay: rgb(0 0 0 / 0.8);
+  --plai-border: hsl(227 14.3% 19.2%);
+  --plai-border-strong: hsl(220 16% 32%);
+  --plai-border-inverse: hsl(60 9.1% 97.8%);
+  --plai-divider: hsl(227 14.3% 16%);
+  --plai-ring: hsl(60 9.1% 97.8%);
+  --plai-foreground: hsl(60 9.1% 97.8%);
+  --plai-strong: hsl(220 14% 85%);
+  --plai-secondary: hsl(220 16% 74%);
+  --plai-muted: hsl(220 21.6% 61%);
+
+  --plai-danger: hsl(0 84% 67%);
+  --plai-danger-strong: hsl(0 90% 80%);
+  --plai-danger-subtle: hsl(0 84% 60% / 0.12);
+  --plai-danger-border: hsl(0 84% 60% / 0.35);
+  --plai-warning: hsl(38 92% 60%);
+  --plai-warning-strong: hsl(40 95% 78%);
+  --plai-warning-subtle: hsl(38 92% 50% / 0.12);
+  --plai-warning-border: hsl(38 92% 50% / 0.35);
+  --plai-success: hsl(160 70% 55%);
+  --plai-success-strong: hsl(158 75% 75%);
+  --plai-success-subtle: hsl(160 70% 45% / 0.12);
+  --plai-success-border: hsl(160 70% 45% / 0.35);
+  --plai-info: hsl(217 91% 66%);
+  --plai-info-strong: hsl(213 97% 83%);
+  --plai-info-subtle: hsl(217 91% 60% / 0.12);
+  --plai-info-border: hsl(217 91% 60% / 0.35);
+}
+
 @keyframes plai-sheet-overlay-in {
   from {
     opacity: 0;

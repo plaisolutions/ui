@@ -3,13 +3,13 @@ import {
   type MemoryProposal,
   type MemoryProposalActions,
 } from "@plaisolutions/client"
-import { Brain, Check, LoaderCircle } from "lucide-react"
+import { Brain, Check, Clock, LoaderCircle, X } from "lucide-react"
 import { useEffect, useState } from "react"
-import {
-  getSupportedToolLocale,
-  type SupportedToolLocale,
-} from "./internal/tool-locale"
 import { joinClasses } from "./internal/join-classes"
+import {
+  type SupportedToolLocale,
+  getSupportedToolLocale,
+} from "./internal/tool-locale"
 
 type Copy = {
   title: string
@@ -346,87 +346,99 @@ export function MemoryProposalCard({
   return (
     <section
       className={joinClasses(
-        "space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/30 p-4 text-left",
+        "plai-memory-proposal-card overflow-hidden rounded-lg border border-success-border bg-success-subtle/30 text-left",
         className,
       )}
       data-memory-proposal-id={proposal.id}
     >
-      <header className="space-y-2">
-        <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <Brain className="size-4" />
-          {copy.title}
-        </h4>
-        <div className="flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full border border-slate-300 bg-white px-2 py-0.5">
+      <header className="border-b border-success-border px-3 py-2">
+        <div className="flex items-center gap-2">
+          <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Brain className="size-4" />
             {proposal.scope === "USER" ? copy.user : copy.project}
-          </span>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5">
-            {operation}
-          </span>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5">
-            {formatCategory(proposal.category)}
-          </span>
+          </h4>
+          <div aria-label="type" className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-surface-subtle px-2 py-0.5">
+              {operation}
+            </span>
+            <span className="rounded-full bg-surface-subtle px-2 py-0.5">
+              {formatCategory(proposal.category)}
+            </span>
+          </div>
         </div>
       </header>
-      {proposal.previous_content && proposal.previous_content !== REDACTED ? (
-        <div className="rounded-md bg-slate-100 p-3 text-sm">
-          <span className="mb-1 block text-xs font-medium text-slate-500">
-            {copy.previous}
+
+      <div className="space-y-3 px-3 py-2">
+        {" "}
+        {proposal.previous_content && proposal.previous_content !== REDACTED ? (
+          <div className="rounded-md bg-surface-subtle p-3 text-sm">
+            <span className="mb-1 block text-xs font-medium text-muted">
+              {copy.previous}
+            </span>
+            <p className="whitespace-pre-wrap break-words">
+              {proposal.previous_content}
+            </p>
+          </div>
+        ) : null}
+        {proposal.content && proposal.content !== REDACTED ? (
+          <div className="text-sm">
+            <span className="mb-1 block text-xs font-medium text-muted">
+              {copy.proposed}
+            </span>
+            <p className="whitespace-pre-wrap break-words">
+              {proposal.content}
+            </p>
+          </div>
+        ) : null}
+        {canResolve ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={resolving}
+              onClick={() => void resolve(true)}
+              className="inline-flex items-center rounded-md bg-inverse px-3 py-1.5 text-xs font-medium text-inverse-foreground disabled:opacity-50"
+            >
+              {resolving ? (
+                <LoaderCircle className="mr-2 size-3 animate-spin" />
+              ) : null}
+              {copy.accept}
+            </button>
+            <button
+              type="button"
+              disabled={resolving}
+              onClick={() => void resolve(false)}
+              className="rounded-md border border-border-strong bg-surface px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+            >
+              {copy.reject}
+            </button>
+          </div>
+        ) : null}
+        {proposal.status === "PENDING" && !canResolve ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border bg-surface px-3 py-1 text-xs font-medium text-foreground">
+            {proposal.scope === "PROJECT" ? copy.review : copy.unavailable}
+            <Clock
+              className="size-3.5 stroke-[2.5] text-muted"
+              aria-hidden="true"
+            />
           </span>
-          <p className="whitespace-pre-wrap break-words">
-            {proposal.previous_content}
-          </p>
-        </div>
-      ) : null}
-      {proposal.content && proposal.content !== REDACTED ? (
-        <div className="text-sm">
-          <span className="mb-1 block text-xs font-medium text-slate-500">
-            {copy.proposed}
+        ) : null}
+        {proposal.status === "ACCEPTED" && statusCopy ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border bg-surface px-3 py-1 text-xs font-medium text-foreground">
+            {statusCopy}
+            <Check
+              className="size-3.5 stroke-[2.5] text-success"
+              aria-hidden="true"
+            />
           </span>
-          <p className="whitespace-pre-wrap break-words">{proposal.content}</p>
-        </div>
-      ) : null}
-      {canResolve ? (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={resolving}
-            onClick={() => void resolve(true)}
-            className="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
-          >
-            {resolving ? (
-              <LoaderCircle className="mr-2 size-3 animate-spin" />
-            ) : null}
-            {copy.accept}
-          </button>
-          <button
-            type="button"
-            disabled={resolving}
-            onClick={() => void resolve(false)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium disabled:opacity-50"
-          >
-            {copy.reject}
-          </button>
-        </div>
-      ) : null}
-      {proposal.status === "PENDING" && !canResolve ? (
-        <p className="text-xs font-medium text-slate-500">
-          {proposal.scope === "PROJECT" ? copy.review : copy.unavailable}
-        </p>
-      ) : null}
-      {proposal.status === "ACCEPTED" && statusCopy ? (
-        <span className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1 text-xs font-medium text-slate-900 shadow-sm">
-          {statusCopy}
-          <Check
-            className="size-3.5 stroke-[2.5] text-emerald-600"
-            aria-hidden="true"
-          />
-        </span>
-      ) : null}
-      {statusCopy && proposal.status !== "ACCEPTED" ? (
-        <p className="text-xs font-medium text-slate-500">{statusCopy}</p>
-      ) : null}
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+        ) : null}
+        {statusCopy && proposal.status !== "ACCEPTED" ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-danger bg-surface px-3 py-1 text-xs font-medium text-danger">
+            {statusCopy}
+            <X className="size-3.5 stroke-[2.5]" aria-hidden="true" />
+          </span>
+        ) : null}
+        {error ? <p className="text-xs text-danger">{error}</p> : null}
+      </div>
     </section>
   )
 }

@@ -89,11 +89,11 @@ function WebSearchResultItem({ result }: { result: WebSearchResult }) {
   const faviconUrl = getFaviconUrl(result.url)
 
   return (
-    <article className="rounded-lg border border-neutral-200 bg-white p-4">
+    <article className="rounded-lg border border-border bg-surface p-4">
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-neutral-300 bg-white text-neutral-600"
+          className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border-strong bg-surface text-secondary"
         >
           <Globe className="h-4 w-4" />
           {faviconUrl ? (
@@ -102,7 +102,7 @@ function WebSearchResultItem({ result }: { result: WebSearchResult }) {
               alt=""
               width="16"
               height="16"
-              className="absolute h-4 w-4 bg-white"
+              className="absolute h-4 w-4 bg-surface"
               onError={(event) => {
                 event.currentTarget.style.display = "none"
               }}
@@ -114,21 +114,21 @@ function WebSearchResultItem({ result }: { result: WebSearchResult }) {
             href={result.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="block line-clamp-2 text-sm font-medium leading-5 text-neutral-950 hover:underline"
+            className="block line-clamp-2 text-sm font-medium leading-5 text-foreground hover:underline"
           >
             {result.title}
           </a>
-          <div className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-500">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
             {date ? <span>{date}</span> : null}
             {source ? (
-              <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 capitalize text-neutral-600">
+              <span className="rounded-full bg-surface-subtle px-1.5 py-0.5 capitalize text-secondary">
                 {source}
               </span>
             ) : null}
             {!date && !source && hostname ? <span>{hostname}</span> : null}
           </div>
           {snippet ? (
-            <p className="line-clamp-2 text-xs leading-5 text-neutral-600">
+            <p className="line-clamp-2 text-xs leading-5 text-secondary">
               {snippet}
             </p>
           ) : null}
@@ -136,7 +136,7 @@ function WebSearchResultItem({ result }: { result: WebSearchResult }) {
             <img
               src={imageUrl}
               alt=""
-              className="max-h-64 w-full rounded-md border border-neutral-200 object-contain"
+              className="max-h-64 w-full rounded-md border border-border object-contain"
               loading="lazy"
             />
           ) : null}
@@ -165,7 +165,7 @@ export function ToolResultWebSearchCard({
       <SheetTrigger
         aria-label={`Web: ${copy.webSearchTitle}, ${searchResults.length} ${sourceLabel}`}
         className={joinClasses(
-          "plai-tool-result-web-search-card min-h-[183px] w-[186px] rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "plai-tool-result-web-search-card min-h-[183px] w-[186px] rounded-lg bg-surface-subtle p-4 text-left font-normal text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           className,
         )}
       >
@@ -176,7 +176,7 @@ export function ToolResultWebSearchCard({
         <h3 className="mt-3 line-clamp-2 text-sm font-normal leading-5">
           {copy.webSearchTitle}
         </h3>
-        <p className="mt-2 text-xs leading-4 text-neutral-600">
+        <p className="mt-2 text-xs leading-4 text-secondary">
           {part.state === "pending"
             ? uiCopy.searching
             : `${searchResults.length} ${sourceLabel}`}
@@ -223,13 +223,13 @@ export function ToolResultWebSearchResults({
           ))}
         </div>
       ) : part.state === "pending" ? (
-        <p className="text-sm text-neutral-600">{copy.searchingForSources}</p>
+        <p className="text-sm text-secondary">{copy.searchingForSources}</p>
       ) : (
-        <p className="text-sm text-neutral-600">{copy.noSourcesReturned}</p>
+        <p className="text-sm text-secondary">{copy.noSourcesReturned}</p>
       )}
 
       {errorDetails ? (
-        <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+        <p className="mt-4 rounded border border-danger-border bg-danger-subtle px-3 py-2 text-xs text-danger-strong">
           <span className="font-semibold">{copy.errorDetails}:</span>{" "}
           {errorDetails}
         </p>

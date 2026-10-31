@@ -128,7 +128,7 @@ function SourceCard({
   }
 
   return (
-    <section className="rounded-lg bg-neutral-100 p-4">
+    <section className="rounded-lg bg-surface-subtle p-4">
       <header className="mb-4 flex items-center gap-3">
         <Globe className="h-5 w-5 shrink-0" aria-hidden="true" />
         <h3 className="text-sm font-medium">
@@ -182,7 +182,7 @@ export function AggregatedSourceResults({
         <Sheet>
           <SheetTrigger
             aria-label={`+${overflowCount} ${overflowLabel}`}
-            className="flex min-h-[183px] w-[186px] max-w-full flex-col justify-center rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+            className="flex min-h-[183px] w-[186px] max-w-full flex-col justify-center rounded-lg bg-surface-subtle p-4 text-left font-normal text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <span className="text-2xl font-medium leading-7">
               +{overflowCount}

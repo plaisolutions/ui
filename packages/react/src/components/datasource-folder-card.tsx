@@ -41,7 +41,7 @@ export function DatasourceFolderCard({
         aria-label={`${type}: ${title}`}
         className={`${
           variant === "card" ? "min-h-[183px] w-[186px] max-w-full" : "w-full"
-        } rounded-lg bg-neutral-100 p-4 text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950`}
+        } plai-datasource-folder-card rounded-lg bg-surface-subtle p-4 text-left font-normal text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`}
       >
         <DatasourceToolResultCardContent
           icon={icon}
@@ -75,7 +75,7 @@ export function DatasourceFolderCard({
               href={url}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-xs font-medium text-neutral-700 underline underline-offset-2"
+              className="text-xs font-medium text-strong underline underline-offset-2"
             >
               {copy.view}
             </a>

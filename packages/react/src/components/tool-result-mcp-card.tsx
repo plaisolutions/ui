@@ -44,23 +44,20 @@ export function ToolResultMcpCard({
       <SheetTrigger
         aria-label={`${copy.mcpTool}: ${tool}`}
         className={joinClasses(
-          "w-full rounded-lg border border-neutral-200 bg-white text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "plai-tool-result-mcp-card w-full rounded-lg border border-border bg-surface text-left font-normal text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           className,
         )}
       >
         <span className="flex items-center gap-2 px-3 py-2 text-sm">
-          <Plug
-            className="h-4 w-4 shrink-0 text-neutral-500"
-            aria-hidden="true"
-          />
+          <Plug className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
           <span className="truncate font-medium">MCP</span>
-          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+          <span className="min-w-0 truncate border-border-strong border px-2 py-0.5 rounded-md text-xs text-muted">
             {tool}
           </span>
           <span
             className={joinClasses(
               "ml-auto shrink-0",
-              failed ? "text-rose-600" : "text-emerald-600",
+              failed ? "text-danger" : "text-success",
             )}
           >
             {failed ? (
@@ -78,12 +75,12 @@ export function ToolResultMcpCard({
         <section className="mt-6 space-y-4" aria-label={copy.mcpToolResult}>
           <dl className="grid gap-2 text-sm">
             <div>
-              <dt className="text-xs text-neutral-500">{copy.tool}</dt>
+              <dt className="text-xs text-muted">{copy.tool}</dt>
               <dd>{tool}</dd>
             </div>
             {server ? (
               <div>
-                <dt className="text-xs text-neutral-500">{copy.server}</dt>
+                <dt className="text-xs text-muted">{copy.server}</dt>
                 <dd className="break-all">{server}</dd>
               </div>
             ) : null}
@@ -91,13 +88,13 @@ export function ToolResultMcpCard({
           {result ? (
             <div>
               <h3 className="mb-2 text-sm font-medium">{copy.result}</h3>
-              <pre className="overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs leading-5">
+              <pre className="overflow-x-auto rounded-md border border-border bg-surface-muted p-3 text-xs leading-5">
                 {result}
               </pre>
             </div>
           ) : null}
           {error ? (
-            <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <p className="rounded border border-danger-border bg-danger-subtle px-3 py-2 text-xs text-danger-strong">
               <span className="font-semibold">{copy.errorDetails}:</span>{" "}
               {error}
             </p>

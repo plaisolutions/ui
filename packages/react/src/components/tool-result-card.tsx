@@ -12,6 +12,7 @@ import {
 import { joinClasses } from "./internal/join-classes"
 import { getUiCopy } from "./internal/ui-copy"
 import { MemoryProposalCard } from "./memory-proposal-card"
+import type { ToolConfirmationProps } from "./tool-confirmation-controls"
 import { ToolError } from "./tool-error"
 import { ToolResultAgentInvocationCard } from "./tool-result-agent-invocation-card"
 import { ToolResultBrowserCard } from "./tool-result-browser-card"
@@ -31,7 +32,6 @@ import {
 import { ToolResultWebSearchCard } from "./tool-result-web-search-card"
 import { ToolResultWorkflowDispatchCard } from "./tool-result-workflow-dispatch-card"
 import { ToolUseIndicator } from "./tool-use-indicator"
-import type { ToolConfirmationProps } from "./tool-confirmation-controls"
 
 export type ToolResultCardProps = {
   part: UIToolCallPart
@@ -265,72 +265,74 @@ export function ToolResultCard({
   return (
     <section
       className={joinClasses(
-        "space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3",
+        "plai-tool-result-card overflow-hidden rounded-lg border border-border bg-surface-muted",
         className,
       )}
       data-tool-call-id={part.id}
       data-tool-call-state={part.state}
     >
-      <header className="flex items-center justify-between gap-2">
-        <h4 className="text-sm font-semibold text-slate-900">{part.name}</h4>
-        <span className="rounded-full border uppercase border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800">
+      <header className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+        <h4 className="text-sm font-semibold text-foreground">{part.name}</h4>
+        <span className="rounded-full border capitalize border-success-border bg-success-subtle px-2 py-0.5 text-xs text-success-strong">
           {copy.completed}
         </span>
       </header>
 
-      {part.toolType ? (
-        <p className="text-xs text-slate-600">
-          <span className="font-semibold">{copy.type}:</span> {part.toolType}
-        </p>
-      ) : null}
+      <div className="space-y-3 px-3 py-2">
+        {part.toolType ? (
+          <p className="text-xs text-secondary">
+            <span className="font-semibold">{copy.type}:</span> {part.toolType}
+          </p>
+        ) : null}
 
-      <details open={detailsOpen} className="space-y-2">
-        <summary className="cursor-pointer text-xs font-semibold text-slate-600">
-          {copy.input}
-        </summary>
-        <pre className="overflow-x-auto rounded bg-slate-900 p-2 text-xs text-slate-100">
-          {formatJson(part.input)}
-        </pre>
-      </details>
-
-      {part.result !== undefined ? (
         <details open={detailsOpen} className="space-y-2">
-          <summary className="cursor-pointer text-xs font-semibold text-slate-600">
-            {copy.output}
+          <summary className="cursor-pointer text-xs font-semibold text-secondary">
+            {copy.input}
           </summary>
-          {officeMediaFiles.length > 0 ? (
-            <div className="space-y-2 rounded border border-slate-200 bg-white p-3">
-              <p className="text-xs font-semibold text-slate-700">
-                {copy.generatedFiles}
-              </p>
-              <ul className="space-y-1">
-                {officeMediaFiles.map((file) => {
-                  const label = file.name || file.pathname || file.id
-                  return (
-                    <li key={file.id} className="text-xs text-slate-700">
-                      {file.url ? (
-                        <a
-                          href={file.url}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="hover:underline"
-                        >
-                          {label}
-                        </a>
-                      ) : (
-                        <span>{label}</span>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ) : null}
-          <pre className="overflow-x-auto rounded bg-slate-900 p-2 text-xs text-slate-100">
-            {formatJson(part.result)}
+          <pre className="overflow-x-auto rounded bg-inverse p-2 text-xs text-inverse-foreground">
+            {formatJson(part.input)}
           </pre>
         </details>
-      ) : null}
+
+        {part.result !== undefined ? (
+          <details open={detailsOpen} className="space-y-2">
+            <summary className="cursor-pointer text-xs font-semibold text-secondary">
+              {copy.output}
+            </summary>
+            {officeMediaFiles.length > 0 ? (
+              <div className="space-y-2 rounded border border-border bg-surface p-3">
+                <p className="text-xs font-semibold text-strong">
+                  {copy.generatedFiles}
+                </p>
+                <ul className="space-y-1">
+                  {officeMediaFiles.map((file) => {
+                    const label = file.name || file.pathname || file.id
+                    return (
+                      <li key={file.id} className="text-xs text-strong">
+                        {file.url ? (
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="hover:underline"
+                          >
+                            {label}
+                          </a>
+                        ) : (
+                          <span>{label}</span>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ) : null}
+            <pre className="overflow-x-auto rounded bg-inverse p-2 text-xs text-inverse-foreground">
+              {formatJson(part.result)}
+            </pre>
+          </details>
+        ) : null}
+      </div>
     </section>
   )
 }

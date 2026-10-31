@@ -1,10 +1,10 @@
 import type { UIBrowserToolCallPart } from "@plaisolutions/client"
 import {
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Globe,
   LoaderCircle,
-  Minus,
-  Plus,
   XCircle,
 } from "lucide-react"
 import { useState } from "react"
@@ -69,74 +69,75 @@ export function ToolResultBrowserCard({
   return (
     <section
       className={joinClasses(
-        "overflow-hidden rounded-lg border border-neutral-200 bg-white",
+        "plai-tool-result-browser-card overflow-hidden rounded-lg border border-border bg-surface",
         className,
       )}
       aria-label={copy.browserResult}
     >
-      <div className="flex items-center gap-2 px-3 py-2 text-sm">
-        <Globe
-          className="h-4 w-4 shrink-0 text-neutral-500"
-          aria-hidden="true"
-        />
-        <span className="font-medium text-neutral-800">{copy.browser}</span>
-        {subtitle ? (
-          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
-            {subtitle}
-          </span>
-        ) : null}
-        <span className="ml-auto flex shrink-0 items-center gap-2">
-          {pending ? (
-            <LoaderCircle
-              className="h-4 w-4 animate-spin text-amber-600"
-              aria-label={copy.pending}
-            />
-          ) : failed ? (
-            <XCircle className="h-4 w-4 text-rose-600" aria-hidden="true" />
-          ) : (
-            <CheckCircle2
-              className="h-4 w-4 text-emerald-600"
-              aria-hidden="true"
-            />
-          )}
-          {canExpand ? (
-            <button
-              type="button"
-              aria-label={
-                expanded ? copy.collapseBrowserResult : copy.expandBrowserResult
-              }
-              aria-expanded={expanded}
-              className="flex h-5 w-5 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
-              onClick={() => setExpanded((value) => !value)}
-            >
-              {expanded ? (
-                <Minus className="h-3 w-3" aria-hidden="true" />
-              ) : (
-                <Plus className="h-3 w-3" aria-hidden="true" />
-              )}
-            </button>
+      <header className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs text-secondary">
+        <button
+          type="button"
+          disabled={!canExpand}
+          aria-label={
+            expanded ? copy.collapseBrowserResult : copy.expandBrowserResult
+          }
+          aria-expanded={canExpand ? expanded : undefined}
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors enabled:cursor-pointer enabled:hover:bg-surface-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          <Globe className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+          <span className="font-medium text-strong">{copy.browser}</span>
+          {subtitle ? (
+            <span className="min-w-0 truncate border-border-strong border px-2 py-0.5 rounded-md text-xs text-muted">
+              {subtitle}
+            </span>
           ) : null}
-        </span>
-      </div>
+          <span className="ml-auto flex shrink-0 items-center gap-2">
+            {pending ? (
+              <LoaderCircle
+                className="h-4 w-4 animate-spin text-warning"
+                aria-label={copy.pending}
+              />
+            ) : failed ? (
+              <XCircle className="h-4 w-4 text-danger" aria-hidden="true" />
+            ) : (
+              <CheckCircle2
+                className="h-4 w-4 text-success"
+                aria-hidden="true"
+              />
+            )}
+            {canExpand ? (
+              expanded ? (
+                <ChevronUp className="h-4 w-4 text-muted" aria-hidden="true" />
+              ) : (
+                <ChevronDown
+                  className="h-4 w-4 text-muted"
+                  aria-hidden="true"
+                />
+              )
+            ) : null}
+          </span>
+        </button>
+      </header>
       {expanded ? (
-        <div className="space-y-3 border-t border-neutral-200 bg-neutral-50 p-3">
+        <div className="space-y-3 border-t border-border bg-surface-muted p-3">
           {url ? (
             <a
               href={url}
               target="_blank"
               rel="noreferrer noopener"
-              className="block truncate text-xs text-blue-700 underline underline-offset-2 hover:text-blue-900"
+              className="block truncate text-xs text-info-strong underline underline-offset-2 hover:text-info-strong"
             >
               {url}
             </a>
           ) : null}
           {preview ? (
-            <p className="whitespace-pre-wrap text-xs leading-5 text-neutral-600">
+            <p className="whitespace-pre-wrap text-xs leading-5 text-secondary">
               {preview}
             </p>
           ) : null}
           {error ? (
-            <p className="text-xs text-rose-700">
+            <p className="text-xs text-danger-strong">
               <span className="font-semibold">{copy.errorDetails}:</span>{" "}
               {error}
             </p>

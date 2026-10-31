@@ -66,7 +66,7 @@ export function DatasourceToolResultCardContent({
       </h3>
       <p className="mt-2 line-clamp-2 text-xs leading-4">{description}</p>
       {resourceCount === undefined ? null : (
-        <p className="mt-2 text-xs leading-4 text-neutral-600">
+        <p className="mt-2 text-xs leading-4 text-secondary">
           {resourceCount} {resourceCount === 1 ? copy.resource : copy.resources}
         </p>
       )}
@@ -78,7 +78,7 @@ export function DatasourceToolResultCard(props: DatasourceToolResultCardProps) {
   return (
     <article
       aria-label={`${props.type}: ${props.title}`}
-      className="w-46.5 rounded-lg bg-neutral-100 p-4 text-neutral-950"
+      className="plai-datasource-tool-result-card w-46.5 rounded-lg bg-surface-subtle p-4 text-foreground"
     >
       <DatasourceToolResultCardContent {...props} />
     </article>
