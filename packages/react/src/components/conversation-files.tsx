@@ -144,7 +144,7 @@ export function ConversationFilesList({
   return (
     <div className={joinClasses("space-y-6", className)}>
       {uploaded.length === 0 && generated.length === 0 ? (
-        <p className="text-sm text-neutral-600">{copy.noConversationFiles}</p>
+        <p className="text-sm text-secondary">{copy.noConversationFiles}</p>
       ) : null}
       <FileSection title={copy.uploadedFiles} files={uploaded} copy={copy} />
       <FileSection title={copy.generatedFiles} files={generated} copy={copy} />
@@ -165,13 +165,13 @@ function FileSection({
 
   return (
     <section className="space-y-3" aria-label={title}>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
         {title} ({files.length})
       </h3>
       {files.map((file) => (
         <div
           key={`${file.kind}:${file.id}`}
-          className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3"
+          className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3"
         >
           <File
             className={joinClasses(
@@ -183,7 +183,7 @@ function FileSection({
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{file.name}</p>
             {file.extension ? (
-              <p className="text-[11px] uppercase text-neutral-500">
+              <p className="text-[11px] uppercase text-muted">
                 {file.extension}
               </p>
             ) : null}
@@ -232,7 +232,7 @@ export function ConversationFilesSheet({
           aria-label={`${copy.conversationFiles}: ${count}`}
           title={copy.conversationFiles}
           className={joinClasses(
-            "inline-flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+            "inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2 text-sm text-strong transition-colors hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
             triggerClassName,
           )}
         >

@@ -82,26 +82,26 @@ export function ToolResultWorkflowDispatchCard({
       <SheetTrigger
         aria-label={`${copy.workflow}: ${workflowName}`}
         className={joinClasses(
-          "w-full rounded-lg border border-neutral-200 bg-white text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "plai-tool-result-workflow-dispatch-card w-full rounded-lg border border-border bg-surface text-left font-normal text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           className,
         )}
       >
         <span className="flex items-center gap-2 px-3 py-2 text-sm">
           <Workflow
-            className="h-4 w-4 shrink-0 text-neutral-500"
+            className="h-4 w-4 shrink-0 text-muted"
             aria-hidden="true"
           />
           <span className="shrink-0 font-medium">{copy.workflow}</span>
-          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+          <span className="min-w-0 truncate border-border-strong border px-2 py-0.5 rounded-md text-xs text-muted">
             {workflowName}
           </span>
           <span className="ml-auto flex shrink-0 items-center gap-2">
-            <span className="text-xs text-neutral-500">{status}</span>
+            <span className="text-xs text-muted">{status}</span>
             {failed ? (
-              <XCircle className="h-4 w-4 text-rose-600" aria-hidden="true" />
+              <XCircle className="h-4 w-4 text-danger" aria-hidden="true" />
             ) : (
               <CheckCircle2
-                className="h-4 w-4 text-emerald-600"
+                className="h-4 w-4 text-success"
                 aria-hidden="true"
               />
             )}
@@ -118,22 +118,22 @@ export function ToolResultWorkflowDispatchCard({
         >
           <dl className="grid gap-2 text-sm">
             <div>
-              <dt className="text-xs text-neutral-500">{copy.workflow}</dt>
+              <dt className="text-xs text-muted">{copy.workflow}</dt>
               <dd>{workflowName}</dd>
             </div>
             <div>
-              <dt className="text-xs text-neutral-500">{copy.status}</dt>
+              <dt className="text-xs text-muted">{copy.status}</dt>
               <dd>{status}</dd>
             </div>
             {result.executionId ? (
               <div>
-                <dt className="text-xs text-neutral-500">{copy.executionId}</dt>
+                <dt className="text-xs text-muted">{copy.executionId}</dt>
                 <dd className="break-all">{result.executionId}</dd>
               </div>
             ) : null}
             {result.workflowId ? (
               <div>
-                <dt className="text-xs text-neutral-500">{copy.workflowId}</dt>
+                <dt className="text-xs text-muted">{copy.workflowId}</dt>
                 <dd className="break-all">{result.workflowId}</dd>
               </div>
             ) : null}
@@ -141,13 +141,13 @@ export function ToolResultWorkflowDispatchCard({
           {output ? (
             <div>
               <h3 className="mb-2 text-sm font-medium">{copy.result}</h3>
-              <pre className="overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs leading-5">
+              <pre className="overflow-x-auto rounded-md border border-border bg-surface-muted p-3 text-xs leading-5">
                 {output}
               </pre>
             </div>
           ) : null}
           {error ? (
-            <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <p className="rounded border border-danger-border bg-danger-subtle px-3 py-2 text-xs text-danger-strong">
               <span className="font-semibold">{copy.errorDetails}:</span>{" "}
               {error}
             </p>

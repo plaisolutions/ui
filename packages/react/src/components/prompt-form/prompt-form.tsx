@@ -14,7 +14,7 @@ import type { InvalidPromptFormFile } from "./file-attachments"
 import { PromptFormAttachButton } from "./prompt-form-attach-button"
 
 const actionButtonClassName =
-  "inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40"
+  "inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-secondary transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
 
 const defaultMaxRows = 4
 
@@ -180,7 +180,7 @@ export function PromptForm({
   return (
     <form
       className={joinClasses(
-        "flex w-full flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white",
+        "flex w-full flex-col overflow-hidden rounded-2xl border border-border bg-surface",
         className,
       )}
       onSubmit={async (event) => {
@@ -218,7 +218,7 @@ export function PromptForm({
           ref={textareaRef}
           rows={1}
           className={joinClasses(
-            "min-h-10 flex-1 resize-none overflow-hidden border-0 bg-transparent px-0 py-1.5 text-sm leading-6 text-neutral-900 outline-none placeholder:text-neutral-400",
+            "min-h-10 flex-1 resize-none overflow-hidden border-0 bg-transparent px-0 py-1.5 text-sm leading-6 text-foreground outline-none placeholder:text-muted",
             textareaClassName,
           )}
           value={value}
@@ -277,7 +277,7 @@ export function PromptForm({
       {files.length > 0 ? (
         <div
           className={joinClasses(
-            "border-t border-neutral-200",
+            "border-t border-border",
             attachmentsClassName,
           )}
         >
@@ -285,12 +285,12 @@ export function PromptForm({
             {files.map((file, index) => (
               <div
                 key={`${file.name}-${file.lastModified}-${index}`}
-                className="flex max-w-full items-center gap-1.5 rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-700"
+                className="flex max-w-full items-center gap-1.5 rounded-md bg-surface-subtle px-2 py-1 text-xs text-strong"
               >
                 <span className="max-w-[150px] truncate">{file.name}</span>
                 <button
                   type="button"
-                  className="text-neutral-500 transition-colors hover:text-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="text-muted transition-colors hover:text-strong disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label={`${removeFileLabel}: ${file.name}`}
                   disabled={isInteractionDisabled}
                   onClick={() => removeFile(index)}
@@ -314,18 +314,18 @@ export function PromptForm({
                 aria-valuemax={100}
                 aria-valuenow={Math.round(uploadState.progress)}
                 className={joinClasses(
-                  "h-1.5 overflow-hidden rounded-full bg-neutral-200",
+                  "h-1.5 overflow-hidden rounded-full bg-surface-hover",
                   uploadProgressClassName,
                 )}
               >
                 <div
-                  className="h-full rounded-full bg-neutral-900 transition-[width] duration-150"
+                  className="h-full rounded-full bg-inverse transition-[width] duration-150"
                   style={{ width: `${uploadState.progress}%` }}
                 />
               </div>
             </div>
           ) : uploadState?.status === "error" ? (
-            <p className="px-4 pb-3 text-xs text-red-600">{uploadErrorLabel}</p>
+            <p className="px-4 pb-3 text-xs text-danger">{uploadErrorLabel}</p>
           ) : null}
         </div>
       ) : null}

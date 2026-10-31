@@ -35,7 +35,7 @@ export function FileDownloadButton({
   return (
     <span className="ml-auto flex shrink-0 items-center gap-2">
       {state === "error" ? (
-        <span role="alert" className="text-xs text-rose-600">
+        <span role="alert" className="text-xs text-danger">
           {copy.downloadFailed}
         </span>
       ) : null}
@@ -46,7 +46,7 @@ export function FileDownloadButton({
         aria-label={`${isDownloading ? copy.downloading : copy.download}: ${label}`}
         title={isDownloading ? copy.downloading : copy.download}
         className={joinClasses(
-          "inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-wait disabled:opacity-60",
+          "inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface text-strong transition-colors hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60",
           className,
         )}
       >

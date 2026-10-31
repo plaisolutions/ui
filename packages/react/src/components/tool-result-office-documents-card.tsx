@@ -53,10 +53,10 @@ export function ToolResultOfficeDocumentsCard({
   const fileLabel = files.length === 1 ? copy.file : copy.files
   const statusClass =
     part.state === "error"
-      ? "text-rose-600"
+      ? "text-danger"
       : part.state === "pending"
-        ? "text-amber-600"
-        : "text-emerald-600"
+        ? "text-warning"
+        : "text-success"
 
   const singleFile =
     part.state === "completed" && files.length === 1 && !errorDetails
@@ -70,7 +70,7 @@ export function ToolResultOfficeDocumentsCard({
       <section
         aria-label={`${copy.officeDocuments}: ${label}`}
         className={joinClasses(
-          "flex w-full items-center gap-3 overflow-hidden rounded-lg border border-neutral-200 bg-white px-3 py-2 text-left font-normal text-neutral-950",
+          "plai-tool-result-office-documents-card flex w-full items-center gap-3 overflow-hidden rounded-lg border border-border bg-surface px-3 py-2 text-left font-normal text-foreground",
           className,
         )}
       >
@@ -83,7 +83,7 @@ export function ToolResultOfficeDocumentsCard({
         />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{label}</p>
-          <p className="truncate text-[11px] text-neutral-500">
+          <p className="truncate text-[11px] text-muted">
             {copy.officeDocuments}
             {extension ? ` · ${extension.toUpperCase()}` : null}
           </p>
@@ -96,7 +96,7 @@ export function ToolResultOfficeDocumentsCard({
           />
         ) : (
           <CheckCircle2
-            className="ml-auto h-4 w-4 shrink-0 text-emerald-600"
+            className="ml-auto h-4 w-4 shrink-0 text-success"
             aria-hidden="true"
           />
         )}
@@ -109,17 +109,17 @@ export function ToolResultOfficeDocumentsCard({
       <SheetTrigger
         aria-label={`${copy.officeDocuments}: ${files.length} ${fileLabel}`}
         className={joinClasses(
-          "w-full overflow-hidden rounded-lg border border-neutral-200 bg-white text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "plai-tool-result-office-documents-card w-full overflow-hidden rounded-lg border border-border bg-surface text-left font-normal text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           className,
         )}
       >
         <span className="flex items-center gap-2 px-3 py-2 text-sm">
           <FileText
-            className="h-4 w-4 shrink-0 text-neutral-500"
+            className="h-4 w-4 shrink-0 text-muted"
             aria-hidden="true"
           />
           <span className="truncate font-medium">{copy.officeDocuments}</span>
-          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+          <span className="min-w-0 truncate border-border-strong border px-2 py-0.5 rounded-md text-xs text-muted">
             {part.state === "pending"
               ? copy.pending
               : `${files.length} ${fileLabel}`}
@@ -144,7 +144,7 @@ export function ToolResultOfficeDocumentsCard({
             return (
               <div
                 key={file.id}
-                className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3"
+                className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3"
               >
                 <File
                   className={joinClasses(
@@ -156,7 +156,7 @@ export function ToolResultOfficeDocumentsCard({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{label}</p>
                   {extension ? (
-                    <p className="text-[11px] uppercase text-neutral-500">
+                    <p className="text-[11px] uppercase text-muted">
                       {extension}
                     </p>
                   ) : null}
@@ -172,13 +172,13 @@ export function ToolResultOfficeDocumentsCard({
             )
           })}
           {files.length === 0 && part.state === "pending" ? (
-            <p className="text-sm text-neutral-600">{copy.creatingDocuments}</p>
+            <p className="text-sm text-secondary">{copy.creatingDocuments}</p>
           ) : null}
           {files.length === 0 && part.state === "completed" && !errorDetails ? (
-            <p className="text-sm text-neutral-600">{copy.noFilesGenerated}</p>
+            <p className="text-sm text-secondary">{copy.noFilesGenerated}</p>
           ) : null}
           {errorDetails ? (
-            <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <p className="rounded border border-danger-border bg-danger-subtle px-3 py-2 text-xs text-danger-strong">
               <span className="font-semibold">{copy.errorDetails}:</span>{" "}
               {errorDetails}
             </p>

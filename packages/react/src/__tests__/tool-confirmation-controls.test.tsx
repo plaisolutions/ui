@@ -168,7 +168,7 @@ describe("confirmation buttons on pending cards", () => {
     )
 
     const button = screen.getByRole("button", { name: "Eliminar" })
-    expect(button.className).toContain("bg-rose-600")
+    expect(button.className).toContain("bg-danger")
     expect(screen.getByRole("button", { name: "Cancelar" })).toBeTruthy()
   })
 

@@ -227,7 +227,7 @@ export function ChatError({
       role="alert"
       {...props}
       className={joinClasses(
-        "plai-chat-error flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-950 dark:border-red-900 dark:bg-red-950/30 dark:text-red-100",
+        "plai-chat-error flex gap-3 rounded-lg border border-danger-border bg-danger-subtle p-4 text-sm text-danger-strong   ",
         className,
       )}
     >

@@ -93,11 +93,11 @@ export function statusLabel(
 }
 
 const BADGE_TONE: Record<string, string> = {
-  pending: "border-amber-200 bg-amber-50 text-amber-800",
+  pending: "border-warning-border bg-warning-subtle text-warning-strong",
   executing: "border-sky-200 bg-sky-50 text-sky-800",
-  executed: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  failed: "border-rose-200 bg-rose-50 text-rose-800",
-  unknown: "border-amber-300 bg-amber-50 text-amber-900",
+  executed: "border-success-border bg-success-subtle text-success-strong",
+  failed: "border-danger-border bg-danger-subtle text-danger-strong",
+  unknown: "border-warning-border bg-warning-subtle text-warning-strong",
 }
 
 /** Header badge of a held action: "Awaiting your confirmation" or its outcome. */
@@ -123,8 +123,7 @@ export function ConfirmationBadge({
     <span
       className={joinClasses(
         "ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 font-medium",
-        BADGE_TONE[status] ??
-          "border-neutral-200 bg-neutral-50 text-neutral-700",
+        BADGE_TONE[status] ?? "border-border bg-surface-muted text-strong",
       )}
       data-confirmation-status={status}
     >
@@ -174,7 +173,7 @@ export function PendingConfirmationFooter({
 
   if (!toolConfirmation) {
     return (
-      <p className="border-t border-amber-100 bg-amber-50/60 px-3 py-2 text-xs text-neutral-700">
+      <p className="border-t border-border bg-warning-subtle/60 px-3 py-2 text-xs text-strong">
         {copy.confirmHint}
       </p>
     )
@@ -184,7 +183,7 @@ export function PendingConfirmationFooter({
     // Unknown until the server answers: no decision on an unverified state.
     return (
       <p
-        className="border-t border-neutral-100 bg-neutral-50 px-3 py-2 text-xs text-neutral-500"
+        className="border-t border-divider bg-surface-muted px-3 py-2 text-xs text-muted"
         aria-live="polite"
       >
         {copy.verifying}
@@ -196,7 +195,7 @@ export function PendingConfirmationFooter({
     const label = statusLabel(state.status, copy)
     return label ? (
       <p
-        className="border-t border-neutral-100 bg-neutral-50 px-3 py-2 text-xs text-neutral-700"
+        className="border-t border-divider bg-surface-muted px-3 py-2 text-xs text-strong"
         aria-live="polite"
       >
         {label}
@@ -231,7 +230,7 @@ export function PendingConfirmationFooter({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2 border-t border-amber-100 bg-amber-50/60 px-3 py-2"
+      className="flex flex-wrap items-center gap-2 border-t border-border bg-warning-subtle/60 px-3 py-2"
       data-confirmation-actions={pending.action_id}
     >
       {state.canConfirm ? (
@@ -240,10 +239,10 @@ export function PendingConfirmationFooter({
           disabled={disabled}
           onClick={() => void decide("confirm")}
           className={joinClasses(
-            "inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50",
+            "inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium text-inverse-foreground disabled:opacity-50",
             destructive
-              ? "bg-rose-600 hover:bg-rose-700"
-              : "bg-neutral-900 hover:bg-neutral-800",
+              ? "bg-danger hover:bg-danger-strong"
+              : "bg-inverse hover:bg-inverse-hover",
           )}
         >
           {sending === "confirm" ? (
@@ -262,7 +261,7 @@ export function PendingConfirmationFooter({
           type="button"
           disabled={disabled}
           onClick={() => void decide("reject")}
-          className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-50 disabled:opacity-50"
+          className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-xs font-medium text-strong hover:bg-surface-muted disabled:opacity-50"
         >
           {sending === "reject" ? (
             <LoaderCircle
@@ -273,7 +272,7 @@ export function PendingConfirmationFooter({
           {sending === "reject" ? copy.cancelling : copy.cancel}
         </button>
       ) : null}
-      <span className="ml-auto text-xs text-neutral-600" aria-live="polite">
+      <span className="ml-auto text-xs text-secondary" aria-live="polite">
         {failed
           ? copy.decisionError
           : unavailable

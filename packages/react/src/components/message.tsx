@@ -74,7 +74,7 @@ export function MessageAvatar({
   return (
     <div
       className={joinClasses(
-        "plai-message-avatar flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-xs font-semibold uppercase text-neutral-700",
+        "plai-message-avatar flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-hover text-xs font-semibold uppercase text-strong",
         className,
       )}
       {...props}
@@ -115,7 +115,7 @@ export function MessageHeader({ className, ...props }: MessageHeaderProps) {
   return (
     <header
       className={joinClasses(
-        "text-xs font-semibold uppercase tracking-wide text-neutral-500",
+        "text-xs font-semibold uppercase tracking-wide text-muted",
         className,
       )}
       {...props}
@@ -238,7 +238,7 @@ function renderPart(
         href={part.url}
         target="_blank"
         rel="noreferrer noopener"
-        className="block w-fit rounded-lg border border-slate-200 bg-white p-2"
+        className="block w-fit rounded-lg border border-border bg-surface p-2"
       >
         <img
           src={part.url}
@@ -246,7 +246,7 @@ function renderPart(
           className="max-h-56 rounded-md object-contain"
         />
         {title ? (
-          <p className="mt-2 max-w-xs truncate text-xs font-medium text-slate-700">
+          <p className="mt-2 max-w-xs truncate text-xs font-medium text-strong">
             {title}
           </p>
         ) : null}
@@ -268,17 +268,17 @@ function renderPart(
         href={part.fileUrl}
         target="_blank"
         rel="noreferrer noopener"
-        className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left"
+        className="flex w-fit items-center gap-3 rounded-lg border border-border bg-surface-muted px-3 py-2 text-left"
       >
-        <span className="rounded bg-slate-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+        <span className="rounded bg-inverse px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-inverse-foreground">
           {extension ?? copy.file}
         </span>
         <div className="min-w-0">
-          <p className="max-w-xs truncate text-sm font-medium text-slate-900">
+          <p className="max-w-xs truncate text-sm font-medium text-foreground">
             {fileName}
           </p>
           {part.mimeType ? (
-            <p className="text-xs text-slate-500">{part.mimeType}</p>
+            <p className="text-xs text-muted">{part.mimeType}</p>
           ) : null}
         </div>
       </a>
@@ -327,7 +327,7 @@ function renderPart(
     return (
       <p
         key={`guardrail-${index}`}
-        className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+        className="rounded-lg border border-warning-border bg-warning-subtle px-3 py-2 text-sm text-warning-strong"
       >
         {part.content}
       </p>
@@ -519,7 +519,7 @@ export function MessageParts({
       {canCollapse ? (
         <button
           type="button"
-          className="text-xs font-medium text-slate-600 hover:text-slate-900"
+          className="text-xs font-medium text-secondary hover:text-foreground"
           onClick={() => setIsExpanded((previous) => !previous)}
         >
           {isExpanded

@@ -13,7 +13,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
-  ExternalLink,
+  ArrowUpRight,
   Mail,
   Video,
   XCircle,
@@ -260,7 +260,7 @@ function ExternalAnchor({
       rel="noreferrer noopener"
       aria-label={label}
       className={joinClasses(
-        "inline-flex items-center gap-1 text-xs font-medium text-neutral-700 hover:text-neutral-950 hover:underline",
+        "inline-flex items-center gap-1 text-xs font-medium text-strong hover:text-muted",
         className,
       )}
     >
@@ -285,7 +285,7 @@ function ShowAllToggle({
     <button
       type="button"
       onClick={onToggle}
-      className="w-full border-t border-neutral-200 px-3 py-2 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950"
+      className="w-full border-t border-border px-3 py-2 text-left text-xs font-medium text-secondary hover:bg-surface-muted hover:text-foreground"
     >
       {expanded ? copy.showLess : fillCopy(copy.showAll, { count: total })}
     </button>
@@ -310,33 +310,31 @@ function MailRow({
           aria-label={message.unread ? copy.unread : undefined}
           className={joinClasses(
             "h-2 w-2 shrink-0 self-center rounded-full",
-            message.unread ? "bg-blue-600" : "bg-transparent",
+            message.unread ? "bg-info" : "bg-transparent",
           )}
         />
         <span
           className={joinClasses(
             "min-w-0 flex-1 truncate text-sm",
-            message.unread
-              ? "font-semibold text-neutral-950"
-              : "text-neutral-800",
+            message.unread ? "font-semibold text-foreground" : "text-strong",
           )}
         >
           {displayName(message.from) ?? "—"}
         </span>
-        <span className="shrink-0 text-xs text-neutral-500">
+        <span className="shrink-0 text-xs text-muted">
           {formatMailDate(message.date, locale)}
         </span>
       </div>
       <p
         className={joinClasses(
           "truncate pl-4 text-sm",
-          message.unread ? "font-medium text-neutral-950" : "text-neutral-700",
+          message.unread ? "font-medium text-foreground" : "text-strong",
         )}
       >
         {text(message.subject) ?? copy.noSubject}
       </p>
       {text(message.snippet) ? (
-        <p className="line-clamp-1 pl-4 text-xs text-neutral-500">
+        <p className="line-clamp-1 pl-4 text-xs text-muted">
           {message.snippet}
         </p>
       ) : null}
@@ -349,7 +347,7 @@ function MailRow({
       href={message.link}
       target="_blank"
       rel="noreferrer noopener"
-      className={joinClasses(className, "hover:bg-neutral-50")}
+      className={joinClasses(className, "hover:bg-surface-muted")}
     >
       {content}
     </a>
@@ -369,12 +367,12 @@ function MailList({
 }) {
   const [expanded, setExpanded] = useState(false)
   if (messages.length === 0) {
-    return <p className="px-3 py-3 text-sm text-neutral-600">{copy.noEmails}</p>
+    return <p className="px-3 py-3 text-sm text-secondary">{copy.noEmails}</p>
   }
   const visible = expanded ? messages : messages.slice(0, COLLAPSED_ITEMS)
   return (
     <>
-      <ul className="divide-y divide-neutral-100">
+      <ul className="divide-y divide-divider">
         {visible.map((message) => (
           <li key={message.id}>
             <MailRow message={message} locale={locale} copy={copy} />
@@ -413,11 +411,11 @@ function MailMessageView({
   return (
     <div className="space-y-3 px-3 py-3">
       <div className="space-y-1">
-        <h4 className="text-sm font-semibold text-neutral-950">
+        <h4 className="text-sm font-semibold text-foreground">
           {text(message.subject) ?? copy.noSubject}
         </h4>
-        <div className="flex items-baseline gap-2 text-xs text-neutral-600">
-          <span className="min-w-0 flex-1 truncate font-medium text-neutral-800">
+        <div className="flex items-baseline gap-2 text-xs text-secondary">
+          <span className="min-w-0 flex-1 truncate font-medium text-strong">
             {message.from ?? "—"}
           </span>
           <span className="shrink-0">
@@ -425,18 +423,18 @@ function MailMessageView({
           </span>
         </div>
         {text(message.to) ? (
-          <p className="truncate text-xs text-neutral-500">
+          <p className="truncate text-xs text-muted">
             {copy.to}: {message.to}
           </p>
         ) : null}
         {text(message.cc) ? (
-          <p className="truncate text-xs text-neutral-500">
+          <p className="truncate text-xs text-muted">
             {copy.cc}: {message.cc}
           </p>
         ) : null}
       </div>
       {shownBody ? (
-        <p className="whitespace-pre-wrap break-words text-sm leading-6 text-neutral-800">
+        <p className="whitespace-pre-wrap break-words text-sm leading-6 text-strong">
           {shownBody}
         </p>
       ) : null}
@@ -445,7 +443,7 @@ function MailMessageView({
           <button
             type="button"
             onClick={() => setExpanded((value) => !value)}
-            className="text-xs font-medium text-neutral-600 hover:text-neutral-950"
+            className="text-xs font-medium text-secondary hover:text-foreground"
           >
             {expanded ? copy.showLess : copy.showMore}
           </button>
@@ -453,7 +451,7 @@ function MailMessageView({
         {message.link ? (
           <ExternalAnchor href={message.link}>
             {fillCopy(copy.openIn, { service: connector?.label ?? "" })}
-            <ExternalLink className="h-3 w-3" aria-hidden="true" />
+            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
           </ExternalAnchor>
         ) : null}
       </div>
@@ -514,7 +512,7 @@ function EventRow({
 
   return (
     <li className="flex gap-3 px-3 py-2">
-      <span className="w-24 shrink-0 pt-0.5 text-xs tabular-nums text-neutral-600">
+      <span className="w-24 shrink-0 pt-0.5 text-xs tabular-nums text-secondary">
         {eventTime(event, locale, copy)}
       </span>
       <div className="min-w-0 flex-1 space-y-0.5">
@@ -523,19 +521,17 @@ function EventRow({
             href={event.link}
             target="_blank"
             rel="noreferrer noopener"
-            className="block truncate text-sm font-medium text-neutral-950 hover:underline"
+            className="block truncate text-sm font-medium text-foreground hover:underline"
           >
             {text(event.title) ?? copy.noSubject}
           </a>
         ) : (
-          <p className="truncate text-sm font-medium text-neutral-950">
+          <p className="truncate text-sm font-medium text-foreground">
             {text(event.title) ?? copy.noSubject}
           </p>
         )}
         {details.length > 0 ? (
-          <p className="truncate text-xs text-neutral-500">
-            {details.join(" · ")}
-          </p>
+          <p className="truncate text-xs text-muted">{details.join(" · ")}</p>
         ) : null}
       </div>
       {event.online_meeting_url ? (
@@ -562,7 +558,7 @@ function Agenda({
 }) {
   const [expanded, setExpanded] = useState(false)
   if (events.length === 0) {
-    return <p className="px-3 py-3 text-sm text-neutral-600">{copy.noEvents}</p>
+    return <p className="px-3 py-3 text-sm text-secondary">{copy.noEvents}</p>
   }
   const visible = expanded ? events : events.slice(0, COLLAPSED_ITEMS)
   const dayFormat = dateFormatter(locale, {
@@ -573,15 +569,15 @@ function Agenda({
 
   return (
     <>
-      <div className="divide-y divide-neutral-100">
+      <div className="divide-y divide-divider">
         {groupByDay(visible).map((group, index) => (
           <section key={group.day?.toISOString() ?? `undated-${index}`}>
             {group.day ? (
-              <h4 className="bg-neutral-50 px-3 py-1 text-xs font-medium capitalize text-neutral-600">
+              <h4 className="bg-surface-muted px-3 py-1 text-xs font-medium capitalize text-secondary">
                 {dayFormat.format(group.day)}
               </h4>
             ) : null}
-            <ul className="divide-y divide-neutral-100">
+            <ul className="divide-y divide-divider">
               {group.events.map((event) => (
                 <EventRow
                   key={event.id}
@@ -618,7 +614,7 @@ function CollapsibleBody({
   const long = body.length > COLLAPSED_BODY_CHARS
   return (
     <div className="space-y-1">
-      <p className="whitespace-pre-wrap break-words text-sm leading-6 text-neutral-800">
+      <p className="whitespace-pre-wrap break-words text-sm leading-6 text-strong">
         {long && !expanded
           ? `${body.slice(0, COLLAPSED_BODY_CHARS).trimEnd()}…`
           : body}
@@ -627,7 +623,7 @@ function CollapsibleBody({
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="text-xs font-medium text-neutral-600 hover:text-neutral-950"
+          className="text-xs font-medium text-secondary hover:text-foreground"
         >
           {expanded ? copy.showLess : copy.showMore}
         </button>
@@ -646,14 +642,12 @@ function DraftView({
   return (
     <div className="space-y-2 px-3 py-3">
       <div className="space-y-1">
-        <p className="text-sm font-medium text-neutral-950">
-          {copy.draftSaved}
-        </p>
+        <p className="text-sm font-medium text-foreground">{copy.draftSaved}</p>
         {view.subject ? (
-          <p className="truncate text-sm text-neutral-800">{view.subject}</p>
+          <p className="truncate text-sm text-strong">{view.subject}</p>
         ) : null}
         {view.to.length > 0 ? (
-          <p className="truncate text-xs text-neutral-500">
+          <p className="truncate text-xs text-muted">
             {copy.to}: {view.to.join(", ")}
           </p>
         ) : null}
@@ -662,7 +656,7 @@ function DraftView({
       {view.link ? (
         <ExternalAnchor href={view.link}>
           {copy.openDraft}
-          <ExternalLink className="h-3 w-3" aria-hidden="true" />
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
         </ExternalAnchor>
       ) : null}
     </div>
@@ -680,12 +674,8 @@ function strings(value: unknown): string[] {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex gap-3 text-sm">
-      <dt className="w-24 shrink-0 text-xs leading-5 text-neutral-500">
-        {label}
-      </dt>
-      <dd className="min-w-0 flex-1 break-words text-neutral-900">
-        {children}
-      </dd>
+      <dt className="w-24 shrink-0 text-xs leading-5 text-muted">{label}</dt>
+      <dd className="min-w-0 flex-1 break-words text-foreground">{children}</dd>
     </div>
   )
 }
@@ -712,9 +702,9 @@ function PendingMailView({
         </Field>
       </dl>
       {text(mail.reply_to_message_id) ? (
-        <p className="text-xs text-neutral-500">{copy.replyInThread}</p>
+        <p className="text-xs text-muted">{copy.replyInThread}</p>
       ) : null}
-      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2">
+      <div className="rounded-md border border-border bg-surface-muted px-3 py-2">
         <CollapsibleBody body={text(mail.body)} copy={copy} />
       </div>
     </div>
@@ -750,7 +740,7 @@ function Change({ before, after }: { before: ReactNode; after: ReactNode }) {
   }
   return (
     <span className="flex flex-wrap items-baseline gap-x-2">
-      <span className="text-neutral-500 line-through">{before}</span>
+      <span className="text-muted line-through">{before}</span>
       <span aria-hidden="true">→</span>
       <span>{after}</span>
     </span>
@@ -775,14 +765,14 @@ function PendingEventView({
   if (operation === "delete_event") {
     return (
       <div className="space-y-1 px-3 py-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-rose-700">
+        <p className="text-xs font-medium capitalize tracking-wide text-danger-strong">
           {copy.deleteEvent}
         </p>
-        <p className="text-sm font-medium text-neutral-900 line-through">
+        <p className="text-sm font-medium text-foreground line-through">
           {text(current?.title) ?? text(action.event_id) ?? copy.noSubject}
         </p>
         {current ? (
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted">
             {formatRange(
               current.start,
               current.end,
@@ -793,7 +783,7 @@ function PendingEventView({
           </p>
         ) : null}
         {(current?.attendees?.length ?? 0) > 0 ? (
-          <p className="pt-1 text-xs text-neutral-600">
+          <p className="pt-1 text-xs text-secondary">
             {copy.attendeesNotified}
           </p>
         ) : null}
@@ -826,7 +816,7 @@ function PendingEventView({
 
   return (
     <div className="space-y-2 px-3 py-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+      <p className="text-xs font-medium capitalize tracking-wide text-muted">
         {isUpdate ? copy.eventChange : copy.newEvent}
       </p>
       <dl className="space-y-1.5">
@@ -874,7 +864,7 @@ function PendingEventView({
         ) : null}
       </dl>
       {attendees.length > 0 ? (
-        <p className="text-xs text-neutral-600">{copy.attendeesNotified}</p>
+        <p className="text-xs text-secondary">{copy.attendeesNotified}</p>
       ) : null}
     </div>
   )
@@ -924,23 +914,20 @@ export function ToolResultPersonalConnectorCard({
   return (
     <section
       className={joinClasses(
-        "plai-tool-result-personal-connector-card overflow-hidden rounded-lg border border-neutral-200 bg-white text-neutral-950",
+        "plai-tool-result-personal-connector-card overflow-hidden rounded-lg border border-border bg-surface text-foreground",
         className,
       )}
       data-tool-call-id={part.id}
       data-tool-call-state={part.state}
       data-connector-action={view.kind}
     >
-      <header className="flex items-center gap-2 border-b border-neutral-200 px-3 py-2 text-xs text-neutral-600">
-        <Icon
-          className="h-4 w-4 shrink-0 text-neutral-700"
-          aria-hidden="true"
-        />
-        <span className="shrink-0 font-medium text-neutral-900">
+      <header className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs text-secondary">
+        <Icon className="h-4 w-4 shrink-0 text-strong" aria-hidden="true" />
+        <span className="shrink-0 font-medium text-foreground">
           {connector?.label}
         </span>
         {connector?.account_email ? (
-          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+          <span className="min-w-0 truncate border-border-strong border px-2 py-0.5 rounded-md text-xs text-muted">
             {connector.account_email}
           </span>
         ) : null}
@@ -1049,39 +1036,42 @@ function ConfirmedActionRow({
     >
       {failed ? (
         <XCircle
-          className="mt-0.5 h-4 w-4 shrink-0 text-rose-600"
+          className="mt-0.5 h-4 w-4 shrink-0 text-danger"
           aria-hidden="true"
         />
       ) : executed ? (
         <CheckCircle2
-          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+          className="mt-0.5 h-4 w-4 shrink-0 text-success"
           aria-hidden="true"
         />
       ) : (
         <Clock
-          className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500"
+          className="mt-0.5 h-4 w-4 shrink-0 text-muted"
           aria-hidden="true"
         />
       )}
       <div className="min-w-0 flex-1 space-y-0.5">
-        <p className="text-sm font-medium text-neutral-950">{title}</p>
+        <p className="text-sm font-medium text-foreground">{title}</p>
         {connector ? (
-          <div className="flex items-center gap-2 truncate text-xs text-neutral-500">
+          <div className="flex items-center gap-2 truncate text-xs text-muted">
             {connector.label}
             {connector.account_email ? (
-              <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+              <span className="min-w-0 truncate border-border-strong border px-2 py-0.5 rounded-md text-xs text-muted">
                 {connector.account_email}
               </span>
             ) : null}
           </div>
         ) : null}
         {failed && text(action.error) ? (
-          <p className="line-clamp-2 text-xs text-rose-700">{action.error}</p>
+          <p className="line-clamp-2 text-xs text-danger-strong">
+            {action.error}
+          </p>
         ) : null}
       </div>
       {executed && link ? (
         <ExternalAnchor href={link} className="shrink-0">
           {operation === "send" ? copy.openEmail : copy.openEvent}
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
         </ExternalAnchor>
       ) : null}
     </li>
@@ -1105,7 +1095,7 @@ export function ToolResultToolConfirmationCard({
   return (
     <ul
       className={joinClasses(
-        "plai-tool-result-tool-confirmation-card divide-y divide-neutral-100 overflow-hidden rounded-lg border border-neutral-200 bg-white text-neutral-950",
+        "plai-tool-result-tool-confirmation-card divide-y divide-divider overflow-hidden rounded-lg border border-border bg-surface text-foreground",
         className,
       )}
       data-tool-call-id={part.id}
@@ -1164,14 +1154,14 @@ export function ToolResultPendingConfirmationCard({
   return (
     <section
       className={joinClasses(
-        "plai-tool-result-pending-confirmation-card overflow-hidden rounded-lg border border-neutral-200 bg-white text-neutral-950",
+        "plai-tool-result-pending-confirmation-card overflow-hidden rounded-lg border border-border bg-surface text-foreground",
         className,
       )}
       data-tool-call-id={part.id}
       data-tool-call-state={part.state}
     >
-      <header className="flex items-center gap-2 border-b border-neutral-200 px-3 py-2 text-xs text-neutral-600">
-        <span className="truncate font-mono font-medium text-neutral-900">
+      <header className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs text-secondary">
+        <span className="truncate font-mono font-medium text-foreground">
           {part.name}
         </span>
         <ConfirmationBadge state={confirmationState} copy={copy} />

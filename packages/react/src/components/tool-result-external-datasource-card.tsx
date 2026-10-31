@@ -133,23 +133,23 @@ export function ToolResultExternalDatasourceCard({
   const errorDetails = formatToolErrorDetails(part.errorDetails)
   const statusClass =
     part.state === "error"
-      ? "text-rose-600"
+      ? "text-danger"
       : part.state === "pending"
-        ? "text-amber-600"
-        : "text-emerald-600"
+        ? "text-warning"
+        : "text-success"
 
   return (
     <Sheet>
       <SheetTrigger
         aria-label={`${copy.externalDatasource}: ${getUiStatusLabel(part.state, copy)}`}
         className={joinClasses(
-          "w-full overflow-hidden rounded-lg border border-neutral-200 bg-white text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "plai-tool-result-external-datasource-card w-full overflow-hidden rounded-lg border border-border bg-surface text-left font-normal text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           className,
         )}
       >
         <span className="flex items-center gap-2 px-3 py-2 text-sm">
           <Database
-            className="h-4 w-4 shrink-0 text-neutral-500"
+            className="h-4 w-4 shrink-0 text-muted"
             aria-hidden="true"
           />
           <span className="truncate font-medium">{copy.externalDatasource}</span>
@@ -178,12 +178,12 @@ export function ToolResultExternalDatasourceCard({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Database
-                  className="h-5 w-5 text-blue-500"
+                  className="h-5 w-5 text-info"
                   aria-hidden="true"
                 />
                 <h3 className="text-sm font-medium">{copy.sqlQuery}</h3>
               </div>
-              <pre className="overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs leading-5 text-neutral-800">
+              <pre className="overflow-x-auto rounded-md border border-border bg-surface-muted p-3 text-xs leading-5 text-strong">
                 {sqlQuery}
               </pre>
             </div>
@@ -192,14 +192,14 @@ export function ToolResultExternalDatasourceCard({
           {table.columns.length > 0 && table.rows.length > 0 ? (
             <div className="space-y-2">
               <h3 className="text-sm font-medium">{copy.queryResults}</h3>
-              <div className="overflow-x-auto rounded-md border border-neutral-200">
+              <div className="overflow-x-auto rounded-md border border-border">
                 <table className="w-full border-collapse text-left text-xs">
-                  <thead className="bg-neutral-50 text-neutral-600">
+                  <thead className="bg-surface-muted text-secondary">
                     <tr>
                       {table.columns.map((column) => (
                         <th
                           key={column}
-                          className="max-w-56 truncate border-b border-neutral-200 px-3 py-2 font-medium"
+                          className="max-w-56 truncate border-b border-border px-3 py-2 font-medium"
                           title={column}
                         >
                           {column}
@@ -211,14 +211,14 @@ export function ToolResultExternalDatasourceCard({
                     {table.rows.map((row) => (
                       <tr
                         key={row.map(formatCell).join("\u0000")}
-                        className="border-b border-neutral-100 last:border-0"
+                        className="border-b border-divider last:border-0"
                       >
                         {table.columns.map((column, columnIndex) => {
                           const value = formatCell(row[columnIndex])
                           return (
                             <td
                               key={column}
-                              className="max-w-56 truncate px-3 py-2 text-neutral-700"
+                              className="max-w-56 truncate px-3 py-2 text-strong"
                               title={value}
                             >
                               {value}
@@ -232,11 +232,11 @@ export function ToolResultExternalDatasourceCard({
               </div>
             </div>
           ) : part.state === "completed" && !errorDetails ? (
-            <p className="text-sm text-neutral-600">{copy.noDataToDisplay}</p>
+            <p className="text-sm text-secondary">{copy.noDataToDisplay}</p>
           ) : null}
 
           {errorDetails ? (
-            <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <p className="rounded border border-danger-border bg-danger-subtle px-3 py-2 text-xs text-danger-strong">
               <span className="font-semibold">{copy.errorDetails}:</span>{" "}
               {errorDetails}
             </p>

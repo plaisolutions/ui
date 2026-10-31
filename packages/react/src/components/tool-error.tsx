@@ -129,7 +129,7 @@ export function ToolError({
 
   return (
     <section
-      className={joinClasses("text-sm text-neutral-600", className)}
+      className={joinClasses("text-sm text-secondary", className)}
       data-tool-call-id={part.id}
       data-tool-call-state={part.state}
       {...props}
@@ -138,11 +138,11 @@ export function ToolError({
         type="button"
         aria-controls={contentId}
         aria-expanded={isOpen}
-        className="inline-flex items-center gap-2 rounded-md py-1 text-left font-medium text-rose-600 transition-colors hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+        className="inline-flex items-center gap-2 rounded-md py-1 text-left font-medium text-danger transition-colors hover:text-danger-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         onClick={() => setIsOpen((value) => !value)}
       >
         <CircleX className="size-4 shrink-0" aria-hidden="true" />
-        <span>{copy.summary}</span>
+        <span className="line-clamp-1">{copy.summary}</span>
         <ChevronDown
           className={joinClasses(
             "size-4 shrink-0 transition-transform motion-reduce:transition-none",
@@ -155,22 +155,22 @@ export function ToolError({
       {isOpen ? (
         <div
           id={contentId}
-          className="mt-2 space-y-3 border-l-2 border-rose-200 pl-3"
+          className="mt-2 space-y-3 border-l-2 border-danger-border pl-3"
         >
           <div>
-            <p className="mb-2 text-xs font-semibold text-neutral-700">
+            <p className="mb-2 text-xs font-semibold text-strong">
               {copy.input}
             </p>
-            <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-neutral-100 p-3 text-xs leading-5 text-neutral-800">
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-surface-subtle p-3 text-xs leading-5 text-strong">
               {formatJson(part.input)}
             </pre>
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-semibold text-neutral-700">
+            <p className="mb-2 text-xs font-semibold text-strong">
               {copy.output}
             </p>
-            <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-neutral-100 p-3 text-xs leading-5 text-neutral-800">
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-surface-subtle p-3 text-xs leading-5 text-strong">
               {part.result === undefined
                 ? copy.noOutput
                 : formatJson(part.result)}
@@ -179,10 +179,10 @@ export function ToolError({
 
           {errorDetails ? (
             <div>
-              <p className="mb-2 text-xs font-semibold text-rose-700">
+              <p className="mb-2 text-xs font-semibold text-danger-strong">
                 {copy.details}
               </p>
-              <p className="whitespace-pre-wrap text-xs leading-5 text-rose-700">
+              <p className="whitespace-pre-wrap text-xs leading-5 text-danger-strong">
                 {errorDetails}
               </p>
             </div>

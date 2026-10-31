@@ -29,10 +29,9 @@ export function getFileExtension(
 }
 
 export function getFileIconClass(extension: string | null) {
-  if (extension === "pdf") return "text-rose-500"
-  if (["doc", "docx"].includes(extension ?? "")) return "text-blue-600"
-  if (["xls", "xlsx", "csv"].includes(extension ?? ""))
-    return "text-emerald-600"
-  if (["ppt", "pptx"].includes(extension ?? "")) return "text-orange-600"
-  return "text-neutral-500"
+  if (extension === "pdf") return "text-danger"
+  if (["doc", "docx"].includes(extension ?? "")) return "text-info"
+  if (["xls", "xlsx", "csv"].includes(extension ?? "")) return "text-success"
+  if (["ppt", "pptx"].includes(extension ?? "")) return "text-warning"
+  return "text-muted"
 }

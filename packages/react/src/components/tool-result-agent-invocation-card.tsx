@@ -75,30 +75,27 @@ export function ToolResultAgentInvocationCard({
       <SheetTrigger
         aria-label={`${copy.agent}: ${agentName}`}
         className={joinClasses(
-          "w-full rounded-lg border border-neutral-200 bg-white text-left font-normal text-neutral-950 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950",
+          "plai-tool-result-agent-invocation-card w-full rounded-lg border border-border bg-surface text-left font-normal text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           className,
         )}
       >
         <span className="flex items-center gap-2 px-3 py-2 text-sm">
-          <Bot
-            className="h-4 w-4 shrink-0 text-neutral-500"
-            aria-hidden="true"
-          />
+          <Bot className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
           <span className="shrink-0 font-medium">{copy.agent}</span>
-          <span className="min-w-0 truncate border-neutral-500 border px-2 py-0.5 rounded-md text-xs text-neutral-500">
+          <span className="min-w-0 truncate border-border-strong border px-2 py-0.5 rounded-md text-xs text-muted">
             {agentName}
           </span>
           <span className="ml-auto shrink-0">
             {pending ? (
               <LoaderCircle
-                className="h-4 w-4 animate-spin text-amber-600"
+                className="h-4 w-4 animate-spin text-warning"
                 aria-label={copy.pending}
               />
             ) : failed ? (
-              <XCircle className="h-4 w-4 text-rose-600" aria-hidden="true" />
+              <XCircle className="h-4 w-4 text-danger" aria-hidden="true" />
             ) : (
               <CheckCircle2
-                className="h-4 w-4 text-emerald-600"
+                className="h-4 w-4 text-success"
                 aria-hidden="true"
               />
             )}
@@ -115,24 +112,24 @@ export function ToolResultAgentInvocationCard({
         >
           <dl className="grid gap-2 text-sm">
             <div>
-              <dt className="text-xs text-neutral-500">{copy.status}</dt>
+              <dt className="text-xs text-muted">{copy.status}</dt>
               <dd>{getUiStatusLabel(part.state, copy)}</dd>
             </div>
             {metadata?.agent_id ? (
               <div>
-                <dt className="text-xs text-neutral-500">{copy.agentId}</dt>
+                <dt className="text-xs text-muted">{copy.agentId}</dt>
                 <dd className="break-all">{metadata.agent_id}</dd>
               </div>
             ) : null}
             {metadata?.tracked_execution_id ? (
               <div>
-                <dt className="text-xs text-neutral-500">{copy.executionId}</dt>
+                <dt className="text-xs text-muted">{copy.executionId}</dt>
                 <dd className="break-all">{metadata.tracked_execution_id}</dd>
               </div>
             ) : null}
             {threadId ? (
               <div>
-                <dt className="text-xs text-neutral-500">{copy.threadId}</dt>
+                <dt className="text-xs text-muted">{copy.threadId}</dt>
                 <dd className="break-all">{threadId}</dd>
               </div>
             ) : null}
@@ -140,7 +137,7 @@ export function ToolResultAgentInvocationCard({
           {prompt ? (
             <div>
               <h3 className="mb-2 text-sm font-medium">{copy.prompt}</h3>
-              <p className="whitespace-pre-wrap rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm leading-6">
+              <p className="whitespace-pre-wrap rounded-md border border-border bg-surface-muted p-3 text-sm leading-6">
                 {prompt}
               </p>
             </div>
@@ -148,7 +145,7 @@ export function ToolResultAgentInvocationCard({
           {output ? (
             <div>
               <h3 className="mb-2 text-sm font-medium">{copy.result}</h3>
-              <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs leading-5">
+              <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border border-border bg-surface-muted p-3 text-xs leading-5">
                 {output}
               </pre>
             </div>
@@ -156,7 +153,7 @@ export function ToolResultAgentInvocationCard({
           {threadId && onOpenThread ? (
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+              className="inline-flex items-center gap-2 rounded-md border border-border-strong px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               onClick={() => onOpenThread(threadId)}
             >
               <MessageSquare className="h-4 w-4" aria-hidden="true" />
@@ -164,7 +161,7 @@ export function ToolResultAgentInvocationCard({
             </button>
           ) : null}
           {error ? (
-            <p className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <p className="rounded border border-danger-border bg-danger-subtle px-3 py-2 text-xs text-danger-strong">
               <span className="font-semibold">{copy.errorDetails}:</span>{" "}
               {error}
             </p>

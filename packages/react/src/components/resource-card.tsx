@@ -61,7 +61,7 @@ function ResourceCardContent({
         </p>
       ) : null}
       {bodyDescription ? (
-        <p className="mt-2 line-clamp-2 text-xs leading-4 text-neutral-600">
+        <p className="mt-2 line-clamp-2 text-xs leading-4 text-secondary">
           {bodyDescription}
         </p>
       ) : null}
@@ -85,11 +85,11 @@ export function ResourceCard(props: ResourceCardProps) {
   >("idle")
   const abortControllerRef = useRef<AbortController | null>(null)
   const className = joinClasses(
-    "block rounded-lg bg-neutral-100 p-4 text-left text-neutral-950",
+    "plai-resource-card block rounded-lg bg-surface-subtle p-4 text-left text-foreground",
     variant === "card" ? "min-h-[183px] w-[186px] max-w-full" : "w-full",
     customClassName,
   )
-  const interactiveClassName = `${className} transition-colors hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950`
+  const interactiveClassName = `${className} transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`
 
   useEffect(
     () => () => {
@@ -155,14 +155,14 @@ export function ResourceCard(props: ResourceCardProps) {
         <ResourceCardContent {...contentProps} variant={variant} />
         {downloadState === "loading" ? (
           <span
-            className="mt-2 block text-xs text-neutral-600"
+            className="mt-2 block text-xs text-secondary"
             aria-live="polite"
           >
             {copy.openingResource}
           </span>
         ) : null}
         {downloadState === "error" ? (
-          <span className="mt-2 block text-xs text-red-700" role="alert">
+          <span className="mt-2 block text-xs text-danger-strong" role="alert">
             {copy.resourceOpenFailed}
           </span>
         ) : null}
