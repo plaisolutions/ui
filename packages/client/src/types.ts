@@ -73,8 +73,17 @@ export type OfficeDocumentsToolMetadata = {
 export type DocumentMetadata = {
   id?: string
   resource_id?: string
+  resource_link_id?: string
   datasource_id?: string
   [key: string]: unknown
+}
+
+export type ResourceLinkReadModel = {
+  id: string
+  resource_id: string
+  url: string
+  title: string | null
+  favicon: string | null
 }
 
 export type FolderReadModel = {
@@ -124,6 +133,7 @@ export type DatasourceToolResultMetadata = {
   chunk_ids: string[] | null
   relevance_scores: number[] | null
   resources: ResourceReadModel[]
+  resource_links?: ResourceLinkReadModel[]
   [key: string]: unknown
 }
 

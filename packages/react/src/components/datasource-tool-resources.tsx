@@ -1,6 +1,7 @@
 import type {
   FolderReadModel,
   GetResourceDownloadUrlFn,
+  ResourceLinkReadModel,
   ResourceReadModel,
 } from "@plaisolutions/client"
 import {
@@ -22,6 +23,7 @@ import { ResourceCard, type ResourceCardProps } from "./resource-card"
 
 export type DatasourceToolResourcesProps = {
   resources: ResourceReadModel[]
+  resourceLinks?: ResourceLinkReadModel[]
   locale?: string | null
   className?: string
   getResourceDownloadUrl?: GetResourceDownloadUrlFn
@@ -140,17 +142,60 @@ export function isDatasourceResource(
   )
 }
 
+export function isResourceLink(value: unknown): value is ResourceLinkReadModel {
+  return (
+    isObject(value) &&
+    typeof value.id === "string" &&
+    typeof value.resource_id === "string" &&
+    typeof value.url === "string" &&
+    (value.title === null || typeof value.title === "string") &&
+    (value.favicon === null || typeof value.favicon === "string")
+  )
+}
+
 export function getDatasourceResourceCards(
   resources: ResourceReadModel[],
   locale?: string | null,
   getResourceDownloadUrl?: GetResourceDownloadUrlFn,
+  resourceLinks: ResourceLinkReadModel[] = [],
 ): DatasourceResourceCard[] {
   const folderGroups = new Map<string, FolderGroup>()
   const ungroupedResources: ResourceReadModel[] = []
+  const linkCards: DatasourceResourceCard[] = []
   const seenUrls = new Set<string>()
+
+  const linksByResource = new Map<string, ResourceLinkReadModel[]>()
+  for (const link of resourceLinks) {
+    const group = linksByResource.get(link.resource_id)
+    if (group) group.push(link)
+    else linksByResource.set(link.resource_id, [link])
+  }
 
   for (const resource of resources) {
     if (resource.extra_info.public === false) continue
+
+    // A webpage resource (e.g. a sitemap) is represented by the specific
+    // pages that matched the search instead of by its parent URL.
+    const links = linksByResource.get(resource.id)
+    if (resource.type === "WEBPAGE" && links?.length) {
+      for (const link of links) {
+        if (seenUrls.has(link.url)) continue
+        seenUrls.add(link.url)
+        linkCards.push({
+          kind: "resource",
+          key: `resource-link-${link.id}`,
+          props: {
+            icon: link.favicon ?? undefined,
+            type: getResourceType(resource, locale),
+            title: link.title?.trim() || link.url,
+            url: link.url,
+            resourceId: resource.id,
+            locale,
+          },
+        })
+      }
+      continue
+    }
 
     const resourceUrl = getResourceUrl(resource, locale)
     if (resourceUrl) {
@@ -187,6 +232,7 @@ export function getDatasourceResourceCards(
       key: `resource-${resource.id}`,
       props: toResourceCardProps(resource, locale, getResourceDownloadUrl),
     })),
+    ...linkCards,
   ]
 }
 
@@ -206,6 +252,7 @@ export function DatasourceResourceCardView({
 
 export function DatasourceToolResources({
   resources,
+  resourceLinks,
   locale,
   className,
   getResourceDownloadUrl,
@@ -214,6 +261,7 @@ export function DatasourceToolResources({
     resources,
     locale,
     getResourceDownloadUrl,
+    resourceLinks,
   )
 
   return (

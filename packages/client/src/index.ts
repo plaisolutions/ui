@@ -118,6 +118,7 @@ export type {
   UploadFileProgress,
   UploadFileTransportRequest,
   PlaiSseEvent,
+  ResourceLinkReadModel,
   ResourceReadModel,
   SendMessageDocument,
   SendMessageInput,

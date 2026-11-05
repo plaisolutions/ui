@@ -268,3 +268,41 @@ describe("DatasourceToolResources", () => {
     expect(document.activeElement).toBe(trigger)
   })
 })
+
+describe("resource links", () => {
+  it("renders matched pages instead of the parent webpage resource", () => {
+    const sitemap = createResource({
+      id: "resource-sitemap",
+      name: "Sitemap",
+      type: "WEBPAGE",
+      url: "https://example.com/sitemap.xml",
+      folder: null,
+    })
+
+    render(
+      <DatasourceToolResources
+        resources={[sitemap]}
+        resourceLinks={[
+          {
+            id: "link-1",
+            resource_id: "resource-sitemap",
+            url: "https://example.com/a",
+            title: "Page A",
+            favicon: null,
+          },
+          {
+            id: "link-2",
+            resource_id: "resource-sitemap",
+            url: "https://example.com/a",
+            title: "Page A duplicate",
+            favicon: null,
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText("Page A")).toBeTruthy()
+    expect(screen.queryByText("Page A duplicate")).toBeNull()
+    expect(screen.queryByText("Sitemap")).toBeNull()
+  })
+})
