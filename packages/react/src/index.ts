@@ -174,6 +174,7 @@ export type {
   MessageRating,
   RateMessageInput,
   ResendMessageInput,
+  ResourceLinkReadModel,
   ResourceReadModel,
   SendMessageDocument,
   SendMessageInput,

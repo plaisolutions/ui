@@ -1,5 +1,6 @@
 import type {
   GetResourceDownloadUrlFn,
+  ResourceLinkReadModel,
   ResourceReadModel,
   UIDatasourceToolCallPart,
   UIFirecrawlSearchToolCallPart,
@@ -12,6 +13,7 @@ import {
   DatasourceResourceCardView,
   getDatasourceResourceCards,
   isDatasourceResource,
+  isResourceLink,
 } from "./datasource-tool-resources"
 import { joinClasses } from "./internal/join-classes"
 import { getSourceResultsCopy } from "./internal/source-results-copy"
@@ -72,6 +74,13 @@ function getDatasourceResources(
   return Array.isArray(resources) ? resources.filter(isDatasourceResource) : []
 }
 
+function getDatasourceResourceLinks(
+  part: UIDatasourceToolCallPart,
+): ResourceLinkReadModel[] {
+  const links = part.metadata?.resource_links
+  return Array.isArray(links) ? links.filter(isResourceLink) : []
+}
+
 function getAggregatedCards(
   parts: SourceToolPart[],
   locale?: string | null,
@@ -87,6 +96,7 @@ function getAggregatedCards(
         getDatasourceResources(part),
         locale,
         getResourceDownloadUrl,
+        getDatasourceResourceLinks(part),
       ).map((card) => ({
         kind: "datasource" as const,
         key: `${part.id}-${card.key}`,

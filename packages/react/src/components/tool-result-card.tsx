@@ -2,12 +2,14 @@ import type {
   GetResourceDownloadUrlFn,
   MemoryProposalActions,
   OfficeDocumentMediaFile,
+  ResourceLinkReadModel,
   ResourceReadModel,
   UIToolCallPart,
 } from "@plaisolutions/client"
 import {
   DatasourceToolResources,
   isDatasourceResource,
+  isResourceLink,
 } from "./datasource-tool-resources"
 import { joinClasses } from "./internal/join-classes"
 import { getUiCopy } from "./internal/ui-copy"
@@ -83,6 +85,17 @@ function getDatasourceResources(part: UIToolCallPart): ResourceReadModel[] {
   return Array.isArray(resources) ? resources.filter(isDatasourceResource) : []
 }
 
+function getDatasourceResourceLinks(
+  part: UIToolCallPart,
+): ResourceLinkReadModel[] {
+  if (part.toolType !== "datasource" || !part.metadata) {
+    return []
+  }
+
+  const links = part.metadata.resource_links
+  return Array.isArray(links) ? links.filter(isResourceLink) : []
+}
+
 export function ToolResultCard({
   part,
   className,
@@ -146,6 +159,7 @@ export function ToolResultCard({
 
   const officeMediaFiles = getOfficeDocumentMediaFiles(part)
   const datasourceResources = getDatasourceResources(part)
+  const datasourceResourceLinks = getDatasourceResourceLinks(part)
 
   if (part.toolType === "email_send") {
     return (
@@ -251,6 +265,7 @@ export function ToolResultCard({
     return (
       <DatasourceToolResources
         resources={datasourceResources}
+        resourceLinks={datasourceResourceLinks}
         locale={locale}
         className={className}
         getResourceDownloadUrl={getResourceDownloadUrl}
