@@ -896,13 +896,25 @@ export function ToolResultPersonalConnectorCard({
   className,
   toolConfirmation,
 }: ToolResultPersonalConnectorCardProps) {
-  const view = getView(part)
+  const prepared = getView(part)
   const pending =
-    view?.kind === "pending-mail" || view?.kind === "pending-event"
-      ? view.pending
+    prepared?.kind === "pending-mail" || prepared?.kind === "pending-event"
+      ? prepared.pending
       : null
   const confirmationState = useToolConfirmationState(pending, toolConfirmation)
-  if (!view) return null
+  if (!prepared) return null
+  // After an edit the card shows what actually ran, not what was prepared.
+  const view =
+    (prepared.kind === "pending-mail" || prepared.kind === "pending-event") &&
+    confirmationState?.effectiveAction
+      ? {
+          ...prepared,
+          pending: {
+            ...prepared.pending,
+            action: confirmationState.effectiveAction,
+          },
+        }
+      : prepared
 
   const copy = getPersonalConnectorCopy(locale)
   const connector = getConnector(part)
@@ -915,11 +927,14 @@ export function ToolResultPersonalConnectorCard({
     <section
       className={joinClasses(
         "plai-tool-result-personal-connector-card overflow-hidden rounded-lg border border-border bg-surface text-foreground",
+        // A replaced version stays readable but recedes behind its successor.
+        confirmationState?.status === "superseded" ? "opacity-60" : undefined,
         className,
       )}
       data-tool-call-id={part.id}
       data-tool-call-state={part.state}
       data-connector-action={view.kind}
+      data-confirmation-action={pending?.action_id}
     >
       <header className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs text-secondary">
         <Icon className="h-4 w-4 shrink-0 text-strong" aria-hidden="true" />

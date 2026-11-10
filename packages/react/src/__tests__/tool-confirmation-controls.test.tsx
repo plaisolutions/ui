@@ -76,6 +76,9 @@ function state(
     error: null,
     metadata: null,
     pendingConfirmation: null,
+    effectiveAction: null,
+    supersededBy: null,
+    supersedes: null,
     source: "server",
     ...overrides,
   }

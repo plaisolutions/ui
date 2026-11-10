@@ -285,9 +285,13 @@ const pendingSendPart = part("gmail_send", {
 })
 
 function confirmationState(
-  status: "pending" | "executed" | "rejected" | "expired",
+  status: "pending" | "executed" | "rejected" | "expired" | "superseded",
   actionId = "a-1",
   toolName = "gmail_send",
+  extra: {
+    effectiveAction?: Record<string, unknown> | null
+    supersededBy?: string | null
+  } = {},
 ) {
   const open = status === "pending"
   return {
@@ -303,6 +307,9 @@ function confirmationState(
         error: null,
         metadata: null,
         pendingConfirmation: null,
+        effectiveAction: extra.effectiveAction ?? null,
+        supersededBy: extra.supersededBy ?? null,
+        supersedes: null,
         source: "server" as const,
       },
     },
@@ -383,6 +390,137 @@ export const PendingEventDeleteWithButtons: Story = {
         "a-3",
         "google_calendar_delete_event",
       ),
+      decide: async () => {},
+    },
+  },
+}
+
+/** The server declares the fields: "Editar" opens an inline form, "Guardar y enviar" runs it. */
+export const PendingSendEditable: Story = {
+  args: {
+    locale: "es",
+    part: part("gmail_send", {
+      connector: gmail,
+      action: "send",
+      pending_confirmation: {
+        action_id: "a-1",
+        tool_name: "gmail_send",
+        kind: "mail",
+        operation: "send",
+        editable: ["to", "cc", "subject", "body"],
+        expires_at: inHalfAnHour,
+        state_version: 1,
+        action: {
+          operation: "send",
+          to: ["carlos@cliente.com"],
+          subject: "Propuesta",
+          body: "Hola Carlos,\n\nTe adjunto la propuesta revisada.\n\nUn saludo",
+        },
+      },
+    }),
+    toolConfirmation: {
+      states: confirmationState("pending"),
+      decide: async (decisions) => {
+        console.log("decisions", decisions)
+        await new Promise((resolve) => setTimeout(resolve, 800))
+      },
+    },
+  },
+}
+
+/** Times are shown and sent in the action's own zone (Europe/Madrid), never the browser's. */
+export const PendingEventCreateEditable: Story = {
+  args: {
+    locale: "es",
+    part: part("google_calendar_create_event", {
+      connector: {
+        provider: "google",
+        capability: "google_calendar",
+        label: "Google Calendar",
+        account_email: "dani@plai.ai",
+      },
+      action: "create_event",
+      pending_confirmation: {
+        action_id: "a-4",
+        tool_name: "google_calendar_create_event",
+        kind: "calendar",
+        operation: "create",
+        editable: ["title", "start", "end", "location", "attendees"],
+        expires_at: inHalfAnHour,
+        state_version: 1,
+        action: {
+          operation: "create_event",
+          title: "Demo con Cliente",
+          start: "2027-11-15T10:00:00+01:00",
+          end: "2027-11-15T11:00:00+01:00",
+          time_zone: "Europe/Madrid",
+          attendees: ["carlos@cliente.com"],
+        },
+      },
+    }),
+    toolConfirmation: {
+      states: confirmationState(
+        "pending",
+        "a-4",
+        "google_calendar_create_event",
+      ),
+      decide: async (decisions) => {
+        console.log("decisions", decisions)
+      },
+    },
+  },
+}
+
+/** The server refuses the edit: the draft stays and the field shows the reason. */
+export const PendingSendEditRejected: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("pending"),
+      decide: async () => {
+        const { ToolDecisionRejectedError } = await import(
+          "@plaisolutions/client"
+        )
+        throw new ToolDecisionRejectedError(
+          {
+            actionId: "a-1",
+            errors: [
+              { field: "body", message: "must be plain text, without HTML" },
+            ],
+          },
+          { type: "http_error", message: "HTTP 422", status: 422 },
+        )
+      },
+    },
+  },
+}
+
+/** Executed after an edit: the card shows what was sent, marked as edited. */
+export const SentAfterEdit: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("executed", "a-1", "gmail_send", {
+        effectiveAction: {
+          operation: "send",
+          to: ["carlos@cliente.com"],
+          subject: "Propuesta revisada",
+          body: "Hola Carlos,\n\nTe adjunto la propuesta revisada.\n\nUn saludo",
+        },
+      }),
+      decide: async () => {},
+    },
+  },
+}
+
+/** An older version replaced by `replace_pending_action`: dimmed, with a link to the new one. */
+export const ReplacedVersion: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("superseded", "a-1", "gmail_send", {
+        supersededBy: "a-2",
+      }),
       decide: async () => {},
     },
   },

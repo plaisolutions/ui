@@ -3,15 +3,24 @@ import {
   type ToolConfirmationSnapshot,
   type ToolConfirmationState,
   type ToolDecision,
+  ToolDecisionRejectedError,
   toolConfirmationAt,
 } from "@plaisolutions/client"
 import { CheckCircle2, Clock, LoaderCircle, XCircle } from "lucide-react"
 import { useEffect, useState } from "react"
+import { ToolConfirmationEditForm } from "./tool-confirmation-edit-form"
 import { joinClasses } from "./internal/join-classes"
 import {
   type PersonalConnectorCopy,
   fillCopy,
 } from "./internal/personal-connector-copy"
+import {
+  type Draft,
+  type FieldError,
+  buildPatch,
+  editableFields,
+  initialDraft,
+} from "./internal/tool-confirmation-edit"
 
 /**
  * Lets the user confirm or reject held actions from their cards. Built by the
@@ -153,9 +162,32 @@ function expiryText(
     : fillCopy(copy.expiresIn, { minutes: Math.floor(left / MINUTE) })
 }
 
+/** Label of the button that saves an edit and runs the action in one step. */
+function saveLabel(
+  operation: PendingConfirmation["operation"],
+  copy: PersonalConnectorCopy,
+) {
+  return operation === "send" ? copy.saveAndSend : copy.saveAndConfirm
+}
+
+/** Scrolls to the card of another version of the same action, if it is on screen. */
+function showAction(actionId: string) {
+  if (typeof document === "undefined") return
+  for (const element of document.querySelectorAll(
+    "[data-confirmation-action]",
+  )) {
+    if (element.getAttribute("data-confirmation-action") === actionId) {
+      element.scrollIntoView?.({ block: "center", behavior: "smooth" })
+      return
+    }
+  }
+}
+
 /**
  * Footer of a held action. Without `toolConfirmation` it keeps the text hint
- * (reply "yes"); with it, buttons once the server state is known.
+ * (reply "yes"); with it, buttons once the server state is known. When the
+ * server lets the user edit the action, an inline form is offered and "Save
+ * and send" confirms with the changes in a single step.
  */
 export function PendingConfirmationFooter({
   pending,
@@ -170,6 +202,10 @@ export function PendingConfirmationFooter({
   const now = useNow(state?.status === "pending")
   const [sending, setSending] = useState<ToolDecision["decision"] | null>(null)
   const [failed, setFailed] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<Draft>({})
+  const [fieldErrors, setFieldErrors] = useState<Record<string, FieldError>>({})
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({})
 
   if (!toolConfirmation) {
     return (
@@ -195,31 +231,92 @@ export function PendingConfirmationFooter({
     const label = statusLabel(state.status, copy)
     return label ? (
       <p
-        className="border-t border-divider bg-surface-muted px-3 py-2 text-xs text-strong"
+        className="flex flex-wrap items-center gap-2 border-t border-divider bg-surface-muted px-3 py-2 text-xs text-strong"
         aria-live="polite"
       >
-        {label}
-        {state.status === "failed" && state.error ? `: ${state.error}` : null}
+        <span>
+          {label}
+          {state.status === "failed" && state.error ? `: ${state.error}` : null}
+        </span>
+        {state.status === "superseded" && state.supersededBy ? (
+          <button
+            type="button"
+            className="underline underline-offset-2 hover:text-foreground"
+            onClick={() => showAction(state.supersededBy as string)}
+          >
+            {copy.seeNewerVersion}
+          </button>
+        ) : null}
+        {state.effectiveAction ? (
+          <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-muted">
+            {copy.editedLabel}
+          </span>
+        ) : null}
       </p>
     ) : null
   }
 
-  const decide = async (decision: ToolDecision["decision"]) => {
-    setSending(decision)
+  const decide = async (decisions: ToolDecision[]) => {
     setFailed(false)
     try {
-      await toolConfirmation.decide([
-        { action_id: pending.action_id, decision },
-      ])
-    } catch {
-      setFailed(true)
-    } finally {
-      setSending(null)
+      await toolConfirmation.decide(decisions)
+    } catch (error) {
+      if (
+        error instanceof ToolDecisionRejectedError &&
+        error.details.actionId === pending.action_id
+      ) {
+        // The server refused the edit: nothing ran and the draft stays as it is.
+        setServerErrors(
+          Object.fromEntries(
+            error.details.errors.map(({ field, message }) => [field, message]),
+          ),
+        )
+      } else {
+        setFailed(true)
+      }
     }
+  }
+
+  const send = async (decision: ToolDecision["decision"]) => {
+    setSending(decision)
+    await decide([{ action_id: pending.action_id, decision }])
+    setSending(null)
+  }
+
+  const saveAndConfirm = async () => {
+    const { patch, errors } = buildPatch(pending, draft)
+    setFieldErrors(errors)
+    setServerErrors({})
+    if (Object.keys(errors).length > 0) return
+    setSending("confirm")
+    await decide([
+      {
+        action_id: pending.action_id,
+        decision: "confirm",
+        // Nothing changed: it is a plain confirmation.
+        ...(Object.keys(patch).length > 0 ? { arguments: patch } : {}),
+      },
+    ])
+    setSending(null)
+  }
+
+  const startEditing = () => {
+    setDraft(initialDraft(pending))
+    setFieldErrors({})
+    setServerErrors({})
+    setFailed(false)
+    setEditing(true)
+  }
+
+  const stopEditing = () => {
+    setEditing(false)
+    setFieldErrors({})
+    setServerErrors({})
   }
 
   const disabled = Boolean(toolConfirmation.disabled) || sending !== null
   const destructive = pending.operation === "delete"
+  const canEdit = state.canConfirm && editableFields(pending).length > 0
   const expiry = expiryText(
     state,
     toolConfirmation.states.serverOffsetMs,
@@ -227,58 +324,103 @@ export function PendingConfirmationFooter({
     copy,
   )
   const unavailable = state.error === "tool_unavailable"
+  const editStale = state.error === "invalid_edit"
 
   return (
-    <div
-      className="flex flex-wrap items-center gap-2 border-t border-border bg-warning-subtle/60 px-3 py-2"
-      data-confirmation-actions={pending.action_id}
-    >
-      {state.canConfirm ? (
-        <button
-          type="button"
+    <>
+      {editing && canEdit ? (
+        <ToolConfirmationEditForm
+          pending={pending}
+          draft={draft}
+          onChange={(field, value) => {
+            setDraft((current) => ({ ...current, [field]: value }))
+            // The message belonged to the previous value.
+            setFieldErrors(({ [field]: _removed, ...rest }) => rest)
+            setServerErrors(({ [field]: _removed, ...rest }) => rest)
+          }}
+          errors={fieldErrors}
+          serverErrors={serverErrors}
           disabled={disabled}
-          onClick={() => void decide("confirm")}
-          className={joinClasses(
-            "inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium text-inverse-foreground disabled:opacity-50",
-            destructive
-              ? "bg-danger hover:bg-danger-strong"
-              : "bg-inverse hover:bg-inverse-hover",
-          )}
-        >
-          {sending === "confirm" ? (
-            <LoaderCircle
-              className="mr-2 size-3 animate-spin"
-              aria-hidden="true"
-            />
-          ) : null}
-          {sending === "confirm"
-            ? copy.confirming
-            : verbFor(pending.operation, copy)}
-        </button>
+          copy={copy}
+        />
       ) : null}
-      {state.canReject ? (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => void decide("reject")}
-          className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-xs font-medium text-strong hover:bg-surface-muted disabled:opacity-50"
-        >
-          {sending === "reject" ? (
-            <LoaderCircle
-              className="mr-2 size-3 animate-spin"
-              aria-hidden="true"
-            />
-          ) : null}
-          {sending === "reject" ? copy.cancelling : copy.cancel}
-        </button>
-      ) : null}
-      <span className="ml-auto text-xs text-secondary" aria-live="polite">
-        {failed
-          ? copy.decisionError
-          : unavailable
-            ? copy.toolUnavailable
-            : expiry}
-      </span>
-    </div>
+      <div
+        className="flex flex-wrap items-center gap-2 border-t border-border bg-warning-subtle/60 px-3 py-2"
+        data-confirmation-actions={pending.action_id}
+      >
+        {state.canConfirm ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() =>
+              void (editing && canEdit ? saveAndConfirm() : send("confirm"))
+            }
+            className={joinClasses(
+              "inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium text-inverse-foreground disabled:opacity-50",
+              destructive
+                ? "bg-danger hover:bg-danger-strong"
+                : "bg-inverse hover:bg-inverse-hover",
+            )}
+          >
+            {sending === "confirm" ? (
+              <LoaderCircle
+                className="mr-2 size-3 animate-spin"
+                aria-hidden="true"
+              />
+            ) : null}
+            {sending === "confirm"
+              ? copy.confirming
+              : editing && canEdit
+                ? saveLabel(pending.operation, copy)
+                : verbFor(pending.operation, copy)}
+          </button>
+        ) : null}
+        {canEdit && !editing ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={startEditing}
+            className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-xs font-medium text-strong hover:bg-surface-muted disabled:opacity-50"
+          >
+            {copy.edit}
+          </button>
+        ) : null}
+        {editing && canEdit ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={stopEditing}
+            className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-xs font-medium text-strong hover:bg-surface-muted disabled:opacity-50"
+          >
+            {copy.discardEdit}
+          </button>
+        ) : null}
+        {state.canReject ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => void send("reject")}
+            className="inline-flex items-center rounded-md border border-border-strong bg-surface px-3 py-1.5 text-xs font-medium text-strong hover:bg-surface-muted disabled:opacity-50"
+          >
+            {sending === "reject" ? (
+              <LoaderCircle
+                className="mr-2 size-3 animate-spin"
+                aria-hidden="true"
+              />
+            ) : null}
+            {sending === "reject" ? copy.cancelling : copy.cancel}
+          </button>
+        ) : null}
+        <span className="ml-auto text-xs text-secondary" aria-live="polite">
+          {failed
+            ? copy.decisionError
+            : unavailable
+              ? copy.toolUnavailable
+              : editStale
+                ? copy.editNoLongerApplies
+                : expiry}
+        </span>
+      </div>
+    </>
   )
 }

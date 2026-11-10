@@ -74,6 +74,24 @@ export type PersonalConnectorCopy = {
   statusNotFound: string
   toolUnavailable: string
   decisionError: string
+  edit: string
+  saveAndSend: string
+  saveAndConfirm: string
+  discardEdit: string
+  fieldBody: string
+  fieldStart: string
+  fieldEnd: string
+  addressesHint: string
+  timeZoneNote: string
+  errorRequired: string
+  errorNoRecipients: string
+  errorInvalidAddress: string
+  errorInvalidDateTime: string
+  errorAmbiguousTime: string
+  errorEndBeforeStart: string
+  editNoLongerApplies: string
+  editedLabel: string
+  seeNewerVersion: string
 }
 
 const ENGLISH: PersonalConnectorCopy = {
@@ -147,6 +165,26 @@ const ENGLISH: PersonalConnectorCopy = {
   statusNotFound: "Not available in this conversation",
   toolUnavailable: "The tool for this action isn’t available right now",
   decisionError: "Your decision couldn’t be sent. Try again.",
+  edit: "Edit",
+  saveAndSend: "Save and send",
+  saveAndConfirm: "Save and confirm",
+  discardEdit: "Discard changes",
+  fieldBody: "Message",
+  fieldStart: "Starts",
+  fieldEnd: "Ends",
+  addressesHint: "Separate addresses with commas",
+  timeZoneNote: "Time zone: {{zone}}",
+  errorRequired: "This field can’t be empty",
+  errorNoRecipients: "Add at least one recipient",
+  errorInvalidAddress: "Enter valid email addresses",
+  errorInvalidDateTime: "Enter a valid date and time",
+  errorAmbiguousTime:
+    "This time doesn’t exist or happens twice in {{zone}}. Pick another time.",
+  errorEndBeforeStart: "The end must be after the start",
+  editNoLongerApplies:
+    "Your changes no longer apply to this action. Review them and try again.",
+  editedLabel: "Edited",
+  seeNewerVersion: "See the newer version",
 }
 
 const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
@@ -222,6 +260,26 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusNotFound: "No disponible en esta conversación",
     toolUnavailable: "La herramienta de esta acción no está disponible ahora",
     decisionError: "No se pudo enviar tu decisión. Inténtalo de nuevo.",
+    edit: "Editar",
+    saveAndSend: "Guardar y enviar",
+    saveAndConfirm: "Guardar y confirmar",
+    discardEdit: "Descartar cambios",
+    fieldBody: "Mensaje",
+    fieldStart: "Empieza",
+    fieldEnd: "Termina",
+    addressesHint: "Separa las direcciones con comas",
+    timeZoneNote: "Zona horaria: {{zone}}",
+    errorRequired: "Este campo no puede estar vacío",
+    errorNoRecipients: "Añade al menos un destinatario",
+    errorInvalidAddress: "Introduce direcciones de correo válidas",
+    errorInvalidDateTime: "Introduce una fecha y hora válidas",
+    errorAmbiguousTime:
+      "Esta hora no existe o se repite en {{zone}}. Elige otra hora.",
+    errorEndBeforeStart: "El final debe ser posterior al inicio",
+    editNoLongerApplies:
+      "Tus cambios ya no se aplican a esta acción. Revísalos e inténtalo de nuevo.",
+    editedLabel: "Editada",
+    seeNewerVersion: "Ver la versión más reciente",
   },
   ca: {
     searchingMail: "Cercant a {{service}}",
@@ -295,6 +353,26 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusNotFound: "No disponible en aquesta conversa",
     toolUnavailable: "L’eina d’aquesta acció no està disponible ara",
     decisionError: "No s’ha pogut enviar la teva decisió. Torna-ho a provar.",
+    edit: "Edita",
+    saveAndSend: "Desa i envia",
+    saveAndConfirm: "Desa i confirma",
+    discardEdit: "Descarta els canvis",
+    fieldBody: "Missatge",
+    fieldStart: "Comença",
+    fieldEnd: "Acaba",
+    addressesHint: "Separa les adreces amb comes",
+    timeZoneNote: "Zona horària: {{zone}}",
+    errorRequired: "Aquest camp no pot estar buit",
+    errorNoRecipients: "Afegeix com a mínim un destinatari",
+    errorInvalidAddress: "Introdueix adreces de correu vàlides",
+    errorInvalidDateTime: "Introdueix una data i hora vàlides",
+    errorAmbiguousTime:
+      "Aquesta hora no existeix o es repeteix a {{zone}}. Tria una altra hora.",
+    errorEndBeforeStart: "El final ha de ser posterior a l’inici",
+    editNoLongerApplies:
+      "Els teus canvis ja no s’apliquen a aquesta acció. Revisa’ls i torna-ho a provar.",
+    editedLabel: "Editada",
+    seeNewerVersion: "Mostra la versió més recent",
   },
   fr: {
     searchingMail: "Recherche dans {{service}}",
@@ -366,8 +444,29 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusFailed: "Échec",
     statusUnknown: "Résultat inconnu : vérifiez avant de réessayer",
     statusNotFound: "Indisponible dans cette conversation",
-    toolUnavailable: "L’outil de cette action n’est pas disponible pour le moment",
+    toolUnavailable:
+      "L’outil de cette action n’est pas disponible pour le moment",
     decisionError: "Impossible d’envoyer votre décision. Réessayez.",
+    edit: "Modifier",
+    saveAndSend: "Enregistrer et envoyer",
+    saveAndConfirm: "Enregistrer et confirmer",
+    discardEdit: "Annuler les modifications",
+    fieldBody: "Message",
+    fieldStart: "Début",
+    fieldEnd: "Fin",
+    addressesHint: "Séparez les adresses par des virgules",
+    timeZoneNote: "Fuseau horaire : {{zone}}",
+    errorRequired: "Ce champ ne peut pas être vide",
+    errorNoRecipients: "Ajoutez au moins un destinataire",
+    errorInvalidAddress: "Saisissez des adresses e-mail valides",
+    errorInvalidDateTime: "Saisissez une date et une heure valides",
+    errorAmbiguousTime:
+      "Cette heure n’existe pas ou se répète en {{zone}}. Choisissez une autre heure.",
+    errorEndBeforeStart: "La fin doit être postérieure au début",
+    editNoLongerApplies:
+      "Vos modifications ne s’appliquent plus à cette action. Vérifiez-les et réessayez.",
+    editedLabel: "Modifiée",
+    seeNewerVersion: "Voir la version la plus récente",
   },
   it: {
     searchingMail: "Ricerca in {{service}}",
@@ -441,6 +540,26 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusNotFound: "Non disponibile in questa conversazione",
     toolUnavailable: "Lo strumento di questa azione non è disponibile ora",
     decisionError: "Impossibile inviare la tua decisione. Riprova.",
+    edit: "Modifica",
+    saveAndSend: "Salva e invia",
+    saveAndConfirm: "Salva e conferma",
+    discardEdit: "Annulla le modifiche",
+    fieldBody: "Messaggio",
+    fieldStart: "Inizio",
+    fieldEnd: "Fine",
+    addressesHint: "Separa gli indirizzi con virgole",
+    timeZoneNote: "Fuso orario: {{zone}}",
+    errorRequired: "Questo campo non può essere vuoto",
+    errorNoRecipients: "Aggiungi almeno un destinatario",
+    errorInvalidAddress: "Inserisci indirizzi e-mail validi",
+    errorInvalidDateTime: "Inserisci una data e un’ora valide",
+    errorAmbiguousTime:
+      "Questo orario non esiste o si ripete in {{zone}}. Scegli un altro orario.",
+    errorEndBeforeStart: "La fine deve essere successiva all’inizio",
+    editNoLongerApplies:
+      "Le tue modifiche non si applicano più a questa azione. Controllale e riprova.",
+    editedLabel: "Modificata",
+    seeNewerVersion: "Vedi la versione più recente",
   },
   de: {
     searchingMail: "Suche in {{service}}",
@@ -508,12 +627,34 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusRejected: "Abgebrochen",
     statusExpired: "Abgelaufen: bitte im Chat erneut anfragen",
     statusSuperseded: "Durch eine neuere Version ersetzt",
-    statusInvalidated: "Kann nicht mehr ausgeführt werden: bitte erneut anfragen",
+    statusInvalidated:
+      "Kann nicht mehr ausgeführt werden: bitte erneut anfragen",
     statusFailed: "Fehlgeschlagen",
     statusUnknown: "Ergebnis unbekannt: vor dem Wiederholen prüfen",
     statusNotFound: "In dieser Unterhaltung nicht verfügbar",
     toolUnavailable: "Das Tool für diese Aktion ist gerade nicht verfügbar",
-    decisionError: "Deine Entscheidung konnte nicht gesendet werden. Versuche es erneut.",
+    decisionError:
+      "Deine Entscheidung konnte nicht gesendet werden. Versuche es erneut.",
+    edit: "Bearbeiten",
+    saveAndSend: "Speichern und senden",
+    saveAndConfirm: "Speichern und bestätigen",
+    discardEdit: "Änderungen verwerfen",
+    fieldBody: "Nachricht",
+    fieldStart: "Beginn",
+    fieldEnd: "Ende",
+    addressesHint: "Adressen durch Kommas trennen",
+    timeZoneNote: "Zeitzone: {{zone}}",
+    errorRequired: "Dieses Feld darf nicht leer sein",
+    errorNoRecipients: "Füge mindestens einen Empfänger hinzu",
+    errorInvalidAddress: "Gib gültige E-Mail-Adressen ein",
+    errorInvalidDateTime: "Gib ein gültiges Datum und eine gültige Uhrzeit ein",
+    errorAmbiguousTime:
+      "Diese Uhrzeit existiert in {{zone}} nicht oder kommt doppelt vor. Wähle eine andere Uhrzeit.",
+    errorEndBeforeStart: "Das Ende muss nach dem Beginn liegen",
+    editNoLongerApplies:
+      "Deine Änderungen gelten für diese Aktion nicht mehr. Prüfe sie und versuche es erneut.",
+    editedLabel: "Bearbeitet",
+    seeNewerVersion: "Neuere Version ansehen",
   },
   da: {
     searchingMail: "Søger i {{service}}",
@@ -585,8 +726,29 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusFailed: "Mislykkedes",
     statusUnknown: "Ukendt resultat: tjek før du prøver igen",
     statusNotFound: "Ikke tilgængelig i denne samtale",
-    toolUnavailable: "Værktøjet til denne handling er ikke tilgængeligt lige nu",
+    toolUnavailable:
+      "Værktøjet til denne handling er ikke tilgængeligt lige nu",
     decisionError: "Din beslutning kunne ikke sendes. Prøv igen.",
+    edit: "Rediger",
+    saveAndSend: "Gem og send",
+    saveAndConfirm: "Gem og bekræft",
+    discardEdit: "Kassér ændringer",
+    fieldBody: "Besked",
+    fieldStart: "Starter",
+    fieldEnd: "Slutter",
+    addressesHint: "Adskil adresser med komma",
+    timeZoneNote: "Tidszone: {{zone}}",
+    errorRequired: "Feltet må ikke være tomt",
+    errorNoRecipients: "Tilføj mindst én modtager",
+    errorInvalidAddress: "Angiv gyldige mailadresser",
+    errorInvalidDateTime: "Angiv en gyldig dato og tid",
+    errorAmbiguousTime:
+      "Dette tidspunkt findes ikke eller forekommer to gange i {{zone}}. Vælg et andet tidspunkt.",
+    errorEndBeforeStart: "Slutningen skal være efter starten",
+    editNoLongerApplies:
+      "Dine ændringer gælder ikke længere for denne handling. Gennemgå dem og prøv igen.",
+    editedLabel: "Redigeret",
+    seeNewerVersion: "Se den nyere version",
   },
   sv: {
     searchingMail: "Söker i {{service}}",
@@ -658,8 +820,29 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusFailed: "Misslyckades",
     statusUnknown: "Okänt resultat: kontrollera innan du försöker igen",
     statusNotFound: "Inte tillgänglig i den här konversationen",
-    toolUnavailable: "Verktyget för den här åtgärden är inte tillgängligt just nu",
+    toolUnavailable:
+      "Verktyget för den här åtgärden är inte tillgängligt just nu",
     decisionError: "Ditt beslut kunde inte skickas. Försök igen.",
+    edit: "Redigera",
+    saveAndSend: "Spara och skicka",
+    saveAndConfirm: "Spara och bekräfta",
+    discardEdit: "Ignorera ändringar",
+    fieldBody: "Meddelande",
+    fieldStart: "Börjar",
+    fieldEnd: "Slutar",
+    addressesHint: "Separera adresser med kommatecken",
+    timeZoneNote: "Tidszon: {{zone}}",
+    errorRequired: "Fältet får inte vara tomt",
+    errorNoRecipients: "Lägg till minst en mottagare",
+    errorInvalidAddress: "Ange giltiga e-postadresser",
+    errorInvalidDateTime: "Ange ett giltigt datum och en giltig tid",
+    errorAmbiguousTime:
+      "Den här tiden finns inte eller inträffar två gånger i {{zone}}. Välj en annan tid.",
+    errorEndBeforeStart: "Slutet måste vara efter starten",
+    editNoLongerApplies:
+      "Dina ändringar gäller inte längre för den här åtgärden. Granska dem och försök igen.",
+    editedLabel: "Redigerad",
+    seeNewerVersion: "Se den nyare versionen",
   },
   no: {
     searchingMail: "Søker i {{service}}",
@@ -733,6 +916,26 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusNotFound: "Ikke tilgjengelig i denne samtalen",
     toolUnavailable: "Verktøyet for denne handlingen er ikke tilgjengelig nå",
     decisionError: "Beslutningen din kunne ikke sendes. Prøv igjen.",
+    edit: "Rediger",
+    saveAndSend: "Lagre og send",
+    saveAndConfirm: "Lagre og bekreft",
+    discardEdit: "Forkast endringer",
+    fieldBody: "Melding",
+    fieldStart: "Starter",
+    fieldEnd: "Slutter",
+    addressesHint: "Skill adresser med komma",
+    timeZoneNote: "Tidssone: {{zone}}",
+    errorRequired: "Feltet kan ikke være tomt",
+    errorNoRecipients: "Legg til minst én mottaker",
+    errorInvalidAddress: "Skriv inn gyldige e-postadresser",
+    errorInvalidDateTime: "Skriv inn en gyldig dato og tid",
+    errorAmbiguousTime:
+      "Dette tidspunktet finnes ikke eller forekommer to ganger i {{zone}}. Velg et annet tidspunkt.",
+    errorEndBeforeStart: "Slutten må være etter starten",
+    editNoLongerApplies:
+      "Endringene dine gjelder ikke lenger for denne handlingen. Gå gjennom dem og prøv igjen.",
+    editedLabel: "Redigert",
+    seeNewerVersion: "Se den nyere versjonen",
   },
   pt: {
     searchingMail: "Pesquisando no {{service}}",
@@ -806,6 +1009,26 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
     statusNotFound: "Indisponível nesta conversa",
     toolUnavailable: "A ferramenta desta ação não está disponível agora",
     decisionError: "Não foi possível enviar sua decisão. Tente novamente.",
+    edit: "Editar",
+    saveAndSend: "Salvar e enviar",
+    saveAndConfirm: "Salvar e confirmar",
+    discardEdit: "Descartar alterações",
+    fieldBody: "Mensagem",
+    fieldStart: "Início",
+    fieldEnd: "Fim",
+    addressesHint: "Separe os endereços com vírgulas",
+    timeZoneNote: "Fuso horário: {{zone}}",
+    errorRequired: "Este campo não pode ficar vazio",
+    errorNoRecipients: "Adicione pelo menos um destinatário",
+    errorInvalidAddress: "Informe endereços de e-mail válidos",
+    errorInvalidDateTime: "Informe uma data e hora válidas",
+    errorAmbiguousTime:
+      "Este horário não existe ou se repete em {{zone}}. Escolha outro horário.",
+    errorEndBeforeStart: "O fim deve ser posterior ao início",
+    editNoLongerApplies:
+      "Suas alterações não se aplicam mais a esta ação. Revise-as e tente novamente.",
+    editedLabel: "Editada",
+    seeNewerVersion: "Ver a versão mais recente",
   },
 }
 
