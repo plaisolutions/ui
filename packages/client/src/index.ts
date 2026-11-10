@@ -26,7 +26,12 @@ export type {
   ChatRegistryHooks,
   ChatRegistryOptions,
 } from "./registry"
-export { ProtocolError, HttpStatusError, normalizeError } from "./errors"
+export {
+  ProtocolError,
+  HttpStatusError,
+  ToolDecisionRejectedError,
+  normalizeError,
+} from "./errors"
 export {
   createInitialInternalState,
   reduceChatState,
@@ -99,7 +104,9 @@ export type {
   ToolConfirmationStatus,
   ToolConfirmationItem,
   ToolConfirmationsResponse,
+  ToolActionSuperseded,
   ToolDecision,
+  ToolDecisionError,
   DecideToolActionsOptions,
   GetToolConfirmationsInput,
   GetToolConfirmationsFn,

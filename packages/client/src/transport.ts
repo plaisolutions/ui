@@ -57,7 +57,14 @@ export class PlaiThreadTransport implements ChatTransport {
       request.message.toolDecisions.length > 0
         ? {
             tool_decisions: request.message.toolDecisions.map(
-              ({ action_id, decision }) => ({ action_id, decision }),
+              ({ action_id, decision, arguments: patch }) => ({
+                action_id,
+                decision,
+                // Only an edit carries `arguments`; reject never does.
+                ...(decision === "confirm" && patch !== undefined
+                  ? { arguments: patch }
+                  : {}),
+              }),
             ),
             decision_request_id: request.message.decisionRequestId,
           }
