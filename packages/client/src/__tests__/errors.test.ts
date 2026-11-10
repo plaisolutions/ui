@@ -91,6 +91,44 @@ describe("HTTP errors", () => {
     },
   )
 
+  it("exposes the field errors of a rejected edit", () => {
+    const cause = new HttpStatusError(
+      422,
+      "Unprocessable Entity",
+      JSON.stringify({
+        detail: {
+          code: "invalid_tool_decision",
+          detail: "invalid edit of action a-1",
+          action_id: "a-1",
+          errors: [
+            { field: "to", message: "needs at least one recipient" },
+            { field: 1, message: "ignored: field is not a string" },
+          ],
+        },
+      }),
+    )
+
+    expect(normalizeError(cause)).toMatchObject({
+      type: "http_error",
+      status: 422,
+      code: "invalid_tool_decision",
+      toolDecision: {
+        actionId: "a-1",
+        errors: [{ field: "to", message: "needs at least one recipient" }],
+      },
+    })
+    // Without an action id or a list there is nothing to attach.
+    expect(
+      normalizeError(
+        new HttpStatusError(
+          422,
+          "x",
+          '{"code":"invalid_tool_decision","errors":[]}',
+        ),
+      ).toolDecision,
+    ).toBeUndefined()
+  })
+
   it("supports FastAPI nested detail and validates optional fields", () => {
     expect(
       normalizeError(

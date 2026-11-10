@@ -1,5 +1,5 @@
 import { normalizeError } from "./errors"
-import { ProtocolError } from "./errors"
+import { ProtocolError, ToolDecisionRejectedError } from "./errors"
 import {
   createInitialInternalState,
   reduceChatState,
@@ -193,6 +193,19 @@ export class PlaiChat {
       }
     } catch (error) {
       const normalized = normalizeError(error)
+      if (normalized.toolDecision) {
+        // A rejected edit is not a chat failure: the submission never started.
+        // Undo the local message and let the card show its field errors.
+        this.setState({
+          ...this.state,
+          messages: this.state.messages.filter(
+            (message) => message.id !== userMessage.id,
+          ),
+          status: "ready",
+          error: null,
+        })
+        throw new ToolDecisionRejectedError(normalized.toolDecision, normalized)
+      }
       if (!(this.isStopping && normalized.type === "abort_error")) {
         this.setState({
           ...this.state,

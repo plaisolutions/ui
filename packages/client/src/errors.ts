@@ -1,9 +1,27 @@
-import type { PlaiChatError, StreamErrorType } from "./types"
+import type { PlaiChatError, StreamErrorType, ToolDecisionError } from "./types"
 
 export class ProtocolError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "ProtocolError"
+  }
+}
+
+/**
+ * The server rejected the edit of a decision (HTTP 422 `invalid_tool_decision`)
+ * before anything ran. The chat itself is fine: nothing was sent, every action
+ * of the submission is still pending and the card keeps its draft.
+ */
+export class ToolDecisionRejectedError extends Error {
+  readonly details: ToolDecisionError
+
+  readonly error: PlaiChatError
+
+  constructor(details: ToolDecisionError, error: PlaiChatError) {
+    super(error.message)
+    this.name = "ToolDecisionRejectedError"
+    this.details = details
+    this.error = error
   }
 }
 
@@ -60,6 +78,8 @@ export function normalizeError(error: unknown): PlaiChatError {
     const code = nonEmptyString(body?.code)
     const periodEnd = nonEmptyString(body?.period_end)
     const detail = nonEmptyString(body?.detail)
+    const toolDecision =
+      code === "invalid_tool_decision" ? toolDecisionError(body) : undefined
     return {
       type: "http_error",
       // Preserve the HTTP prefix for existing consumers matching e.g. "401".
@@ -70,6 +90,7 @@ export function normalizeError(error: unknown): PlaiChatError {
       ...(periodEnd && Number.isFinite(Date.parse(periodEnd))
         ? { periodEnd }
         : {}),
+      ...(toolDecision ? { toolDecision } : {}),
       cause: error,
     }
   }
@@ -120,6 +141,24 @@ function parseHttpErrorBody(body: string): Record<string, unknown> | null {
   } catch {
     return null
   }
+}
+
+function toolDecisionError(
+  body: Record<string, unknown> | null,
+): ToolDecisionError | undefined {
+  const actionId = nonEmptyString(body?.action_id)
+  const raw = body?.errors
+  if (!actionId || !Array.isArray(raw)) return undefined
+  const errors = raw.flatMap((item: unknown) => {
+    const record =
+      item && typeof item === "object"
+        ? (item as Record<string, unknown>)
+        : null
+    const field = nonEmptyString(record?.field)
+    const message = nonEmptyString(record?.message)
+    return field && message ? [{ field, message }] : []
+  })
+  return { actionId, errors }
 }
 
 function nonEmptyString(value: unknown): string | undefined {

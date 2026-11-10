@@ -282,12 +282,29 @@ export type PendingConfirmation = {
   kind?: "mail" | "calendar" | "generic" | (string & {})
   /** Selects the confirm button's verb: send, create, update, delete. */
   operation?: "send" | "create" | "update" | "delete" | (string & {}) | null
-  /** Fields the user may edit from the card (empty until editing ships). */
+  /**
+   * Fields the user may edit from the card, decided by the server per action
+   * (mail: to, cc, subject, body; event: title, start, end, location,
+   * attendees). Empty or missing: the card only confirms or cancels.
+   */
   editable?: string[]
   /** When the user can no longer decide (server time, ISO 8601). */
   expires_at?: string
   /** Version when the action was prepared; the current one comes from the server. */
   state_version?: number
+  /** Set when this action replaced an earlier version of itself. */
+  supersedes_action_id?: string | null
+}
+
+/**
+ * Sent with the result of `replace_pending_action`: the older version is no
+ * longer decidable and points to its successor.
+ */
+export type ToolActionSuperseded = {
+  action_id: string
+  status: "superseded"
+  state_version?: number | null
+  superseded_by_action_id: string
 }
 
 /**
@@ -312,6 +329,8 @@ export type PersonalConnectorToolResultMetadata = {
   error?: "needs_reauth" | "provider" | (string & {})
   /** Set when the call only prepared the action: it waits for confirmation. */
   pending_confirmation?: PendingConfirmation
+  /** Set when the call replaced an earlier pending version of the action. */
+  superseded?: ToolActionSuperseded
   [key: string]: unknown
 }
 
@@ -337,8 +356,13 @@ export type ConfirmedAction = {
   state_version?: number | null
   /** False when the action had already been decided (double click, resend). */
   decision_applied?: boolean
-  /** "tool_unavailable": the action's tool is not available in this invocation. */
+  /**
+   * "tool_unavailable": the action's tool is not available in this invocation.
+   * "invalid_edit": the edit no longer holds; nothing ran and it stays pending.
+   */
   error?: string | null
+  /** What actually ran, when the user edited the action in the card. */
+  effective_action?: Record<string, unknown> | null
   /** Metadata of the tool that ran, e.g. a personal connector result. */
   metadata?:
     | PersonalConnectorToolResultMetadata
@@ -593,7 +617,18 @@ export type PlaiChatError = {
   retryAfterSeconds?: number
   /** ISO date of the spending cap's next monthly period. */
   periodEnd?: string
+  /**
+   * `invalid_tool_decision` (HTTP 422): the edit of one decision was rejected
+   * before anything ran; every action of the submission stays pending.
+   */
+  toolDecision?: ToolDecisionError
   cause?: unknown
+}
+
+/** Field errors of a rejected edit; messages are safe to show next to the field. */
+export type ToolDecisionError = {
+  actionId: string
+  errors: { field: string; message: string }[]
 }
 
 export type FileUploadStatus = "idle" | "uploading" | "processing" | "error"
@@ -655,6 +690,12 @@ export type SendMessageDocument =
 export type ToolDecision = {
   action_id: string
   decision: "confirm" | "reject"
+  /**
+   * Edit patch, only with `confirm`: top-level keys over the prepared input.
+   * Omitted keys keep their value; `null` is an explicit value where allowed;
+   * lists replace the whole value. Only `pending_confirmation.editable` keys.
+   */
+  arguments?: Record<string, unknown>
 }
 
 export type SendMessageInput = {
@@ -683,6 +724,9 @@ export type ToolConfirmationItem = {
   decided_at?: string | null
   decided_via?: string | null
   superseded_by_action_id?: string | null
+  supersedes_action_id?: string | null
+  /** What ran, when the user edited the action in the card. */
+  effective_action?: Record<string, unknown> | null
   error?: string | null
   can_confirm: boolean
   can_reject: boolean

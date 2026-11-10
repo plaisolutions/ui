@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { PlaiChat } from "../chat"
+import { HttpStatusError, ToolDecisionRejectedError } from "../errors"
 import { ChatRegistry } from "../registry"
 import { StreamCoordinator } from "../coordinator"
 import {
@@ -118,6 +119,110 @@ describe("ToolConfirmationStore", () => {
       canConfirm: true,
       expiresAt: "2026-10-30T10:30:00Z",
       source: "stream",
+    })
+  })
+
+  it("marks the replaced version superseded and links both ways", () => {
+    const store = new ToolConfirmationStore()
+    store.applyToolResult({
+      type: "personal_connector",
+      pending_confirmation: PENDING,
+    })
+
+    store.applyToolResult({
+      type: "personal_connector",
+      pending_confirmation: {
+        ...PENDING,
+        action_id: "a-2",
+        supersedes_action_id: "a-1",
+      },
+      superseded: {
+        action_id: "a-1",
+        status: "superseded",
+        state_version: 2,
+        superseded_by_action_id: "a-2",
+      },
+    })
+
+    const now = Date.parse("2026-10-30T10:00:00Z")
+    expect(store.get("a-1", now)).toMatchObject({
+      status: "superseded",
+      stateVersion: 2,
+      canConfirm: false,
+      canReject: false,
+      supersededBy: "a-2",
+      // The card of the old version still shows what it said.
+      pendingConfirmation: { action_id: "a-1" },
+    })
+    expect(store.get("a-2", now)).toMatchObject({
+      status: "pending",
+      canConfirm: true,
+      supersedes: "a-1",
+    })
+  })
+
+  it("keeps what ran after an edit, from the stream and from the server", () => {
+    const store = new ToolConfirmationStore()
+    store.applyToolResult({
+      type: "personal_connector",
+      pending_confirmation: PENDING,
+    })
+    store.applyToolResult({
+      type: "tool_confirmation",
+      actions: [
+        {
+          action_id: "a-1",
+          tool_name: "gmail_send",
+          status: "executed",
+          state_version: 3,
+          effective_action: { subject: "Revisado" },
+        },
+      ],
+    })
+    expect(store.get("a-1")?.effectiveAction).toEqual({ subject: "Revisado" })
+
+    // A server answer at the same version brings the same effective view.
+    store.applyServer(
+      serverResponse([
+        {
+          status: "executed",
+          state_version: 3,
+          effective_action: { subject: "Revisado" },
+          supersedes_action_id: "a-0",
+        },
+      ]),
+    )
+    expect(store.get("a-1")).toMatchObject({
+      source: "server",
+      effectiveAction: { subject: "Revisado" },
+      supersedes: "a-0",
+    })
+  })
+
+  it("an edit that no longer holds leaves the action pending", () => {
+    const store = new ToolConfirmationStore()
+    store.applyToolResult({
+      type: "personal_connector",
+      pending_confirmation: PENDING,
+    })
+    store.applyToolResult({
+      type: "tool_confirmation",
+      actions: [
+        {
+          action_id: "a-1",
+          tool_name: "gmail_send",
+          status: "pending",
+          state_version: 1,
+          decision_applied: false,
+          error: "invalid_edit",
+        },
+      ],
+    })
+
+    expect(store.get("a-1", Date.parse("2026-10-30T10:00:00Z"))).toMatchObject({
+      status: "pending",
+      canConfirm: true,
+      error: "invalid_edit",
     })
   })
 
@@ -332,6 +437,103 @@ describe("PlaiChat tool decisions", () => {
   })
 })
 
+describe("PlaiChat rejected edits", () => {
+  const rejection = () =>
+    new HttpStatusError(
+      422,
+      "Unprocessable Entity",
+      JSON.stringify({
+        detail: {
+          code: "invalid_tool_decision",
+          detail: "invalid edit of action a-1",
+          action_id: "a-1",
+          errors: [{ field: "to", message: "needs at least one recipient" }],
+        },
+      }),
+    )
+
+  it("undoes the local message and rejects with the field errors", async () => {
+    const onError = vi.fn()
+    const chat = new PlaiChat({
+      transport: {
+        // biome-ignore lint/correctness/useYield: the request fails before any event
+        async *stream() {
+          throw rejection()
+        },
+      },
+      onError,
+    })
+
+    const attempt = chat.decideToolActions([
+      { action_id: "a-1", decision: "confirm", arguments: { to: [] } },
+    ])
+
+    await expect(attempt).rejects.toBeInstanceOf(ToolDecisionRejectedError)
+    await expect(attempt).rejects.toMatchObject({
+      details: {
+        actionId: "a-1",
+        errors: [{ field: "to", message: "needs at least one recipient" }],
+      },
+    })
+    // The conversation is untouched and not in an error state: nothing was sent.
+    expect(chat.getState().messages).toEqual([])
+    expect(chat.getState().status).toBe("ready")
+    expect(chat.getState().error).toBeNull()
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  it("lets the next submission go through after a rejection", async () => {
+    let calls = 0
+    const chat = new PlaiChat({
+      transport: {
+        async *stream() {
+          calls += 1
+          if (calls === 1) throw rejection()
+          yield { type: "message_stop" } as PlaiSseEvent
+        },
+      },
+    })
+
+    await expect(
+      chat.decideToolActions([
+        { action_id: "a-1", decision: "confirm", arguments: { to: [] } },
+      ]),
+    ).rejects.toBeInstanceOf(ToolDecisionRejectedError)
+    await chat.decideToolActions([
+      { action_id: "a-1", decision: "confirm", arguments: { to: ["a@b.co"] } },
+    ])
+
+    expect(calls).toBe(2)
+    expect(chat.getState().status).toBe("ready")
+  })
+
+  it("keeps other HTTP failures as chat errors", async () => {
+    const onError = vi.fn()
+    const chat = new PlaiChat({
+      transport: {
+        // biome-ignore lint/correctness/useYield: the request fails before any event
+        async *stream() {
+          throw new HttpStatusError(
+            409,
+            "Conflict",
+            '{"detail":{"code":"thread_busy"}}',
+          )
+        },
+      },
+      onError,
+    })
+
+    await chat.decideToolActions([{ action_id: "a-1", decision: "confirm" }])
+
+    expect(chat.getState().status).toBe("error")
+    expect(chat.getState().error).toMatchObject({
+      status: 409,
+      code: "thread_busy",
+    })
+    expect(onError).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe("PlaiThreadTransport tool confirmations", () => {
   it("sends tool_decisions and decision_request_id in the invoke body", async () => {
     const fetchMock = vi.fn(
@@ -372,6 +574,57 @@ describe("PlaiThreadTransport tool confirmations", () => {
       tool_decisions: [{ action_id: "a-1", decision: "confirm" }],
       decision_request_id: "dr-1",
     })
+  })
+
+  it("sends the edit patch only with confirm and never copies it elsewhere", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          streamFromString(
+            'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+            8,
+          ),
+          { status: 200, headers: { "Content-Type": "text/event-stream" } },
+        ),
+    )
+    const transport = new PlaiThreadTransport({
+      api: "https://api.test",
+      chatSessionId: "cs-1",
+      threadId: "t-1",
+      fetch: fetchMock,
+    })
+
+    for await (const _event of transport.stream({
+      messages: [],
+      message: {
+        text: "",
+        toolDecisions: [
+          {
+            action_id: "a-1",
+            decision: "confirm",
+            arguments: { subject: "Revisado", cc: null },
+          },
+          { action_id: "a-2", decision: "confirm" },
+          // A reject with arguments is a client bug: it must not reach the API.
+          { action_id: "a-3", decision: "reject", arguments: { subject: "x" } },
+        ],
+        decisionRequestId: "dr-1",
+      },
+      signal: new AbortController().signal,
+    })) {
+      // drain
+    }
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(JSON.parse(init.body as string).tool_decisions).toEqual([
+      {
+        action_id: "a-1",
+        decision: "confirm",
+        arguments: { subject: "Revisado", cc: null },
+      },
+      { action_id: "a-2", decision: "confirm" },
+      { action_id: "a-3", decision: "reject" },
+    ])
   })
 
   it("reads the thread's tool confirmations", async () => {

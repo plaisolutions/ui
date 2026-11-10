@@ -1,6 +1,6 @@
 import type { PlaiChat } from "./chat"
 import type { StreamCoordinator } from "./coordinator"
-import { normalizeError } from "./errors"
+import { ToolDecisionRejectedError, normalizeError } from "./errors"
 import type {
   ChatState,
   DecideToolActionsOptions,
@@ -403,6 +403,15 @@ export class ChatRegistry {
           outcome: "cancelled",
           error: null,
           didSend: current.didSend,
+          state,
+        }
+      } else if (didThrow && thrown instanceof ToolDecisionRejectedError) {
+        // The server refused an edit before running anything: the chat is intact.
+        settled = {
+          invocationId: current.id,
+          outcome: "completed",
+          error: null,
+          didSend: false,
           state,
         }
       } else if (didThrow) {

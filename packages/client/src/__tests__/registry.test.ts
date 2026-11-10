@@ -96,6 +96,51 @@ function createRegistry(
 
 const file = () => new File(["x"], "x.pdf", { type: "application/pdf" })
 
+describe("ChatRegistry rejected edits", () => {
+  it("settles as completed without a send when the server refuses an edit", async () => {
+    const { HttpStatusError, ToolDecisionRejectedError } = await import(
+      "../errors"
+    )
+    const { registry } = createRegistry(() => ({
+      // biome-ignore lint/correctness/useYield: the request fails before any event
+      async *stream() {
+        throw new HttpStatusError(
+          422,
+          "Unprocessable Entity",
+          JSON.stringify({
+            detail: {
+              code: "invalid_tool_decision",
+              action_id: "a-1",
+              errors: [
+                { field: "to", message: "needs at least one recipient" },
+              ],
+            },
+          }),
+        )
+      },
+    }))
+    const settled = vi.fn()
+    registry.onSettled((_, result) => settled(result))
+
+    await expect(
+      registry.runInvocation("a", (op) =>
+        op.decideToolActions([
+          { action_id: "a-1", decision: "confirm", arguments: { to: [] } },
+        ]),
+      ),
+    ).rejects.toBeInstanceOf(ToolDecisionRejectedError)
+
+    // Not an error of the chat: its host must not show a failure for it.
+    expect(settled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: "completed",
+        error: null,
+        didSend: false,
+      }),
+    )
+  })
+})
+
 describe("PlaiChat snapshots", () => {
   it("returns the same snapshot until the state changes and bumps the revision", async () => {
     const chat = new PlaiChat({ transport: controlledTransport([START, STOP]) })

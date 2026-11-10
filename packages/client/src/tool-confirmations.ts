@@ -1,6 +1,7 @@
 import type {
   ConfirmedAction,
   PendingConfirmation,
+  ToolActionSuperseded,
   ToolConfirmationItem,
   ToolConfirmationStatus,
   ToolConfirmationsResponse,
@@ -25,6 +26,12 @@ export type ToolConfirmationState = {
   /** Metadata of the tool once it ran (links, connector...). */
   metadata: Record<string, unknown> | null
   pendingConfirmation: PendingConfirmation | null
+  /** What ran, when the user edited the action in the card. */
+  effectiveAction: Record<string, unknown> | null
+  /** Successor of a replaced (`superseded`) action, to link to it. */
+  supersededBy: string | null
+  /** The earlier version this action replaced. */
+  supersedes: string | null
   source: "stream" | "server"
 }
 
@@ -99,6 +106,9 @@ function sameState(a: ToolConfirmationState, b: ToolConfirmationState) {
     a.canReject === b.canReject &&
     a.expiresAt === b.expiresAt &&
     a.error === b.error &&
+    a.supersededBy === b.supersededBy &&
+    a.supersedes === b.supersedes &&
+    JSON.stringify(a.effectiveAction) === JSON.stringify(b.effectiveAction) &&
     JSON.stringify(a.metadata) === JSON.stringify(b.metadata) &&
     JSON.stringify(a.pendingConfirmation) ===
       JSON.stringify(b.pendingConfirmation)
@@ -176,6 +186,33 @@ export class ToolConfirmationStore {
         error: null,
         metadata: null,
         pendingConfirmation: pending,
+        effectiveAction: null,
+        supersededBy: null,
+        supersedes: pending.supersedes_action_id ?? null,
+        source: "stream",
+      })
+    }
+    const superseded = supersededNotice(record.superseded)
+    if (superseded) {
+      // The older version of a replaced action: no longer decidable.
+      const previous = this.snapshot.items[superseded.action_id]
+      updates.push({
+        actionId: superseded.action_id,
+        toolName: previous?.toolName ?? null,
+        status: "superseded",
+        stateVersion:
+          typeof superseded.state_version === "number"
+            ? superseded.state_version
+            : -1,
+        expiresAt: previous?.expiresAt ?? null,
+        canConfirm: false,
+        canReject: false,
+        error: null,
+        metadata: null,
+        pendingConfirmation: previous?.pendingConfirmation ?? null,
+        effectiveAction: null,
+        supersededBy: superseded.superseded_by_action_id,
+        supersedes: previous?.supersedes ?? null,
         source: "stream",
       })
     }
@@ -198,6 +235,9 @@ export class ToolConfirmationStore {
           error: action.error ?? null,
           metadata: asRecord(action.metadata),
           pendingConfirmation: previous?.pendingConfirmation ?? null,
+          effectiveAction: asRecord(action.effective_action),
+          supersededBy: previous?.supersededBy ?? null,
+          supersedes: previous?.supersedes ?? null,
           source: "stream",
         })
       }
@@ -255,8 +295,20 @@ function fromServerItem(item: ToolConfirmationItem): ToolConfirmationState {
     error: item.error ?? null,
     metadata: item.metadata ?? null,
     pendingConfirmation: item.pending_confirmation ?? null,
+    effectiveAction: asRecord(item.effective_action),
+    supersededBy: item.superseded_by_action_id ?? null,
+    supersedes: item.supersedes_action_id ?? null,
     source: "server",
   }
+}
+
+function supersededNotice(value: unknown): ToolActionSuperseded | null {
+  const notice = asRecord(value)
+  return notice &&
+    typeof notice.action_id === "string" &&
+    typeof notice.superseded_by_action_id === "string"
+    ? (notice as ToolActionSuperseded)
+    : null
 }
 
 /** The persisted message only carries the decisions; the UI hides it. */
