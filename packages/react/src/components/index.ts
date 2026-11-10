@@ -156,6 +156,7 @@ export type {
 export {
   ConfirmationBadge,
   PendingConfirmationFooter,
+  reasonLabel,
 } from "./tool-confirmation-controls"
 export type { ToolConfirmationProps } from "./tool-confirmation-controls"
 export { ToolResultWebSearchCard } from "./tool-result-web-search-card"

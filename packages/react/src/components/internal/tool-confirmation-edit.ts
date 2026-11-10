@@ -55,6 +55,44 @@ export type FieldError = { key: EditErrorKey; zone?: string }
 
 export type Draft = Record<string, string>
 
+/** A field error sent back by the server: its stable `code`, and its English `message`. */
+export type ServerFieldError = { code?: string; message: string }
+
+/**
+ * Copy of each stable code the server sends for a rejected edit. A code this client does
+ * not know falls back to the server's English message instead of hiding the problem.
+ */
+export const SERVER_ERROR_COPY: Record<string, EditErrorCopyKey> = {
+  needs_recipient: "errorNoRecipients",
+  invalid_address: "errorInvalidAddress",
+  must_be_address_list: "errorInvalidAddress",
+  too_many_addresses: "errorInvalidAddress",
+  cannot_be_empty: "errorRequired",
+  cannot_be_null: "errorRequired",
+  plain_text_only: "errorPlainText",
+  invalid_datetime: "errorInvalidDateTime",
+  ambiguous_time: "errorAmbiguousTime",
+  end_before_start: "errorEndBeforeStart",
+  offset_mismatch: "errorOffsetMismatch",
+  not_editable: "errorNotEditable",
+  cannot_change: "errorNotEditable",
+  not_replaceable: "errorNotEditable",
+  must_be_text: "errorInvalidValue",
+  too_long: "errorInvalidValue",
+}
+
+export type EditErrorCopyKey =
+  | "errorRequired"
+  | "errorNoRecipients"
+  | "errorInvalidAddress"
+  | "errorInvalidDateTime"
+  | "errorAmbiguousTime"
+  | "errorEndBeforeStart"
+  | "errorPlainText"
+  | "errorOffsetMismatch"
+  | "errorNotEditable"
+  | "errorInvalidValue"
+
 // ── Time zones ─────────────────────────────────────────────────────────────
 
 /** Where a date of the action is read: a named zone, or the fixed offset it came with. */

@@ -10,6 +10,8 @@ import {
   FIELD_KINDS,
   type FieldError,
   type EditErrorKey,
+  type ServerFieldError,
+  SERVER_ERROR_COPY,
   actionZone,
   editableFields,
   zoneLabel,
@@ -45,8 +47,8 @@ export type ToolConfirmationEditFormProps = {
   onChange: (field: string, value: string) => void
   /** Found on this device before sending. */
   errors: Record<string, FieldError>
-  /** Sent back by the server for this draft (field → message). */
-  serverErrors: Record<string, string>
+  /** Sent back by the server for this draft (field → code and message). */
+  serverErrors: Record<string, ServerFieldError>
   disabled?: boolean
   copy: PersonalConnectorCopy
 }
@@ -79,11 +81,17 @@ export function ToolConfirmationEditForm({
         const id = `${baseId}-${field}`
         const errorId = `${id}-error`
         const clientError = errors[field]
+        const serverError = serverErrors[field]
+        const serverKey = serverError?.code
+          ? SERVER_ERROR_COPY[serverError.code]
+          : undefined
         const message = clientError
           ? fillCopy(copy[ERROR_COPY[clientError.key]], {
               zone: clientError.zone ?? zone,
             })
-          : serverErrors[field]
+          : serverKey
+            ? fillCopy(copy[serverKey], { zone })
+            : serverError?.message
         const common = {
           id,
           name: field,
