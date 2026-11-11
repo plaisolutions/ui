@@ -547,11 +547,14 @@ describe("after an edit or a replacement", () => {
     expect(
       screen.getAllByText("Replaced by a newer version").length,
     ).toBeGreaterThan(0)
-    expect(
-      document
-        .querySelector('[data-confirmation-action="a-1"]')
-        ?.className.includes("opacity-60"),
-    ).toBe(true)
+    // It folds into one line: what it was and a way to the new one, not the whole card.
+    const folded = document.querySelector('[data-confirmation-action="a-1"]')
+    expect(folded?.getAttribute("data-confirmation-status")).toBe("superseded")
+    expect(folded?.textContent).toContain("Hola")
+    expect(folded?.textContent).not.toContain("Texto original")
+    expect(folded?.querySelector("button")?.textContent).toBe(
+      "See the newer version",
+    )
 
     act(() => {
       click("See the newer version")
@@ -561,6 +564,245 @@ describe("after an edit or a replacement", () => {
     expect(scrollIntoView.mock.contexts[0]).toBe(
       document.querySelector('[data-confirmation-action="a-2"]'),
     )
+  })
+
+  it("flashes the successor so the eye finds it, and stops after a moment", () => {
+    vi.useFakeTimers()
+    try {
+      window.HTMLElement.prototype.scrollIntoView = vi.fn()
+      render(
+        <>
+          <ToolResultCard
+            locale="en"
+            part={mailPart()}
+            toolConfirmation={{
+              states: snapshot(
+                state({
+                  status: "superseded",
+                  canConfirm: false,
+                  canReject: false,
+                  supersededBy: "a-2",
+                }),
+                state({ actionId: "a-2" }),
+              ),
+              decide: vi.fn(),
+            }}
+          />
+          <ToolResultCard
+            locale="en"
+            part={mailPart(undefined, "a-2")}
+            toolConfirmation={{
+              states: snapshot(state({ actionId: "a-2" })),
+              decide: vi.fn(),
+            }}
+          />
+        </>,
+      )
+      const target = document.querySelector('[data-confirmation-action="a-2"]')
+
+      click("See the newer version")
+      expect(target?.classList.contains("ring-2")).toBe(true)
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
+
+      expect(target?.classList.contains("ring-2")).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("does nothing, and does not break, when the successor is not on screen", () => {
+    render(
+      <ToolResultCard
+        locale="en"
+        part={mailPart()}
+        toolConfirmation={{
+          states: snapshot(
+            state({
+              status: "superseded",
+              canConfirm: false,
+              canReject: false,
+              supersededBy: "not-loaded",
+            }),
+          ),
+          decide: vi.fn(),
+        }}
+      />,
+    )
+
+    expect(() => click("See the newer version")).not.toThrow()
+  })
+})
+
+describe("the result of replace_pending_action", () => {
+  afterEach(cleanup)
+
+  /** What the server sends when the model replaces a pending mail: a tool_confirmation
+   * result that carries the new version with the connector's metadata. */
+  function replacePart(
+    actionId: string,
+    subject: string,
+    supersedes = "a-1",
+  ): UIToolCallPart {
+    const prepared = mailPart(undefined, actionId)
+    const metadata = prepared.metadata as {
+      pending_confirmation: Record<string, unknown>
+    }
+    return {
+      ...prepared,
+      id: `tool_replace_${actionId}`,
+      name: "replace_pending_action",
+      toolType: "tool_confirmation",
+      metadata: {
+        ...metadata,
+        pending_confirmation: {
+          ...metadata.pending_confirmation,
+          supersedes_action_id: supersedes,
+          action: {
+            operation: "send",
+            to: ["ana@acme.com"],
+            subject,
+            body: "Texto",
+          },
+        },
+        superseded: {
+          action_id: supersedes,
+          status: "superseded",
+          superseded_by_action_id: actionId,
+        },
+      },
+    } as UIToolCallPart
+  }
+
+  it("looks like the mail it carries, not like an anonymous tool with JSON arguments", () => {
+    render(
+      <ToolResultCard
+        locale="en"
+        part={replacePart("a-2", "Versión 2")}
+        toolConfirmation={{
+          states: snapshot(state({ actionId: "a-2" })),
+          decide: vi.fn(),
+        }}
+      />,
+    )
+
+    // The mail card: its account, its subject, and the same buttons as preparing it.
+    expect(screen.getByText("Gmail")).toBeTruthy()
+    expect(screen.getByText("Versión 2")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Send" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Edit" })).toBeTruthy()
+    // None of the generic card's tell-tales.
+    expect(screen.queryByText("replace_pending_action")).toBeNull()
+    expect(
+      document.querySelector(".plai-tool-result-pending-confirmation-card"),
+    ).toBeNull()
+    expect(
+      document.querySelector('[data-confirmation-action="a-2"]'),
+    ).toBeTruthy()
+  })
+
+  it("is decided like any other mail: the buttons act on the new version", async () => {
+    const decide = vi.fn(async () => {})
+    render(
+      <ToolResultCard
+        locale="en"
+        part={replacePart("a-2", "Versión 2")}
+        toolConfirmation={{
+          states: snapshot(state({ actionId: "a-2" })),
+          decide,
+        }}
+      />,
+    )
+
+    click("Send")
+
+    await waitFor(() => expect(decide).toHaveBeenCalled())
+    expect(decide).toHaveBeenCalledWith([
+      { action_id: "a-2", decision: "confirm" },
+    ])
+  })
+
+  it("folds like any other version when a later replacement supersedes it, and leads to it", () => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn()
+    render(
+      <>
+        <ToolResultCard
+          locale="en"
+          part={replacePart("a-2", "Versión 2")}
+          toolConfirmation={{
+            states: snapshot(
+              state({
+                actionId: "a-2",
+                status: "superseded",
+                canConfirm: false,
+                canReject: false,
+                supersededBy: "a-3",
+              }),
+              state({ actionId: "a-3" }),
+            ),
+            decide: vi.fn(),
+          }}
+        />
+        <ToolResultCard
+          locale="en"
+          part={replacePart("a-3", "Versión 3", "a-2")}
+          toolConfirmation={{
+            states: snapshot(state({ actionId: "a-3" })),
+            decide: vi.fn(),
+          }}
+        />
+      </>,
+    )
+
+    const folded = document.querySelector('[data-confirmation-action="a-2"]')
+    expect(folded?.getAttribute("data-confirmation-status")).toBe("superseded")
+    expect(folded?.textContent).toContain("Versión 2")
+    // The link now finds its target: both versions are the same kind of card.
+    act(() => {
+      click("See the newer version")
+    })
+    expect(
+      (window.HTMLElement.prototype.scrollIntoView as ReturnType<typeof vi.fn>)
+        .mock.contexts[0],
+    ).toBe(document.querySelector('[data-confirmation-action="a-3"]'))
+  })
+
+  it("keeps the generic card for any other held tool", () => {
+    const generic = {
+      type: "tool-call",
+      id: "tool_h",
+      name: "create_contact",
+      toolType: "http_request",
+      input: {},
+      state: "completed",
+      result: "{}",
+      metadata: {
+        pending_confirmation: {
+          action_id: "h-1",
+          tool_name: "create_contact",
+          kind: "generic",
+          action: { name: "Ana" },
+        },
+      },
+    } as UIToolCallPart
+
+    render(
+      <ToolResultCard
+        locale="en"
+        part={generic}
+        toolConfirmation={{
+          states: snapshot(state({ actionId: "h-1" })),
+          decide: vi.fn(),
+        }}
+      />,
+    )
+
+    expect(screen.getByText("create_contact")).toBeTruthy()
+    // It leads somewhere too, so another card can point to it.
+    expect(
+      document.querySelector('[data-confirmation-action="h-1"]'),
+    ).toBeTruthy()
   })
 })
 

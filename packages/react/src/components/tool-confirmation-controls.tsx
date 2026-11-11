@@ -201,17 +201,24 @@ function saveLabel(
   return operation === "send" ? copy.saveAndSend : copy.saveAndConfirm
 }
 
-/** Scrolls to the card of another version of the same action, if it is on screen. */
-function showAction(actionId: string) {
-  if (typeof document === "undefined") return
+const HIGHLIGHT = ["ring-2", "ring-border-strong", "transition-shadow"]
+
+/**
+ * Scrolls to the card of another version of the same action and flashes it, so the eye finds
+ * it. Returns whether that card is on screen (it may not be, e.g. older history not loaded).
+ */
+export function showAction(actionId: string): boolean {
+  if (typeof document === "undefined") return false
   for (const element of document.querySelectorAll(
     "[data-confirmation-action]",
   )) {
-    if (element.getAttribute("data-confirmation-action") === actionId) {
-      element.scrollIntoView?.({ block: "center", behavior: "smooth" })
-      return
-    }
+    if (element.getAttribute("data-confirmation-action") !== actionId) continue
+    element.scrollIntoView?.({ block: "center", behavior: "smooth" })
+    element.classList.add(...HIGHLIGHT)
+    setTimeout(() => element.classList.remove(...HIGHLIGHT), 1600)
+    return true
   }
+  return false
 }
 
 /**

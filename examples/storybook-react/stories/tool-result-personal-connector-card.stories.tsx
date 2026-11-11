@@ -1,5 +1,11 @@
-import type { UIPersonalConnectorToolCallPart } from "@plaisolutions/client"
-import { ToolResultPersonalConnectorCard } from "@plaisolutions/react/components"
+import type {
+  UIPersonalConnectorToolCallPart,
+  UIToolCallPart,
+} from "@plaisolutions/client"
+import {
+  ToolResultCard,
+  ToolResultPersonalConnectorCard,
+} from "@plaisolutions/react/components"
 import type { Meta, StoryObj } from "@storybook/react"
 
 const meta: Meta<typeof ToolResultPersonalConnectorCard> = {
@@ -521,7 +527,8 @@ export const SentAfterEdit: Story = {
   },
 }
 
-/** An older version replaced by `replace_pending_action`: dimmed, with a link to the new one. */
+/** An older version replaced by `replace_pending_action`: it folds into one line with a link
+ * that scrolls to the new one and flashes it. */
 export const ReplacedVersion: Story = {
   args: {
     ...PendingSendEditable.args,
@@ -552,9 +559,14 @@ export const InvalidatedEventChanged: Story = {
   args: {
     ...PendingEventCreateEditable.args,
     toolConfirmation: {
-      states: confirmationState("invalidated", "a-4", "google_calendar_update_event", {
-        error: "resource_changed",
-      }),
+      states: confirmationState(
+        "invalidated",
+        "a-4",
+        "google_calendar_update_event",
+        {
+          error: "resource_changed",
+        },
+      ),
       decide: async () => {},
     },
   },
@@ -565,7 +577,9 @@ export const UnknownOutcome: Story = {
   args: {
     ...PendingSendEditable.args,
     toolConfirmation: {
-      states: confirmationState("unknown", "a-1", "gmail_send", { error: "outcome_unknown" }),
+      states: confirmationState("unknown", "a-1", "gmail_send", {
+        error: "outcome_unknown",
+      }),
       decide: async () => {},
     },
   },
@@ -576,7 +590,9 @@ export const UnknownInterrupted: Story = {
   args: {
     ...PendingSendEditable.args,
     toolConfirmation: {
-      states: confirmationState("unknown", "a-1", "gmail_send", { error: "interrupted" }),
+      states: confirmationState("unknown", "a-1", "gmail_send", {
+        error: "interrupted",
+      }),
       decide: async () => {},
     },
   },
@@ -589,7 +605,9 @@ export const AlreadyBeingApplied: Story = {
     toolConfirmation: {
       states: confirmationState("pending"),
       decide: async () => {
-        const { ToolSubmissionConflictError } = await import("@plaisolutions/client")
+        const { ToolSubmissionConflictError } = await import(
+          "@plaisolutions/client"
+        )
         throw new ToolSubmissionConflictError(
           { code: "decision_in_progress", executionId: "run-1" },
           {
@@ -611,12 +629,18 @@ export const PendingSendEditRejectedByCode: Story = {
     toolConfirmation: {
       states: confirmationState("pending"),
       decide: async () => {
-        const { ToolDecisionRejectedError } = await import("@plaisolutions/client")
+        const { ToolDecisionRejectedError } = await import(
+          "@plaisolutions/client"
+        )
         throw new ToolDecisionRejectedError(
           {
             actionId: "a-1",
             errors: [
-              { field: "body", code: "plain_text_only", message: "must be plain text, without HTML" },
+              {
+                field: "body",
+                code: "plain_text_only",
+                message: "must be plain text, without HTML",
+              },
             ],
           },
           { type: "http_error", message: "HTTP 422", status: 422 },
@@ -624,4 +648,28 @@ export const PendingSendEditRejectedByCode: Story = {
       },
     },
   },
+}
+
+/**
+ * What the model's `replace_pending_action` returns: a tool_confirmation result carrying the
+ * new version. It is drawn as the mail it carries (same card, same buttons), not as an
+ * anonymous tool with its arguments as JSON.
+ */
+export const ReplaceResultAsMail: Story = {
+  render: (args) => (
+    <ToolResultCard
+      locale="es"
+      part={
+        {
+          ...(PendingSendEditable.args
+            ?.part as UIPersonalConnectorToolCallPart),
+          id: "tool_replace",
+          name: "replace_pending_action",
+          toolType: "tool_confirmation",
+        } as unknown as UIToolCallPart
+      }
+      toolConfirmation={args.toolConfirmation}
+    />
+  ),
+  args: { ...PendingSendEditable.args },
 }

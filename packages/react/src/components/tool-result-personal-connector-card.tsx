@@ -28,6 +28,7 @@ import {
 import {
   ConfirmationBadge,
   PendingConfirmationFooter,
+  showAction,
   type ToolConfirmationProps,
   statusLabel,
   useToolConfirmationState,
@@ -923,12 +924,53 @@ export function ToolResultPersonalConnectorCard({
   const isPending =
     view.kind === "pending-mail" || view.kind === "pending-event"
 
+  // A version that was replaced no longer matters: what was in it is in its successor. It
+  // folds into one line (what it was, that it was replaced, a way to the new one) instead
+  // of repeating a whole card for every change.
+  if (pending && confirmationState?.status === "superseded") {
+    const summary =
+      text(pending.action.subject) ??
+      text(pending.action.title) ??
+      copy.noSubject
+    return (
+      <section
+        className={joinClasses(
+          "plai-tool-result-personal-connector-card plai-superseded overflow-hidden rounded-lg border border-border bg-surface text-foreground",
+          className,
+        )}
+        data-tool-call-id={part.id}
+        data-tool-call-state={part.state}
+        data-connector-action={view.kind}
+        data-confirmation-action={pending.action_id}
+        data-confirmation-status="superseded"
+      >
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 text-xs text-secondary">
+          <Icon className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+          <span className="shrink-0 font-medium text-muted">
+            {connector?.label}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-muted">{summary}</span>
+          <span className="shrink-0 text-muted">{copy.statusSuperseded}</span>
+          {confirmationState.supersededBy ? (
+            <button
+              type="button"
+              className="shrink-0 underline underline-offset-2 hover:text-foreground"
+              onClick={() =>
+                showAction(confirmationState.supersededBy as string)
+              }
+            >
+              {copy.seeNewerVersion}
+            </button>
+          ) : null}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section
       className={joinClasses(
         "plai-tool-result-personal-connector-card overflow-hidden rounded-lg border border-border bg-surface text-foreground",
-        // A replaced version stays readable but recedes behind its successor.
-        confirmationState?.status === "superseded" ? "opacity-60" : undefined,
         className,
       )}
       data-tool-call-id={part.id}
@@ -1174,6 +1216,7 @@ export function ToolResultPendingConfirmationCard({
       )}
       data-tool-call-id={part.id}
       data-tool-call-state={part.state}
+      data-confirmation-action={pending.action_id}
     >
       <header className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs text-secondary">
         <span className="truncate font-mono font-medium text-foreground">
