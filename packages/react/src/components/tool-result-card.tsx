@@ -4,6 +4,7 @@ import type {
   OfficeDocumentMediaFile,
   ResourceLinkReadModel,
   ResourceReadModel,
+  UIPersonalConnectorToolCallPart,
   UIToolCallPart,
 } from "@plaisolutions/client"
 import {
@@ -96,6 +97,19 @@ function getDatasourceResourceLinks(
   return Array.isArray(links) ? links.filter(isResourceLink) : []
 }
 
+/**
+ * A held mail or calendar action, whichever tool reported it. The result of
+ * `replace_pending_action` is a `tool_confirmation` result that carries the new version
+ * with the connector's metadata: it must look exactly as preparing it did (the mail or
+ * event card), not like an anonymous tool with its arguments as JSON.
+ */
+function isConnectorPending(part: UIToolCallPart): boolean {
+  const metadata = part.metadata as Record<string, unknown> | undefined
+  return (
+    metadata?.type === "personal_connector" && !!getPendingConfirmation(part)
+  )
+}
+
 export function ToolResultCard({
   part,
   className,
@@ -146,7 +160,11 @@ export function ToolResultCard({
 
   // A held call (HTTP, MCP, workflow... with a "confirm" policy) ran nothing
   // yet: never show it as completed.
-  if (part.toolType !== "personal_connector" && getPendingConfirmation(part)) {
+  if (
+    part.toolType !== "personal_connector" &&
+    !isConnectorPending(part) &&
+    getPendingConfirmation(part)
+  ) {
     return (
       <ToolResultPendingConfirmationCard
         part={part}
@@ -228,12 +246,12 @@ export function ToolResultCard({
   }
 
   if (
-    part.toolType === "personal_connector" &&
-    hasPersonalConnectorView(part)
+    (part.toolType === "personal_connector" || isConnectorPending(part)) &&
+    hasPersonalConnectorView(part as UIPersonalConnectorToolCallPart)
   ) {
     return (
       <ToolResultPersonalConnectorCard
-        part={part}
+        part={part as UIPersonalConnectorToolCallPart}
         locale={locale}
         className={className}
         toolConfirmation={toolConfirmation}
