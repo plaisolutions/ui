@@ -285,12 +285,20 @@ const pendingSendPart = part("gmail_send", {
 })
 
 function confirmationState(
-  status: "pending" | "executed" | "rejected" | "expired" | "superseded",
+  status:
+    | "pending"
+    | "executed"
+    | "rejected"
+    | "expired"
+    | "superseded"
+    | "invalidated"
+    | "unknown",
   actionId = "a-1",
   toolName = "gmail_send",
   extra: {
     effectiveAction?: Record<string, unknown> | null
     supersededBy?: string | null
+    error?: string | null
   } = {},
 ) {
   const open = status === "pending"
@@ -304,7 +312,7 @@ function confirmationState(
         expiresAt: inHalfAnHour,
         canConfirm: open,
         canReject: open,
-        error: null,
+        error: extra.error ?? null,
         metadata: null,
         pendingConfirmation: null,
         effectiveAction: extra.effectiveAction ?? null,
@@ -522,6 +530,98 @@ export const ReplacedVersion: Story = {
         supersededBy: "a-2",
       }),
       decide: async () => {},
+    },
+  },
+}
+
+/** The account or its configuration changed after the action was prepared: it did not run. */
+export const InvalidatedConfigurationChanged: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("invalidated", "a-1", "gmail_send", {
+        error: "configuration_changed",
+      }),
+      decide: async () => {},
+    },
+  },
+}
+
+/** The event moved on after the user saw it, so the change was refused and nothing was modified. */
+export const InvalidatedEventChanged: Story = {
+  args: {
+    ...PendingEventCreateEditable.args,
+    toolConfirmation: {
+      states: confirmationState("invalidated", "a-4", "google_calendar_update_event", {
+        error: "resource_changed",
+      }),
+      decide: async () => {},
+    },
+  },
+}
+
+/** The provider did not answer after the request was sent: it may or may not have happened. */
+export const UnknownOutcome: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("unknown", "a-1", "gmail_send", { error: "outcome_unknown" }),
+      decide: async () => {},
+    },
+  },
+}
+
+/** The process died while it ran: nobody knows. There is no retry button, on purpose. */
+export const UnknownInterrupted: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("unknown", "a-1", "gmail_send", { error: "interrupted" }),
+      decide: async () => {},
+    },
+  },
+}
+
+/** The same submission is already being applied: no failure, the card follows the server. */
+export const AlreadyBeingApplied: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("pending"),
+      decide: async () => {
+        const { ToolSubmissionConflictError } = await import("@plaisolutions/client")
+        throw new ToolSubmissionConflictError(
+          { code: "decision_in_progress", executionId: "run-1" },
+          {
+            type: "http_error",
+            message: "HTTP 409",
+            status: 409,
+            code: "decision_in_progress",
+          },
+        )
+      },
+    },
+  },
+}
+
+/** Server field errors arrive as stable codes and are shown in the user's language. */
+export const PendingSendEditRejectedByCode: Story = {
+  args: {
+    ...PendingSendEditable.args,
+    toolConfirmation: {
+      states: confirmationState("pending"),
+      decide: async () => {
+        const { ToolDecisionRejectedError } = await import("@plaisolutions/client")
+        throw new ToolDecisionRejectedError(
+          {
+            actionId: "a-1",
+            errors: [
+              { field: "body", code: "plain_text_only", message: "must be plain text, without HTML" },
+            ],
+          },
+          { type: "http_error", message: "HTTP 422", status: 422 },
+        )
+      },
     },
   },
 }

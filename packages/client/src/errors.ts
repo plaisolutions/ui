@@ -1,4 +1,9 @@
-import type { PlaiChatError, StreamErrorType, ToolDecisionError } from "./types"
+import type {
+  PlaiChatError,
+  StreamErrorType,
+  ToolDecisionError,
+  ToolSubmissionConflict,
+} from "./types"
 
 export class ProtocolError extends Error {
   constructor(message: string) {
@@ -20,6 +25,25 @@ export class ToolDecisionRejectedError extends Error {
   constructor(details: ToolDecisionError, error: PlaiChatError) {
     super(error.message)
     this.name = "ToolDecisionRejectedError"
+    this.details = details
+    this.error = error
+  }
+}
+
+/**
+ * The server answered a decision submission with a conflict about its key: it is
+ * already being applied (`decision_in_progress`) or the key was used with another
+ * request (`decision_request_conflict`). This request applied nothing and the
+ * chat is intact; the cards follow the real state from the server.
+ */
+export class ToolSubmissionConflictError extends Error {
+  readonly details: ToolSubmissionConflict
+
+  readonly error: PlaiChatError
+
+  constructor(details: ToolSubmissionConflict, error: PlaiChatError) {
+    super(error.message)
+    this.name = "ToolSubmissionConflictError"
     this.details = details
     this.error = error
   }
@@ -80,6 +104,13 @@ export function normalizeError(error: unknown): PlaiChatError {
     const detail = nonEmptyString(body?.detail)
     const toolDecision =
       code === "invalid_tool_decision" ? toolDecisionError(body) : undefined
+    const toolSubmission =
+      code === "decision_in_progress" || code === "decision_request_conflict"
+        ? ({
+            code,
+            executionId: nonEmptyString(body?.execution_id) ?? null,
+          } as ToolSubmissionConflict)
+        : undefined
     return {
       type: "http_error",
       // Preserve the HTTP prefix for existing consumers matching e.g. "401".
@@ -91,6 +122,7 @@ export function normalizeError(error: unknown): PlaiChatError {
         ? { periodEnd }
         : {}),
       ...(toolDecision ? { toolDecision } : {}),
+      ...(toolSubmission ? { toolSubmission } : {}),
       cause: error,
     }
   }
@@ -156,7 +188,10 @@ function toolDecisionError(
         : null
     const field = nonEmptyString(record?.field)
     const message = nonEmptyString(record?.message)
-    return field && message ? [{ field, message }] : []
+    const code = nonEmptyString(record?.code)
+    return field && message
+      ? [{ field, message, ...(code ? { code } : {}) }]
+      : []
   })
   return { actionId, errors }
 }

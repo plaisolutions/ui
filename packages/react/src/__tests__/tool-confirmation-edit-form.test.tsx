@@ -3,6 +3,7 @@ import {
   type ToolConfirmationState,
   type ToolDecisionError,
   ToolDecisionRejectedError,
+  ToolSubmissionConflictError,
   type UIToolCallPart,
 } from "@plaisolutions/client"
 import {
@@ -560,5 +561,262 @@ describe("after an edit or a replacement", () => {
     expect(scrollIntoView.mock.contexts[0]).toBe(
       document.querySelector('[data-confirmation-action="a-2"]'),
     )
+  })
+})
+
+describe("why an action was invalidated or left unknown", () => {
+  afterEach(cleanup)
+
+  const closed = (
+    status: ToolConfirmationState["status"],
+    error: string | null,
+  ) =>
+    state({
+      status,
+      stateVersion: 3,
+      canConfirm: false,
+      canReject: false,
+      error,
+    })
+
+  const show = (locale: string, item: ToolConfirmationState) =>
+    render(
+      <ToolResultCard
+        locale={locale}
+        part={mailPart()}
+        toolConfirmation={{ states: snapshot(item), decide: vi.fn() }}
+      />,
+    )
+
+  it.each([
+    ["configuration_changed", /tool, account or its settings changed/],
+    ["no_snapshot", /prepared by an older version/],
+    [
+      "resource_changed",
+      /event changed after this was prepared, so nothing was modified/,
+    ],
+  ])("explains an invalidated action: %s", (reason, text) => {
+    show("en", closed("invalidated", reason))
+
+    // The status label stays, and the reason goes under it.
+    expect(
+      screen.getAllByText("Can no longer run: ask again").length,
+    ).toBeGreaterThan(0)
+    expect(
+      document.querySelector("[data-confirmation-reason]")?.textContent,
+    ).toMatch(text)
+  })
+
+  it.each([
+    ["outcome_unknown", /provider didn’t confirm whether it happened/],
+    [
+      "interrupted",
+      /action was interrupted and it isn’t known whether it happened/,
+    ],
+  ])("tells an unknown outcome apart: %s", (reason, text) => {
+    show("en", closed("unknown", reason))
+
+    expect(
+      screen.getAllByText("Outcome unknown: check before trying again").length,
+    ).toBeGreaterThan(0)
+    expect(
+      document.querySelector("[data-confirmation-reason]")?.textContent,
+    ).toMatch(text)
+  })
+
+  it("shows nothing extra for a reason this client does not know", () => {
+    show("en", closed("invalidated", "some_future_reason"))
+
+    expect(
+      screen.getAllByText("Can no longer run: ask again").length,
+    ).toBeGreaterThan(0)
+    expect(document.querySelector("[data-confirmation-reason]")).toBeNull()
+  })
+
+  it("speaks the user's language", () => {
+    show("es", closed("unknown", "interrupted"))
+
+    expect(
+      document.querySelector("[data-confirmation-reason]")?.textContent,
+    ).toMatch(/La acción se interrumpió y no se sabe si llegó a ocurrir/)
+  })
+
+  it("does not add a reason to a plain failure", () => {
+    show("en", closed("failed", "Provider error 500"))
+
+    expect(document.querySelector("[data-confirmation-reason]")).toBeNull()
+  })
+})
+
+describe("server field errors by code", () => {
+  afterEach(cleanup)
+
+  const refuse = (
+    errors: { field: string; message: string; code?: string }[],
+    actionId = "a-1",
+  ) =>
+    vi.fn(async () => {
+      throw rejection(actionId, errors)
+    })
+
+  async function submitWith(locale: string, decide: ReturnType<typeof vi.fn>) {
+    render(
+      <ToolResultCard
+        locale={locale}
+        part={mailPart()}
+        toolConfirmation={{ states: snapshot(state()), decide }}
+      />,
+    )
+    click(locale === "es" ? "Editar" : "Edit")
+    type(locale === "es" ? "Asunto" : "Subject", "Cambiado")
+    click(locale === "es" ? "Guardar y enviar" : "Save and send")
+    await waitFor(() => expect(decide).toHaveBeenCalled())
+  }
+
+  it("translates a code the client knows, in the user's language", async () => {
+    await submitWith(
+      "es",
+      refuse([
+        {
+          field: "subject",
+          code: "plain_text_only",
+          message: "must be plain text, without HTML",
+        },
+      ]),
+    )
+
+    expect(
+      await screen.findByText("Usa texto sin formato, sin HTML"),
+    ).toBeTruthy()
+    // Not the English message the server sent.
+    expect(screen.queryByText("must be plain text, without HTML")).toBeNull()
+  })
+
+  it("falls back to the server's message for a code it does not know", async () => {
+    await submitWith(
+      "en",
+      refuse([
+        {
+          field: "subject",
+          code: "a_code_from_the_future",
+          message: "the server says no",
+        },
+      ]),
+    )
+
+    expect(await screen.findByText("the server says no")).toBeTruthy()
+  })
+
+  it("still works against a server that sends no code", async () => {
+    await submitWith(
+      "en",
+      refuse([{ field: "subject", message: "older server message" }]),
+    )
+
+    expect(await screen.findByText("older server message")).toBeTruthy()
+  })
+
+  it("names the zone in an ambiguous time sent back by the server", async () => {
+    const decide = refuse(
+      [{ field: "start", code: "ambiguous_time", message: "x" }],
+      "e-1",
+    )
+    render(
+      <ToolResultCard
+        locale="en"
+        part={eventPart()}
+        toolConfirmation={{
+          states: snapshot(state({ actionId: "e-1" })),
+          decide,
+        }}
+      />,
+    )
+    click("Edit")
+    type("Starts", "2027-11-15T10:30")
+    click("Save and confirm")
+
+    expect(await screen.findByRole("alert")).toBeTruthy()
+    expect(screen.getByRole("alert").textContent).toContain("Europe/Madrid")
+  })
+})
+
+describe("a submission the server already has", () => {
+  afterEach(cleanup)
+
+  const conflict = (
+    code: "decision_in_progress" | "decision_request_conflict",
+  ) =>
+    new ToolSubmissionConflictError(
+      { code, executionId: "run-1" },
+      { type: "http_error", message: "HTTP 409", status: 409, code },
+    )
+
+  it("says it is already being applied, not that it failed, and lets the card follow the server", async () => {
+    const decide = vi.fn(async () => {
+      throw conflict("decision_in_progress")
+    })
+    render(
+      <ToolResultCard
+        locale="en"
+        part={mailPart()}
+        toolConfirmation={{ states: snapshot(state()), decide }}
+      />,
+    )
+
+    click("Send")
+
+    expect(
+      await screen.findByText("This is already being applied…"),
+    ).toBeTruthy()
+    expect(
+      screen.queryByText("Your decision couldn’t be sent. Try again."),
+    ).toBeNull()
+    // Nothing to resend, but nothing is locked either: the server's state decides.
+    expect(
+      (screen.getByRole("button", { name: "Send" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false)
+  })
+
+  it("clears the notice when the user decides again", async () => {
+    let calls = 0
+    const decide = vi.fn(async () => {
+      calls += 1
+      if (calls === 1) throw conflict("decision_in_progress")
+    })
+    render(
+      <ToolResultCard
+        locale="en"
+        part={mailPart()}
+        toolConfirmation={{ states: snapshot(state()), decide }}
+      />,
+    )
+    click("Send")
+    await screen.findByText("This is already being applied…")
+
+    click("Send")
+
+    await waitFor(() =>
+      expect(screen.queryByText("This is already being applied…")).toBeNull(),
+    )
+  })
+
+  it("treats a key conflict as a failure to send", async () => {
+    const decide = vi.fn(async () => {
+      throw conflict("decision_request_conflict")
+    })
+    render(
+      <ToolResultCard
+        locale="en"
+        part={mailPart()}
+        toolConfirmation={{ states: snapshot(state()), decide }}
+      />,
+    )
+
+    click("Send")
+
+    expect(
+      await screen.findByText("Your decision couldn’t be sent. Try again."),
+    ).toBeTruthy()
   })
 })

@@ -30,6 +30,7 @@ export {
   ProtocolError,
   HttpStatusError,
   ToolDecisionRejectedError,
+  ToolSubmissionConflictError,
   normalizeError,
 } from "./errors"
 export {
@@ -107,6 +108,7 @@ export type {
   ToolActionSuperseded,
   ToolDecision,
   ToolDecisionError,
+  ToolSubmissionConflict,
   DecideToolActionsOptions,
   GetToolConfirmationsInput,
   GetToolConfirmationsFn,

@@ -92,6 +92,16 @@ export type PersonalConnectorCopy = {
   editNoLongerApplies: string
   editedLabel: string
   seeNewerVersion: string
+  invalidatedConfigurationChanged: string
+  invalidatedNoSnapshot: string
+  invalidatedResourceChanged: string
+  unknownOutcome: string
+  unknownInterrupted: string
+  applyingNow: string
+  errorPlainText: string
+  errorOffsetMismatch: string
+  errorNotEditable: string
+  errorInvalidValue: string
 }
 
 const ENGLISH: PersonalConnectorCopy = {
@@ -185,6 +195,16 @@ const ENGLISH: PersonalConnectorCopy = {
     "Your changes no longer apply to this action. Review them and try again.",
   editedLabel: "Edited",
   seeNewerVersion: "See the newer version",
+  invalidatedConfigurationChanged: "The tool, account or its settings changed after this was prepared. Ask again in the chat.",
+  invalidatedNoSnapshot: "This action was prepared by an older version and can’t run. Ask again in the chat.",
+  invalidatedResourceChanged: "The event changed after this was prepared, so nothing was modified. Ask again in the chat.",
+  unknownOutcome: "The provider didn’t confirm whether it happened. Check your sent mail or calendar before trying again.",
+  unknownInterrupted: "The action was interrupted and it isn’t known whether it happened. Check your account before trying again.",
+  applyingNow: "This is already being applied…",
+  errorPlainText: "Use plain text, without HTML",
+  errorOffsetMismatch: "The UTC offset doesn’t match the time zone of the event",
+  errorNotEditable: "This field can’t be edited",
+  errorInvalidValue: "This value isn’t valid",
 }
 
 const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
@@ -280,6 +300,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Tus cambios ya no se aplican a esta acción. Revísalos e inténtalo de nuevo.",
     editedLabel: "Editada",
     seeNewerVersion: "Ver la versión más reciente",
+    invalidatedConfigurationChanged: "La herramienta, la cuenta o su configuración cambiaron después de preparar esto. Pídelo de nuevo en el chat.",
+    invalidatedNoSnapshot: "Esta acción la preparó una versión anterior y no se puede ejecutar. Pídelo de nuevo en el chat.",
+    invalidatedResourceChanged: "El evento cambió después de preparar esto, así que no se modificó nada. Pídelo de nuevo en el chat.",
+    unknownOutcome: "El proveedor no confirmó si llegó a ocurrir. Comprueba tus enviados o tu calendario antes de intentarlo de nuevo.",
+    unknownInterrupted: "La acción se interrumpió y no se sabe si llegó a ocurrir. Comprueba tu cuenta antes de intentarlo de nuevo.",
+    applyingNow: "Ya se está aplicando…",
+    errorPlainText: "Usa texto sin formato, sin HTML",
+    errorOffsetMismatch: "El desfase UTC no coincide con la zona horaria del evento",
+    errorNotEditable: "Este campo no se puede editar",
+    errorInvalidValue: "Este valor no es válido",
   },
   ca: {
     searchingMail: "Cercant a {{service}}",
@@ -373,6 +403,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Els teus canvis ja no s’apliquen a aquesta acció. Revisa’ls i torna-ho a provar.",
     editedLabel: "Editada",
     seeNewerVersion: "Mostra la versió més recent",
+    invalidatedConfigurationChanged: "L’eina, el compte o la seva configuració han canviat després de preparar això. Torna-ho a demanar al xat.",
+    invalidatedNoSnapshot: "Aquesta acció la va preparar una versió anterior i no es pot executar. Torna-ho a demanar al xat.",
+    invalidatedResourceChanged: "L’esdeveniment ha canviat després de preparar això, així que no s’ha modificat res. Torna-ho a demanar al xat.",
+    unknownOutcome: "El proveïdor no ha confirmat si va arribar a passar. Comprova els enviats o el calendari abans de tornar-ho a provar.",
+    unknownInterrupted: "L’acció s’ha interromput i no se sap si va arribar a passar. Comprova el teu compte abans de tornar-ho a provar.",
+    applyingNow: "Ja s’està aplicant…",
+    errorPlainText: "Utilitza text sense format, sense HTML",
+    errorOffsetMismatch: "El desfasament UTC no coincideix amb la zona horària de l’esdeveniment",
+    errorNotEditable: "Aquest camp no es pot editar",
+    errorInvalidValue: "Aquest valor no és vàlid",
   },
   fr: {
     searchingMail: "Recherche dans {{service}}",
@@ -467,6 +507,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Vos modifications ne s’appliquent plus à cette action. Vérifiez-les et réessayez.",
     editedLabel: "Modifiée",
     seeNewerVersion: "Voir la version la plus récente",
+    invalidatedConfigurationChanged: "L’outil, le compte ou sa configuration ont changé après la préparation. Redemandez-le dans le chat.",
+    invalidatedNoSnapshot: "Cette action a été préparée par une version antérieure et ne peut pas s’exécuter. Redemandez-la dans le chat.",
+    invalidatedResourceChanged: "L’événement a changé après la préparation, donc rien n’a été modifié. Redemandez-le dans le chat.",
+    unknownOutcome: "Le fournisseur n’a pas confirmé si cela a eu lieu. Vérifiez vos envois ou votre agenda avant de réessayer.",
+    unknownInterrupted: "L’action a été interrompue et on ne sait pas si elle a eu lieu. Vérifiez votre compte avant de réessayer.",
+    applyingNow: "Déjà en cours d’application…",
+    errorPlainText: "Utilisez du texte brut, sans HTML",
+    errorOffsetMismatch: "Le décalage UTC ne correspond pas au fuseau horaire de l’événement",
+    errorNotEditable: "Ce champ ne peut pas être modifié",
+    errorInvalidValue: "Cette valeur n’est pas valide",
   },
   it: {
     searchingMail: "Ricerca in {{service}}",
@@ -560,6 +610,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Le tue modifiche non si applicano più a questa azione. Controllale e riprova.",
     editedLabel: "Modificata",
     seeNewerVersion: "Vedi la versione più recente",
+    invalidatedConfigurationChanged: "Lo strumento, l’account o la sua configurazione sono cambiati dopo la preparazione. Chiedilo di nuovo nella chat.",
+    invalidatedNoSnapshot: "Questa azione è stata preparata da una versione precedente e non può essere eseguita. Chiedilo di nuovo nella chat.",
+    invalidatedResourceChanged: "L’evento è cambiato dopo la preparazione, quindi non è stato modificato nulla. Chiedilo di nuovo nella chat.",
+    unknownOutcome: "Il provider non ha confermato se sia avvenuto. Controlla la posta inviata o il calendario prima di riprovare.",
+    unknownInterrupted: "L’azione è stata interrotta e non si sa se sia avvenuta. Controlla il tuo account prima di riprovare.",
+    applyingNow: "È già in corso di applicazione…",
+    errorPlainText: "Usa testo semplice, senza HTML",
+    errorOffsetMismatch: "Lo scostamento UTC non corrisponde al fuso orario dell’evento",
+    errorNotEditable: "Questo campo non può essere modificato",
+    errorInvalidValue: "Questo valore non è valido",
   },
   de: {
     searchingMail: "Suche in {{service}}",
@@ -655,6 +715,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Deine Änderungen gelten für diese Aktion nicht mehr. Prüfe sie und versuche es erneut.",
     editedLabel: "Bearbeitet",
     seeNewerVersion: "Neuere Version ansehen",
+    invalidatedConfigurationChanged: "Das Tool, das Konto oder dessen Konfiguration haben sich nach der Vorbereitung geändert. Frag im Chat erneut an.",
+    invalidatedNoSnapshot: "Diese Aktion wurde von einer älteren Version vorbereitet und kann nicht ausgeführt werden. Frag im Chat erneut an.",
+    invalidatedResourceChanged: "Der Termin hat sich nach der Vorbereitung geändert, daher wurde nichts verändert. Frag im Chat erneut an.",
+    unknownOutcome: "Der Anbieter hat nicht bestätigt, ob es passiert ist. Prüfe deine gesendeten Mails oder deinen Kalender, bevor du es erneut versuchst.",
+    unknownInterrupted: "Die Aktion wurde unterbrochen und es ist nicht bekannt, ob sie ausgeführt wurde. Prüfe dein Konto, bevor du es erneut versuchst.",
+    applyingNow: "Wird bereits angewendet…",
+    errorPlainText: "Verwende reinen Text, ohne HTML",
+    errorOffsetMismatch: "Der UTC-Versatz passt nicht zur Zeitzone des Termins",
+    errorNotEditable: "Dieses Feld kann nicht bearbeitet werden",
+    errorInvalidValue: "Dieser Wert ist ungültig",
   },
   da: {
     searchingMail: "Søger i {{service}}",
@@ -749,6 +819,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Dine ændringer gælder ikke længere for denne handling. Gennemgå dem og prøv igen.",
     editedLabel: "Redigeret",
     seeNewerVersion: "Se den nyere version",
+    invalidatedConfigurationChanged: "Værktøjet, kontoen eller dens konfiguration er ændret, efter at dette blev forberedt. Spørg igen i chatten.",
+    invalidatedNoSnapshot: "Denne handling blev forberedt af en ældre version og kan ikke udføres. Spørg igen i chatten.",
+    invalidatedResourceChanged: "Begivenheden er ændret, efter at dette blev forberedt, så intet blev ændret. Spørg igen i chatten.",
+    unknownOutcome: "Udbyderen bekræftede ikke, om det skete. Tjek dine sendte mails eller din kalender, før du prøver igen.",
+    unknownInterrupted: "Handlingen blev afbrudt, og det vides ikke, om den skete. Tjek din konto, før du prøver igen.",
+    applyingNow: "Bliver allerede anvendt…",
+    errorPlainText: "Brug almindelig tekst uden HTML",
+    errorOffsetMismatch: "UTC-forskydningen passer ikke til begivenhedens tidszone",
+    errorNotEditable: "Dette felt kan ikke redigeres",
+    errorInvalidValue: "Denne værdi er ugyldig",
   },
   sv: {
     searchingMail: "Söker i {{service}}",
@@ -843,6 +923,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Dina ändringar gäller inte längre för den här åtgärden. Granska dem och försök igen.",
     editedLabel: "Redigerad",
     seeNewerVersion: "Se den nyare versionen",
+    invalidatedConfigurationChanged: "Verktyget, kontot eller dess inställningar ändrades efter att detta förbereddes. Fråga igen i chatten.",
+    invalidatedNoSnapshot: "Den här åtgärden förbereddes av en äldre version och kan inte köras. Fråga igen i chatten.",
+    invalidatedResourceChanged: "Händelsen ändrades efter att detta förbereddes, så inget ändrades. Fråga igen i chatten.",
+    unknownOutcome: "Leverantören bekräftade inte om det hände. Kontrollera dina skickade mejl eller din kalender innan du försöker igen.",
+    unknownInterrupted: "Åtgärden avbröts och det är inte känt om den hände. Kontrollera ditt konto innan du försöker igen.",
+    applyingNow: "Tillämpas redan…",
+    errorPlainText: "Använd vanlig text, utan HTML",
+    errorOffsetMismatch: "UTC-förskjutningen stämmer inte med händelsens tidszon",
+    errorNotEditable: "Det här fältet kan inte redigeras",
+    errorInvalidValue: "Det här värdet är ogiltigt",
   },
   no: {
     searchingMail: "Søker i {{service}}",
@@ -936,6 +1026,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Endringene dine gjelder ikke lenger for denne handlingen. Gå gjennom dem og prøv igjen.",
     editedLabel: "Redigert",
     seeNewerVersion: "Se den nyere versjonen",
+    invalidatedConfigurationChanged: "Verktøyet, kontoen eller konfigurasjonen ble endret etter at dette ble forberedt. Spør igjen i chatten.",
+    invalidatedNoSnapshot: "Denne handlingen ble forberedt av en eldre versjon og kan ikke kjøres. Spør igjen i chatten.",
+    invalidatedResourceChanged: "Hendelsen ble endret etter at dette ble forberedt, så ingenting ble endret. Spør igjen i chatten.",
+    unknownOutcome: "Leverandøren bekreftet ikke om det skjedde. Sjekk sendte e-poster eller kalenderen før du prøver igjen.",
+    unknownInterrupted: "Handlingen ble avbrutt, og det er ikke kjent om den skjedde. Sjekk kontoen din før du prøver igjen.",
+    applyingNow: "Blir allerede brukt…",
+    errorPlainText: "Bruk vanlig tekst, uten HTML",
+    errorOffsetMismatch: "UTC-forskyvningen stemmer ikke med hendelsens tidssone",
+    errorNotEditable: "Dette feltet kan ikke redigeres",
+    errorInvalidValue: "Denne verdien er ugyldig",
   },
   pt: {
     searchingMail: "Pesquisando no {{service}}",
@@ -1029,6 +1129,16 @@ const COPY: Record<SupportedToolLocale, Partial<PersonalConnectorCopy>> = {
       "Suas alterações não se aplicam mais a esta ação. Revise-as e tente novamente.",
     editedLabel: "Editada",
     seeNewerVersion: "Ver a versão mais recente",
+    invalidatedConfigurationChanged: "A ferramenta, a conta ou a configuração mudaram depois de preparar isto. Peça de novo no chat.",
+    invalidatedNoSnapshot: "Esta ação foi preparada por uma versão anterior e não pode ser executada. Peça de novo no chat.",
+    invalidatedResourceChanged: "O evento mudou depois de preparar isto, então nada foi modificado. Peça de novo no chat.",
+    unknownOutcome: "O provedor não confirmou se aconteceu. Verifique seus enviados ou sua agenda antes de tentar de novo.",
+    unknownInterrupted: "A ação foi interrompida e não se sabe se aconteceu. Verifique sua conta antes de tentar de novo.",
+    applyingNow: "Já está sendo aplicado…",
+    errorPlainText: "Use texto simples, sem HTML",
+    errorOffsetMismatch: "O deslocamento UTC não corresponde ao fuso horário do evento",
+    errorNotEditable: "Este campo não pode ser editado",
+    errorInvalidValue: "Este valor não é válido",
   },
 }
 

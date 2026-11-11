@@ -622,13 +622,31 @@ export type PlaiChatError = {
    * before anything ran; every action of the submission stays pending.
    */
   toolDecision?: ToolDecisionError
+  /** `decision_in_progress` / `decision_request_conflict` (HTTP 409), see `ToolSubmissionConflict`. */
+  toolSubmission?: ToolSubmissionConflict
   cause?: unknown
 }
 
-/** Field errors of a rejected edit; messages are safe to show next to the field. */
+/**
+ * Field errors of a rejected edit. `code` is stable and meant to be translated
+ * (`needs_recipient`, `invalid_address`, `plain_text_only`, `ambiguous_time`...);
+ * `message` is the English text for a code the client does not know. Both are
+ * safe to show next to the field.
+ */
 export type ToolDecisionError = {
   actionId: string
-  errors: { field: string; message: string }[]
+  errors: { field: string; message: string; code?: string }[]
+}
+
+/**
+ * A retry of a submission the server already registered under its
+ * `decision_request_id`: it is still being applied (`decision_in_progress`, with
+ * the run that applies it) or the key was used with a different request
+ * (`decision_request_conflict`). Nothing was applied by this request.
+ */
+export type ToolSubmissionConflict = {
+  code: "decision_in_progress" | "decision_request_conflict"
+  executionId?: string | null
 }
 
 export type FileUploadStatus = "idle" | "uploading" | "processing" | "error"

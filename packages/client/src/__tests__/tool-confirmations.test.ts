@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { PlaiChat } from "../chat"
-import { HttpStatusError, ToolDecisionRejectedError } from "../errors"
+import {
+  HttpStatusError,
+  ToolDecisionRejectedError,
+  ToolSubmissionConflictError,
+} from "../errors"
 import { ChatRegistry } from "../registry"
 import { StreamCoordinator } from "../coordinator"
 import {
@@ -531,6 +535,171 @@ describe("PlaiChat rejected edits", () => {
       code: "thread_busy",
     })
     expect(onError).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("PlaiChat retries of a decision submission", () => {
+  const conflict = (code: string, executionId: string | null = null) =>
+    new HttpStatusError(
+      409,
+      "Conflict",
+      JSON.stringify({
+        detail: {
+          code,
+          detail: "already registered",
+          execution_id: executionId,
+        },
+      }),
+    )
+
+  /** A chat whose transport answers each request with the next scripted outcome. */
+  function scripted(outcomes: ("ok" | Error)[]) {
+    const ids: (string | undefined)[] = []
+    const chat = new PlaiChat({
+      transport: {
+        async *stream(request) {
+          ids.push(request.message.decisionRequestId)
+          const next = outcomes.shift() ?? "ok"
+          if (next !== "ok") throw next
+          yield { type: "message_stop" } as PlaiSseEvent
+        },
+      },
+    })
+    return { chat, ids }
+  }
+
+  const confirm = (patch?: Record<string, unknown>) => [
+    {
+      action_id: "a-1",
+      decision: "confirm" as const,
+      ...(patch ? { arguments: patch } : {}),
+    },
+  ]
+
+  it("undoes the message and rejects with the conflict when it is already being applied", async () => {
+    const onError = vi.fn()
+    const chat = new PlaiChat({
+      transport: {
+        // biome-ignore lint/correctness/useYield: the request fails before any event
+        async *stream() {
+          throw conflict("decision_in_progress", "run-1")
+        },
+      },
+      onError,
+    })
+
+    const attempt = chat.decideToolActions(confirm())
+
+    await expect(attempt).rejects.toBeInstanceOf(ToolSubmissionConflictError)
+    await expect(attempt).rejects.toMatchObject({
+      details: { code: "decision_in_progress", executionId: "run-1" },
+    })
+    expect(chat.getState().messages).toEqual([])
+    expect(chat.getState().status).toBe("ready")
+    expect(chat.getState().error).toBeNull()
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  it("settles a conflict through the registry as completed, without a send", async () => {
+    const registry = new ChatRegistry({
+      coordinator: new StreamCoordinator(),
+      create: (_key, hooks) =>
+        new PlaiChat({
+          transport: {
+            // biome-ignore lint/correctness/useYield: the request fails before any event
+            async *stream() {
+              throw conflict("decision_request_conflict")
+            },
+          },
+          ...hooks,
+        }),
+    })
+    const settled = vi.fn()
+    registry.onSettled((_, result) => settled(result))
+
+    await expect(
+      registry.runInvocation("a", (op) => op.decideToolActions(confirm())),
+    ).rejects.toBeInstanceOf(ToolSubmissionConflictError)
+
+    expect(settled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: "completed",
+        error: null,
+        didSend: false,
+      }),
+    )
+  })
+
+  it("retries the same decisions under the same key after a failure", async () => {
+    const { chat, ids } = scripted([new TypeError("network down"), "ok"])
+
+    await chat.decideToolActions(confirm())
+    expect(chat.getState().status).toBe("error")
+    chat.clearError() // the host clears the failure before the user tries again
+    await chat.decideToolActions(confirm())
+
+    expect(ids).toHaveLength(2)
+    expect(ids[0]).toBeTruthy()
+    expect(ids[1]).toBe(ids[0])
+  })
+
+  it("uses a new key when anything about the submission changed", async () => {
+    const { chat, ids } = scripted([
+      new TypeError("down"),
+      new TypeError("down"),
+      "ok",
+    ])
+
+    await chat.decideToolActions(confirm())
+    chat.clearError()
+    await chat.decideToolActions(confirm({ subject: "Otro" })) // an edit
+    chat.clearError()
+    await chat.decideToolActions(confirm({ subject: "Otro" }), {
+      text: "y mándalo",
+    })
+
+    expect(new Set(ids).size).toBe(3)
+  })
+
+  it("does not reuse the key of a submission that went through", async () => {
+    const { chat, ids } = scripted(["ok", "ok"])
+
+    await chat.decideToolActions(confirm())
+    await chat.decideToolActions(confirm())
+
+    expect(ids[1]).not.toBe(ids[0])
+  })
+
+  it("keeps the key while the first submission is still being applied", async () => {
+    const { chat, ids } = scripted([
+      conflict("decision_in_progress", "run-1"),
+      "ok",
+    ])
+
+    await expect(chat.decideToolActions(confirm())).rejects.toBeInstanceOf(
+      ToolSubmissionConflictError,
+    )
+    await chat.decideToolActions(confirm())
+
+    expect(ids[1]).toBe(ids[0])
+  })
+
+  it("starts over after a rejected edit: nothing was registered", async () => {
+    const rejected = new HttpStatusError(
+      422,
+      "Unprocessable Entity",
+      JSON.stringify({
+        detail: { code: "invalid_tool_decision", action_id: "a-1", errors: [] },
+      }),
+    )
+    const { chat, ids } = scripted([rejected, "ok"])
+
+    await expect(chat.decideToolActions(confirm())).rejects.toBeInstanceOf(
+      ToolDecisionRejectedError,
+    )
+    await chat.decideToolActions(confirm())
+
+    expect(ids[1]).not.toBe(ids[0])
   })
 })
 

@@ -4,6 +4,7 @@ import {
   type ToolConfirmationState,
   type ToolDecision,
   ToolDecisionRejectedError,
+  ToolSubmissionConflictError,
   toolConfirmationAt,
 } from "@plaisolutions/client"
 import { CheckCircle2, Clock, LoaderCircle, XCircle } from "lucide-react"
@@ -17,6 +18,7 @@ import {
 import {
   type Draft,
   type FieldError,
+  type ServerFieldError,
   buildPatch,
   editableFields,
   initialDraft,
@@ -98,6 +100,35 @@ export function statusLabel(
   copy: PersonalConnectorCopy,
 ): string | null {
   const key = STATUS_COPY[status]
+  return key ? copy[key] : null
+}
+
+const REASON_COPY: Record<
+  string,
+  Record<string, keyof PersonalConnectorCopy>
+> = {
+  invalidated: {
+    configuration_changed: "invalidatedConfigurationChanged",
+    no_snapshot: "invalidatedNoSnapshot",
+    resource_changed: "invalidatedResourceChanged",
+  },
+  unknown: {
+    outcome_unknown: "unknownOutcome",
+    interrupted: "unknownInterrupted",
+  },
+}
+
+/**
+ * Why an action ended as `invalidated` or `unknown`, from the safe reason code the
+ * server stores. A code this client does not know shows nothing extra: the status
+ * label still says what happened.
+ */
+export function reasonLabel(
+  status: string,
+  reason: string | null | undefined,
+  copy: PersonalConnectorCopy,
+): string | null {
+  const key = reason ? REASON_COPY[status]?.[reason] : undefined
   return key ? copy[key] : null
 }
 
@@ -205,7 +236,11 @@ export function PendingConfirmationFooter({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<Draft>({})
   const [fieldErrors, setFieldErrors] = useState<Record<string, FieldError>>({})
-  const [serverErrors, setServerErrors] = useState<Record<string, string>>({})
+  const [serverErrors, setServerErrors] = useState<
+    Record<string, ServerFieldError>
+  >({})
+  // The server already has this submission and is still applying it.
+  const [applying, setApplying] = useState(false)
 
   if (!toolConfirmation) {
     return (
@@ -229,6 +264,7 @@ export function PendingConfirmationFooter({
 
   if (state.status !== "pending") {
     const label = statusLabel(state.status, copy)
+    const reason = reasonLabel(state.status, state.error, copy)
     return label ? (
       <p
         className="flex flex-wrap items-center gap-2 border-t border-divider bg-surface-muted px-3 py-2 text-xs text-strong"
@@ -238,6 +274,11 @@ export function PendingConfirmationFooter({
           {label}
           {state.status === "failed" && state.error ? `: ${state.error}` : null}
         </span>
+        {reason ? (
+          <span className="basis-full text-muted" data-confirmation-reason>
+            {reason}
+          </span>
+        ) : null}
         {state.status === "superseded" && state.supersededBy ? (
           <button
             type="button"
@@ -258,6 +299,7 @@ export function PendingConfirmationFooter({
 
   const decide = async (decisions: ToolDecision[]) => {
     setFailed(false)
+    setApplying(false)
     try {
       await toolConfirmation.decide(decisions)
     } catch (error) {
@@ -268,9 +310,19 @@ export function PendingConfirmationFooter({
         // The server refused the edit: nothing ran and the draft stays as it is.
         setServerErrors(
           Object.fromEntries(
-            error.details.errors.map(({ field, message }) => [field, message]),
+            error.details.errors.map(({ field, message, code }) => [
+              field,
+              { message, ...(code ? { code } : {}) },
+            ]),
           ),
         )
+      } else if (
+        error instanceof ToolSubmissionConflictError &&
+        error.details.code === "decision_in_progress"
+      ) {
+        // The same submission is already being applied: nothing to resend. The card
+        // follows the server's state, which moves on by itself.
+        setApplying(true)
       } else {
         setFailed(true)
       }
@@ -414,11 +466,13 @@ export function PendingConfirmationFooter({
         <span className="ml-auto text-xs text-secondary" aria-live="polite">
           {failed
             ? copy.decisionError
-            : unavailable
-              ? copy.toolUnavailable
-              : editStale
-                ? copy.editNoLongerApplies
-                : expiry}
+            : applying
+              ? copy.applyingNow
+              : unavailable
+                ? copy.toolUnavailable
+                : editStale
+                  ? copy.editNoLongerApplies
+                  : expiry}
         </span>
       </div>
     </>

@@ -129,6 +129,96 @@ describe("HTTP errors", () => {
     ).toBeUndefined()
   })
 
+  it("keeps the stable code of each field error and ignores a malformed one", () => {
+    const cause = new HttpStatusError(
+      422,
+      "Unprocessable Entity",
+      JSON.stringify({
+        detail: {
+          code: "invalid_tool_decision",
+          action_id: "a-1",
+          errors: [
+            {
+              field: "to",
+              code: "needs_recipient",
+              message: "needs at least one recipient",
+            },
+            { field: "body", message: "an older server sends no code" },
+            { field: "x", code: 5, message: "code is not a string" },
+          ],
+        },
+      }),
+    )
+
+    expect(normalizeError(cause).toolDecision?.errors).toEqual([
+      {
+        field: "to",
+        code: "needs_recipient",
+        message: "needs at least one recipient",
+      },
+      { field: "body", message: "an older server sends no code" },
+      { field: "x", message: "code is not a string" },
+    ])
+  })
+
+  it("exposes a conflict on a submission's key, with the run that applies it", () => {
+    const inProgress = normalizeError(
+      new HttpStatusError(
+        409,
+        "Conflict",
+        JSON.stringify({
+          detail: {
+            code: "decision_in_progress",
+            detail: "this submission is already being applied",
+            execution_id: "run-1",
+          },
+        }),
+      ),
+    )
+    const early = normalizeError(
+      new HttpStatusError(
+        409,
+        "Conflict",
+        JSON.stringify({
+          detail: { code: "decision_in_progress", execution_id: null },
+        }),
+      ),
+    )
+    const conflict = normalizeError(
+      new HttpStatusError(
+        409,
+        "Conflict",
+        JSON.stringify({ detail: { code: "decision_request_conflict" } }),
+      ),
+    )
+
+    expect(inProgress.toolSubmission).toEqual({
+      code: "decision_in_progress",
+      executionId: "run-1",
+    })
+    expect(early.toolSubmission).toEqual({
+      code: "decision_in_progress",
+      executionId: null,
+    })
+    expect(conflict.toolSubmission).toEqual({
+      code: "decision_request_conflict",
+      executionId: null,
+    })
+  })
+
+  it("does not take any other 409 for a submission conflict", () => {
+    const busy = normalizeError(
+      new HttpStatusError(
+        409,
+        "Conflict",
+        JSON.stringify({ detail: { code: "thread_busy", detail: "running" } }),
+      ),
+    )
+
+    expect(busy.code).toBe("thread_busy")
+    expect(busy.toolSubmission).toBeUndefined()
+  })
+
   it("supports FastAPI nested detail and validates optional fields", () => {
     expect(
       normalizeError(

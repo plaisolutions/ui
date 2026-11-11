@@ -1,5 +1,9 @@
 import { normalizeError } from "./errors"
-import { ProtocolError, ToolDecisionRejectedError } from "./errors"
+import {
+  ProtocolError,
+  ToolDecisionRejectedError,
+  ToolSubmissionConflictError,
+} from "./errors"
 import {
   createInitialInternalState,
   reduceChatState,
@@ -110,6 +114,9 @@ export class PlaiChat {
 
   private isStopping = false
 
+  /** The last decision submission that did not end cleanly, to retry it under its key. */
+  private lastSubmission: { signature: string; requestId: string } | null = null
+
   /**
    * State of the actions awaiting the user's confirmation in this chat, fed by
    * the stream and by `refreshToolConfirmations`. Cards read it to show buttons.
@@ -206,6 +213,23 @@ export class PlaiChat {
         })
         throw new ToolDecisionRejectedError(normalized.toolDecision, normalized)
       }
+      if (normalized.toolSubmission) {
+        // The server already has this submission (still being applied, or its key was
+        // used with another request): this one applied nothing. Same as a rejected edit,
+        // the chat is intact; the cards follow the server's state.
+        this.setState({
+          ...this.state,
+          messages: this.state.messages.filter(
+            (message) => message.id !== userMessage.id,
+          ),
+          status: "ready",
+          error: null,
+        })
+        throw new ToolSubmissionConflictError(
+          normalized.toolSubmission,
+          normalized,
+        )
+      }
       if (!(this.isStopping && normalized.type === "abort_error")) {
         this.setState({
           ...this.state,
@@ -238,7 +262,33 @@ export class PlaiChat {
     decisions: ToolDecision[],
     options: DecideToolActionsOptions = {},
   ): Promise<void> {
-    await this.sendMessage(toolDecisionsInput(decisions, options))
+    const input = toolDecisionsInput(decisions, options)
+    // A submission that ended in an error may or may not have been applied. Sending the
+    // very same decisions again reuses its key: the server answers from what it recorded
+    // (the same result, or "still being applied") instead of applying anything twice.
+    const signature = JSON.stringify([
+      decisions,
+      options.text ?? "",
+      options.enabledTools ?? null,
+    ])
+    if (this.lastSubmission?.signature === signature) {
+      input.decisionRequestId = this.lastSubmission.requestId
+    }
+    this.lastSubmission = {
+      signature,
+      requestId: input.decisionRequestId as string,
+    }
+    try {
+      await this.sendMessage(input)
+    } catch (error) {
+      // Still being applied: the next try of the same decisions must follow that one.
+      // Anything else (a rejected edit, a busy chat) registered nothing.
+      if (!(error instanceof ToolSubmissionConflictError)) {
+        this.lastSubmission = null
+      }
+      throw error
+    }
+    if (this.state.status !== "error") this.lastSubmission = null
   }
 
   /**
