@@ -2,6 +2,8 @@ import type { UIMessage } from "@plaisolutions/client"
 import { cleanup, render } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import {
+  AssistantMessage,
+  Message,
   MessageParts,
   getMessageGeneratedFiles,
   resolveGeneratedFileLinks,
@@ -534,5 +536,212 @@ describe("MessageParts with generated file links", () => {
     )
 
     expect(seen[0]).toBe(part)
+  })
+})
+
+describe("Message and AssistantMessage with generated file links", () => {
+  afterEach(cleanup)
+
+  const codeExecution = {
+    type: "tool-call" as const,
+    id: "tool_code",
+    name: "analyze",
+    toolType: "code_execution" as const,
+    input: {},
+    state: "completed" as const,
+    metadata: {
+      type: "code_execution" as const,
+      status: "success" as const,
+      media_files: [
+        {
+          id: "f1",
+          name: "x.png",
+          content_type: "image/png",
+          url: "https://files.test/x.png?sig=1",
+        },
+      ],
+    },
+  }
+
+  const officeDocuments = {
+    type: "tool-call" as const,
+    id: "tool_office",
+    name: "office",
+    toolType: "office_documents" as const,
+    input: {},
+    state: "completed" as const,
+    metadata: {
+      type: "office_documents" as const,
+      media_files: [
+        {
+          id: "f2",
+          name: "x.png",
+          content_type: "image/png",
+          url: "https://files.test/office-x.png?sig=2",
+        },
+      ],
+    },
+  }
+
+  const text =
+    "![alt](sandbox:/mnt/data/x.png)\n[Descargar](sandbox:/mnt/data/x.png)"
+
+  const message = (...parts: UIMessage["parts"]): UIMessage => ({
+    id: "m",
+    role: "assistant",
+    parts,
+  })
+
+  function texts(
+    render_: (renderText: (part: { text: string }) => null) => void,
+  ) {
+    const received: string[] = []
+    render_((part) => {
+      received.push(part.text)
+      return null
+    })
+    return received
+  }
+
+  const viaMessage = (
+    value: UIMessage,
+    messagePartsProps: Record<string, unknown> = {},
+  ) =>
+    texts((renderText) => {
+      render(
+        <Message
+          message={value}
+          messagePartsProps={{ ...messagePartsProps, renderText }}
+        />,
+      )
+    })
+
+  const viaAssistantMessage = (
+    value: UIMessage,
+    messagePartsProps: Record<string, unknown> = {},
+  ) =>
+    texts((renderText) => {
+      render(
+        <AssistantMessage
+          message={value}
+          messagePartsProps={{ ...messagePartsProps, renderText }}
+        />,
+      )
+    })
+
+  const resolvedWith = (url: string) => `![alt](${url})\n[Descargar](${url})`
+
+  it.each([
+    ["Message", viaMessage],
+    ["AssistantMessage", viaAssistantMessage],
+  ])(
+    "%s resolves with the code_execution files of the whole message",
+    (_, view) => {
+      expect(view(message(codeExecution, { type: "text", text }))).toEqual([
+        resolvedWith("https://files.test/x.png?sig=1"),
+      ])
+    },
+  )
+
+  it.each([
+    ["Message", viaMessage],
+    ["AssistantMessage", viaAssistantMessage],
+  ])(
+    "%s resolves with the office_documents files of the whole message",
+    (_, view) => {
+      expect(view(message(officeDocuments, { type: "text", text }))).toEqual([
+        resolvedWith("https://files.test/office-x.png?sig=2"),
+      ])
+    },
+  )
+
+  it("resolves the same as MessageParts does when used directly", () => {
+    const value = message(codeExecution, { type: "text", text })
+    expect(viaMessage(value)).toEqual(
+      texts((renderText) => {
+        render(<MessageParts message={value} renderText={renderText} />)
+      }),
+    )
+  })
+
+  it("resolves text that comes before the tool call, and in several text parts", () => {
+    expect(
+      viaMessage(
+        message(
+          { type: "text", text: "![a](sandbox:/mnt/data/x.png)" },
+          codeExecution,
+          { type: "text", text: "[b](/mnt/data/x.png)" },
+        ),
+      ),
+    ).toEqual([
+      "![a](https://files.test/x.png?sig=1)",
+      "[b](https://files.test/x.png?sig=1)",
+    ])
+  })
+
+  it("removes a link with no matching file and keeps its text", () => {
+    expect(
+      viaMessage(
+        message(codeExecution, {
+          type: "text",
+          text: "[Descargar](sandbox:/mnt/data/otro.csv) ![Gráfico](sandbox:/mnt/data/otro.png)",
+        }),
+      ),
+    ).toEqual(["Descargar Gráfico"])
+  })
+
+  it("does not touch http(s) links", () => {
+    const http = "[a](https://example.com/x.png) ![b](http://example.com/x.png)"
+    expect(
+      viaMessage(message(codeExecution, { type: "text", text: http })),
+    ).toEqual([http])
+  })
+
+  it.each([
+    ["Message", viaMessage],
+    ["AssistantMessage", viaAssistantMessage],
+  ])(
+    "%s hands the text over as written with resolveFileLinks={false}",
+    (_, view) => {
+      expect(
+        view(message(codeExecution, { type: "text", text }), {
+          resolveFileLinks: false,
+        }),
+      ).toEqual([text])
+    },
+  )
+
+  it("leaves a message with only text, and no links, as it is", () => {
+    const plain = "Hola, **mundo**. Mira [la web](https://example.com)."
+    expect(viaMessage(message({ type: "text", text: plain }))).toEqual([plain])
+  })
+
+  it("uses the files it is given instead of those of the message", () => {
+    expect(
+      viaAssistantMessage(message(codeExecution, { type: "text", text }), {
+        generatedFiles: [
+          {
+            name: "x.png",
+            url: "https://files.test/given.png",
+            contentType: "image/png",
+          },
+        ],
+      }),
+    ).toEqual([resolvedWith("https://files.test/given.png")])
+  })
+
+  it("renders the tool call card and the text in the same turn", () => {
+    const { container } = render(
+      <AssistantMessage
+        message={message(codeExecution, { type: "text", text })}
+        messagePartsProps={{ renderText: (part) => <span>{part.text}</span> }}
+      />,
+    )
+
+    expect(
+      container.querySelector(".plai-tool-result-code-execution-card"),
+    ).toBeTruthy()
+    expect(container.textContent).toContain("https://files.test/x.png?sig=1")
+    expect(container.textContent).not.toContain("sandbox:")
   })
 })

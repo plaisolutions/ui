@@ -17,6 +17,7 @@ import { getFilenameFromUrl } from "./internal/file-display"
 import { joinClasses } from "./internal/join-classes"
 import { getUiCopy } from "./internal/ui-copy"
 import {
+  type GeneratedFileLinkTarget,
   getMessageGeneratedFiles,
   resolveGeneratedFileLinks,
 } from "./resolve-generated-file-links"
@@ -179,6 +180,14 @@ export type MessagePartsProps = HTMLAttributes<HTMLDivElement> & {
    * text already resolved. See `resolveGeneratedFileLinks`. Defaults to `true`.
    */
   resolveFileLinks?: boolean
+  /**
+   * The files `resolveFileLinks` matches the links against, instead of the ones
+   * found in the tool calls of `message`. For components that render a message
+   * in several `MessageParts` (`AssistantMessage` renders the tool calls and the
+   * text apart) and need the text to see the files of the whole message. You
+   * rarely need to set it.
+   */
+  generatedFiles?: readonly GeneratedFileLinkTarget[]
   thinkingLabel?: string
   completedThinkingLabel?: string
   readMoreLabel?: string
@@ -440,6 +449,7 @@ export function MessageParts({
   renderThinking,
   isStreaming = false,
   resolveFileLinks = true,
+  generatedFiles,
   thinkingLabel,
   completedThinkingLabel,
   readMoreLabel,
@@ -480,13 +490,13 @@ export function MessageParts({
   // them to the generated files of this message before anything renders them.
   const displayParts = useMemo(() => {
     if (!resolveFileLinks || message.role !== "assistant") return message.parts
-    const files = getMessageGeneratedFiles(message)
+    const files = generatedFiles ?? getMessageGeneratedFiles(message)
     return message.parts.map((part) => {
       if (part.type !== "text") return part
       const text = resolveGeneratedFileLinks(part.text, files)
       return text === part.text ? part : { ...part, text }
     })
-  }, [message, resolveFileLinks])
+  }, [message, resolveFileLinks, generatedFiles])
   const orderedParts = useMemo<OrderedMessageItem[]>(
     () =>
       shouldAggregateSourceResults

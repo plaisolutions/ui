@@ -315,6 +315,10 @@ message are rewritten to the `url` of that file, which is the one the cards use
 to download it. `renderText` receives the text already resolved, so hosts do not
 need to change anything. Set `resolveFileLinks={false}` to receive the text as the
 model wrote it.
+`AssistantMessage` (and `Message`) render the tool calls and the text apart, but
+the text is still resolved against the files of the whole message. If you compose
+the pieces yourself with several `MessageParts`, pass the files of the whole
+message to the one that renders the text with `generatedFiles`.
 
 The same logic is exported as a pure function to use on your own:
 

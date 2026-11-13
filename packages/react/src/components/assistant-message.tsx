@@ -15,6 +15,7 @@ import {
   type MessagePartsProps,
 } from "./message"
 import { joinClasses } from "./internal/join-classes"
+import { getMessageGeneratedFiles } from "./resolve-generated-file-links"
 
 type AssistantMessagePartsProps = Omit<
   MessagePartsProps,
@@ -88,6 +89,13 @@ export function AssistantMessage({
     ),
   )
   const hasContentRow = contentParts.length > 0 || footer !== undefined
+  // The text is rendered apart from the tool calls, but its links point to the
+  // files those tool calls generated: resolve them against the whole message.
+  const generatedFiles =
+    messagePartsProps?.generatedFiles ??
+    (messagePartsProps?.resolveFileLinks === false
+      ? undefined
+      : getMessageGeneratedFiles(message))
 
   return (
     <div
@@ -133,6 +141,7 @@ export function AssistantMessage({
             {contentParts.length > 0 ? (
               <MessageParts
                 {...messagePartsProps}
+                generatedFiles={generatedFiles}
                 message={withParts(message, contentParts)}
                 className={contentPartsClassName}
               />
