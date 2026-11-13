@@ -127,6 +127,11 @@ export { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
 export type { ToolResultHttpRequestCardProps } from "./tool-result-http-request-card"
 export { ToolResultMcpCard } from "./tool-result-mcp-card"
 export type { ToolResultMcpCardProps } from "./tool-result-mcp-card"
+export {
+  getMessageGeneratedFiles,
+  resolveGeneratedFileLinks,
+} from "./resolve-generated-file-links"
+export type { GeneratedFileLinkTarget } from "./resolve-generated-file-links"
 export { ToolResultCodeExecutionCard } from "./tool-result-code-execution-card"
 export type { ToolResultCodeExecutionCardProps } from "./tool-result-code-execution-card"
 export { ToolResultOfficeDocumentsCard } from "./tool-result-office-documents-card"
