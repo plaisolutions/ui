@@ -394,6 +394,53 @@ const officeDocumentsToolMessage: UIMessage = {
   ],
 }
 
+const codeExecutionToolMessage: UIMessage = {
+  id: "message_assistant_code_execution_01",
+  role: "assistant",
+  parts: [
+    {
+      type: "tool-call",
+      id: "tool_code_execution_01",
+      name: "analyze_sales",
+      toolType: "code_execution",
+      input: { prompt: "Summarize sales by region and plot them" },
+      state: "completed",
+      result: "Status: success\nSummary: Analyzed 1,204 rows.",
+      metadata: {
+        type: "code_execution",
+        status: "success",
+        media_files: [
+          {
+            id: "mf_chart",
+            name: "sales-by-region.png",
+            content_type: "image/png",
+            url: "https://example.com/sales-by-region.png",
+          },
+          {
+            id: "mf_csv",
+            name: "sales-summary.csv",
+            content_type: "text/csv",
+            url: "https://example.com/sales-summary.csv",
+          },
+        ],
+        steps: [
+          {
+            kind: "command",
+            input: "python analyze.py --input /mnt/data/sales.csv",
+            output: "Loaded 1,204 rows\nWrote sales-summary.csv",
+            exit_code: 0,
+          },
+        ],
+        steps_omitted: 3,
+      },
+    },
+    {
+      type: "text",
+      text: "I analyzed the sales data and generated a chart and a summary file.",
+    },
+  ],
+}
+
 type ComposedMessageOptions = {
   message: UIMessage
   align?: "start" | "end"
@@ -628,4 +675,8 @@ export const UserWithAttachments: Story = {
 
 export const OfficeDocumentsToolCall: Story = {
   render: () => composedMessage({ message: officeDocumentsToolMessage }),
+}
+
+export const CodeExecutionToolCall: Story = {
+  render: () => composedMessage({ message: codeExecutionToolMessage }),
 }

@@ -349,6 +349,143 @@ describe("reduceChatState", () => {
     })
   })
 
+  it("preserves code_execution steps, files and status inside tool-call parts", () => {
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", role: "assistant", model: "gpt-5.4-mini" },
+      },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_code_1",
+          name: "analyze_sales",
+          tool_type: "code_execution",
+          input: { prompt: "Plot sales" },
+          input_schema: {},
+        },
+      },
+      {
+        type: "tool_result",
+        tool_use_id: "toolu_code_1",
+        tool_type: "code_execution",
+        content: "Status: partial\nSummary: chart failed",
+        is_error: false,
+        error_details: null,
+        metadata: {
+          type: "code_execution",
+          status: "partial",
+          media_files: [
+            {
+              id: "mf_1",
+              name: "summary.csv",
+              content_type: "text/csv",
+              url: "https://example.com/summary.csv",
+              pathname: "threads/t1/summary.csv",
+              project_id: "p1",
+              thread_id: "t1",
+            },
+          ],
+          steps: [
+            {
+              kind: "command",
+              input: "python plot.py",
+              output: "ModuleNotFoundError",
+              exit_code: 1,
+            },
+            {
+              kind: "file_view",
+              input: "/mnt/data/a.csv",
+              output: "x",
+              exit_code: null,
+            },
+          ],
+          steps_omitted: 4,
+          sandbox_seconds: 3.2,
+          executions: 1,
+          error_details: null,
+        },
+      },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+    const part = state.messages[0].parts[0]
+    expect(part).toMatchObject({
+      type: "tool-call",
+      toolType: "code_execution",
+      state: "completed",
+      errorDetails: null,
+      metadata: {
+        type: "code_execution",
+        status: "partial",
+        steps_omitted: 4,
+        media_files: [{ id: "mf_1", thread_id: "t1" }],
+        steps: [
+          { kind: "command", exit_code: 1 },
+          { kind: "file_view", exit_code: null },
+        ],
+      },
+    })
+    if (part.type === "tool-call" && part.toolType === "code_execution") {
+      expect(part.metadata?.steps).toHaveLength(2)
+    }
+  })
+
+  it("keeps the code_execution error details of a failed run", () => {
+    const events: PlaiSseEvent[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", role: "assistant", model: "gpt-5.4-mini" },
+      },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_code_2",
+          name: "analyze_sales",
+          tool_type: "code_execution",
+          input: {},
+          input_schema: {},
+        },
+      },
+      {
+        type: "tool_result",
+        tool_use_id: "toolu_code_2",
+        tool_type: "code_execution",
+        content: "Status: error",
+        is_error: true,
+        error_details: {
+          error_type: "SandboxError",
+          error_code: "sandbox_timeout",
+          error_message: "The sandbox timed out.",
+        },
+        metadata: {
+          type: "code_execution",
+          status: "error",
+          media_files: [],
+          error_details: {
+            error_type: "SandboxError",
+            error_code: "sandbox_timeout",
+            error_message: "The sandbox timed out.",
+          },
+        },
+      },
+    ]
+
+    const state = events.reduce(reduceChatState, createInitialInternalState())
+    expect(state.messages[0].parts[0]).toMatchObject({
+      toolType: "code_execution",
+      state: "error",
+      metadata: {
+        status: "error",
+        error_details: { error_message: "The sandbox timed out." },
+      },
+    })
+  })
+
   it("preserves datasource resources inside tool-call metadata", () => {
     const events: PlaiSseEvent[] = [
       {

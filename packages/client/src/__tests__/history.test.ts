@@ -62,6 +62,53 @@ describe("normalizePlaiThreadMessages", () => {
     expect(messages[1]?.metadata?.persistedMessageId).toBe("assistant_1")
   })
 
+  it("keeps code_execution steps and files from persisted tool results", () => {
+    const messages = normalizePlaiThreadMessages([
+      {
+        id: "assistant_code",
+        role: "assistant",
+        content_blocks: [
+          {
+            type: "tool_use",
+            toolInfo: {
+              id: "tool_code",
+              name: "analyze_sales",
+              tool_type: "code_execution",
+              status: "completed",
+              result: "Status: success",
+              metadata: {
+                type: "code_execution",
+                status: "success",
+                media_files: [{ id: "mf_1", url: "https://example.com/a.csv" }],
+                steps: [
+                  {
+                    kind: "command",
+                    input: "ls",
+                    output: "a.csv",
+                    exit_code: 0,
+                  },
+                ],
+                steps_omitted: 2,
+              },
+            },
+          },
+        ],
+      },
+    ])
+
+    expect(messages[0]?.parts[0]).toMatchObject({
+      type: "tool-call",
+      toolType: "code_execution",
+      state: "completed",
+      metadata: {
+        status: "success",
+        steps_omitted: 2,
+        media_files: [{ id: "mf_1" }],
+        steps: [{ kind: "command", exit_code: 0 }],
+      },
+    })
+  })
+
   it("normalizes persisted thinking summaries without private metadata", () => {
     const messages = normalizePlaiThreadMessages([
       {
