@@ -11,7 +11,13 @@ import {
   SheetTrigger,
 } from "./sheet"
 import { FileDownloadButton } from "./internal/file-download-button"
-import { getFileExtension, getFileIconClass } from "./internal/file-display"
+import { getFileIconClass } from "./internal/file-display"
+import {
+  GeneratedFileRow,
+  getGeneratedFileExtension,
+  getGeneratedFileLabel,
+  getGeneratedFiles,
+} from "./internal/generated-files"
 import { formatToolErrorDetails } from "./internal/format-tool-error-details"
 import { joinClasses } from "./internal/join-classes"
 import { getUiCopy } from "./internal/ui-copy"
@@ -23,23 +29,15 @@ export type ToolResultOfficeDocumentsCardProps = {
 }
 
 function getFiles(part: UIOfficeDocumentsToolCallPart) {
-  const files = part.metadata?.media_files
-  return Array.isArray(files)
-    ? files.filter(
-        (file): file is OfficeDocumentMediaFile =>
-          Boolean(file) &&
-          typeof file === "object" &&
-          typeof file.id === "string",
-      )
-    : []
+  return getGeneratedFiles<OfficeDocumentMediaFile>(part.metadata?.media_files)
 }
 
 function getExtension(file: OfficeDocumentMediaFile) {
-  return getFileExtension(file.name ?? file.pathname, file.content_type)
+  return getGeneratedFileExtension(file)
 }
 
 function getLabel(file: OfficeDocumentMediaFile) {
-  return file.name ?? file.pathname ?? file.id
+  return getGeneratedFileLabel(file)
 }
 
 export function ToolResultOfficeDocumentsCard({
@@ -138,39 +136,9 @@ export function ToolResultOfficeDocumentsCard({
           <SheetTitle>{copy.officeDocuments}</SheetTitle>
         </SheetHeader>
         <section className="mt-6 space-y-3" aria-label={copy.generatedFiles}>
-          {files.map((file) => {
-            const extension = getExtension(file)
-            const label = getLabel(file)
-            return (
-              <div
-                key={file.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3"
-              >
-                <File
-                  className={joinClasses(
-                    "h-8 w-8 shrink-0",
-                    getFileIconClass(extension),
-                  )}
-                  aria-hidden="true"
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{label}</p>
-                  {extension ? (
-                    <p className="text-[11px] uppercase text-muted">
-                      {extension}
-                    </p>
-                  ) : null}
-                </div>
-                {file.url ? (
-                  <FileDownloadButton
-                    file={{ url: file.url, name: file.name }}
-                    label={label}
-                    copy={copy}
-                  />
-                ) : null}
-              </div>
-            )
-          })}
+          {files.map((file) => (
+            <GeneratedFileRow key={file.id} file={file} copy={copy} />
+          ))}
           {files.length === 0 && part.state === "pending" ? (
             <p className="text-sm text-secondary">{copy.creatingDocuments}</p>
           ) : null}

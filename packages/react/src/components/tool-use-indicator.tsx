@@ -13,6 +13,7 @@ import {
 
 type ToolUseAction =
   | "agent"
+  | "code"
   | "datasource"
   | "documents"
   | "email"
@@ -25,6 +26,7 @@ type ToolUseAction =
 const TOOL_USE_ACTIONS: Record<UIToolType, ToolUseAction> = {
   agent_invocation: "agent",
   browser: "web",
+  code_execution: "code",
   datasource: "datasource",
   email_send: "email",
   external_datasource: "query",
@@ -47,6 +49,7 @@ const TOOL_USE_TRANSLATIONS: Record<
 > = {
   en: {
     agent: "Running agent {{toolName}}",
+    code: "Running code with {{toolName}}",
     datasource: "Searching in datasource {{toolName}}",
     documents: "Working with documents using {{toolName}}",
     email: "Sending email with {{toolName}}",
@@ -58,6 +61,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   es: {
     agent: "Ejecutando el agente {{toolName}}",
+    code: "Ejecutando código con {{toolName}}",
     datasource: "Buscando en la fuente de datos {{toolName}}",
     documents: "Trabajando con documentos mediante {{toolName}}",
     email: "Enviando un correo con {{toolName}}",
@@ -69,6 +73,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   ca: {
     agent: "Executant l’agent {{toolName}}",
+    code: "Executant codi amb {{toolName}}",
     datasource: "Cercant a la font de dades {{toolName}}",
     documents: "Treballant amb documents mitjançant {{toolName}}",
     email: "Enviant un correu amb {{toolName}}",
@@ -80,6 +85,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   fr: {
     agent: "Exécution de l’agent {{toolName}}",
+    code: "Exécution du code avec {{toolName}}",
     datasource: "Recherche dans la source de données {{toolName}}",
     documents: "Traitement de documents avec {{toolName}}",
     email: "Envoi d’un e-mail avec {{toolName}}",
@@ -91,6 +97,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   it: {
     agent: "Esecuzione dell’agente {{toolName}}",
+    code: "Esecuzione del codice con {{toolName}}",
     datasource: "Ricerca nella fonte dati {{toolName}}",
     documents: "Elaborazione di documenti con {{toolName}}",
     email: "Invio di un’email con {{toolName}}",
@@ -102,6 +109,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   de: {
     agent: "Agent {{toolName}} wird ausgeführt",
+    code: "Code wird mit {{toolName}} ausgeführt",
     datasource: "Suche in der Datenquelle {{toolName}}",
     documents: "Dokumente werden mit {{toolName}} bearbeitet",
     email: "E-Mail wird mit {{toolName}} gesendet",
@@ -113,6 +121,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   da: {
     agent: "Kører agenten {{toolName}}",
+    code: "Kører kode med {{toolName}}",
     datasource: "Søger i datakilden {{toolName}}",
     documents: "Arbejder med dokumenter via {{toolName}}",
     email: "Sender e-mail med {{toolName}}",
@@ -124,6 +133,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   sv: {
     agent: "Kör agenten {{toolName}}",
+    code: "Kör kod med {{toolName}}",
     datasource: "Söker i datakällan {{toolName}}",
     documents: "Arbetar med dokument via {{toolName}}",
     email: "Skickar e-post med {{toolName}}",
@@ -135,6 +145,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   no: {
     agent: "Kjører agenten {{toolName}}",
+    code: "Kjører kode med {{toolName}}",
     datasource: "Søker i datakilden {{toolName}}",
     documents: "Arbeider med dokumenter via {{toolName}}",
     email: "Sender e-post med {{toolName}}",
@@ -146,6 +157,7 @@ const TOOL_USE_TRANSLATIONS: Record<
   },
   pt: {
     agent: "Executando o agente {{toolName}}",
+    code: "Executando código com {{toolName}}",
     datasource: "Pesquisando na fonte de dados {{toolName}}",
     documents: "Trabalhando com documentos usando {{toolName}}",
     email: "Enviando e-mail com {{toolName}}",

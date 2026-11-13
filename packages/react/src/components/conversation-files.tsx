@@ -41,9 +41,9 @@ function getFileKey(url: string) {
 
 /**
  * Collects the files of the loaded messages, in conversation order: the user's
- * attachments and the files produced by office_documents tool calls. Files
- * without a URL are skipped; a file seen twice is listed once. Persisted
- * history omits media file ids, so files are matched by URL.
+ * attachments and the files produced by office_documents and code_execution
+ * tool calls. Files without a URL are skipped; a file seen twice is listed
+ * once. Persisted history omits media file ids, so files are matched by URL.
  */
 export function getConversationFiles(
   messages: readonly UIMessage[],
@@ -99,7 +99,8 @@ export function getConversationFiles(
         })
       } else if (
         part.type === "tool-call" &&
-        part.toolType === "office_documents"
+        (part.toolType === "office_documents" ||
+          part.toolType === "code_execution")
       ) {
         const mediaFiles = part.metadata?.media_files
         if (!Array.isArray(mediaFiles)) continue

@@ -19,6 +19,7 @@ import type { ToolConfirmationProps } from "./tool-confirmation-controls"
 import { ToolError } from "./tool-error"
 import { ToolResultAgentInvocationCard } from "./tool-result-agent-invocation-card"
 import { ToolResultBrowserCard } from "./tool-result-browser-card"
+import { ToolResultCodeExecutionCard } from "./tool-result-code-execution-card"
 import { ToolResultEmailSendCard } from "./tool-result-email-send-card"
 import { ToolResultExternalDatasourceCard } from "./tool-result-external-datasource-card"
 import { ToolResultHttpRequestCard } from "./tool-result-http-request-card"
@@ -154,6 +155,18 @@ export function ToolResultCard({
     )
   }
 
+  // A failed run keeps its own card: the sandbox error and any steps or files
+  // it produced before failing are in the metadata.
+  if (part.state === "error" && part.toolType === "code_execution") {
+    return (
+      <ToolResultCodeExecutionCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
+  }
+
   if (part.state === "error") {
     return <ToolError part={part} locale={locale} className={className} />
   }
@@ -203,6 +216,16 @@ export function ToolResultCard({
   if (part.toolType === "browser") {
     return (
       <ToolResultBrowserCard
+        part={part}
+        locale={locale}
+        className={className}
+      />
+    )
+  }
+
+  if (part.toolType === "code_execution") {
+    return (
+      <ToolResultCodeExecutionCard
         part={part}
         locale={locale}
         className={className}

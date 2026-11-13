@@ -70,6 +70,61 @@ export type OfficeDocumentsToolMetadata = {
   [key: string]: unknown
 }
 
+export type CodeExecutionMediaFile = {
+  id: string
+  name?: string
+  content_type?: string
+  url?: string
+  pathname?: string
+  project_id?: string
+  thread_id?: string
+  metadata?: Record<string, unknown>
+  created_at?: string
+  updated_at?: string
+}
+
+export type CodeExecutionStatus = "success" | "partial" | "error"
+
+export type CodeExecutionStepKind =
+  | "command"
+  | "file_create"
+  | "file_edit"
+  | "file_view"
+
+/**
+ * One step of the sandbox run. The backend only sends steps when the tool's
+ * execution log is "compact": at most 20, input cut to 500 characters and
+ * output to 1000.
+ */
+export type CodeExecutionStep = {
+  kind: CodeExecutionStepKind
+  input: string
+  output: string
+  exit_code: number | null
+}
+
+export type CodeExecutionErrorDetails = {
+  error_type?: string
+  error_code?: string
+  error_message?: string
+  [key: string]: unknown
+}
+
+export type CodeExecutionToolMetadata = {
+  type?: "code_execution" | string
+  status?: CodeExecutionStatus
+  media_files?: CodeExecutionMediaFile[]
+  steps?: CodeExecutionStep[]
+  /** Earlier steps the backend left out to keep the log compact. */
+  steps_omitted?: number
+  sandbox_seconds?: number
+  executions?: number
+  prompt_tokens?: number
+  completion_tokens?: number
+  error_details?: CodeExecutionErrorDetails | null
+  [key: string]: unknown
+}
+
 export type DocumentMetadata = {
   id?: string
   resource_id?: string
@@ -452,6 +507,7 @@ export type UIToolCallMetadata =
   | AgentInvocationToolResultMetadata
   | BrowserToolResultMetadata
   | OfficeDocumentsToolMetadata
+  | CodeExecutionToolMetadata
   | DatasourceToolResultMetadata
   | ExternalDatasourceToolResultMetadata
   | HttpRequestToolResultMetadata
@@ -467,6 +523,7 @@ export type UIToolCallMetadata =
 export type UIToolType =
   | "agent_invocation"
   | "browser"
+  | "code_execution"
   | "datasource"
   | "email_send"
   | "external_datasource"
@@ -505,6 +562,10 @@ export type UIAgentInvocationToolCallPart = UIBaseToolCallPart<
 export type UIBrowserToolCallPart = UIBaseToolCallPart<
   "browser",
   BrowserToolResultMetadata
+>
+export type UICodeExecutionToolCallPart = UIBaseToolCallPart<
+  "code_execution",
+  CodeExecutionToolMetadata
 >
 export type UIDatasourceToolCallPart = UIBaseToolCallPart<
   "datasource",
@@ -563,6 +624,7 @@ export type UIUnknownToolCallPart = Omit<
 export type UIToolCallPart =
   | UIAgentInvocationToolCallPart
   | UIBrowserToolCallPart
+  | UICodeExecutionToolCallPart
   | UIDatasourceToolCallPart
   | UIEmailSendToolCallPart
   | UIExternalDatasourceToolCallPart
