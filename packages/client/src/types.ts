@@ -1033,12 +1033,59 @@ export type StreamErrorEvent = {
   }
 }
 
+/** A UI effect declared by a tool (`ui_action`), emitted once the tool succeeded. */
+export type UiActionEffect = {
+  /** Unique per effect; deduplicates the live stream against the history. */
+  action_id: string
+  /** Slug the host app maps to a handler. The API does not interpret it. */
+  action: string
+  /** Resolved values. Untrusted input: a handler sanitizes it. */
+  payload: Record<string, unknown>
+  /** Whether it is applied again when the conversation is reloaded. */
+  replayable: boolean
+}
+
+export type UiActionEvent = {
+  type: "ui_action"
+  tool_use_id: string
+  ui_action: UiActionEffect
+}
+
+export type UiActionContext = {
+  actionId: string
+  toolUseId: string
+  /** True when the effect comes from the history, not from the live stream. */
+  replay: boolean
+}
+
+export type UiActionHandler = (
+  // biome-ignore lint/suspicious/noExplicitAny: each handler types the payload of its own action
+  payload: any,
+  context: UiActionContext,
+) => void | Promise<void>
+
+export type UiActionHandlers = Record<string, UiActionHandler>
+
+/** The handlers, or a function read on every effect (the host's handlers change between renders). */
+export type UiActionHandlersSource =
+  | UiActionHandlers
+  | (() => UiActionHandlers | undefined)
+
+export type UiActionIssue = {
+  type: "ui_action.unmapped" | "ui_action.failed"
+  action: string
+  actionId: string
+  toolUseId: string
+  error?: unknown
+}
+
 export type PlaiSseEvent =
   | MessageStartEvent
   | ContentBlockStartEvent
   | ContentBlockDeltaEvent
   | ContentBlockStopEvent
   | ToolResultEvent
+  | UiActionEvent
   | MemoryProposalEvent
   | MessageIdEvent
   | UsageEvent
@@ -1051,6 +1098,10 @@ export type PlaiChatOptions = {
   generateId?: () => string
   onEvent?: (event: PlaiSseEvent) => void
   onError?: (error: PlaiChatError) => void
+  /** Handlers of the `ui_action` effects, by action slug. Can be replaced later with `chat.uiActions.setHandlers`. */
+  uiActionHandlers?: UiActionHandlersSource
+  /** An effect with no handler (`ui_action.unmapped`) or whose handler threw (`ui_action.failed`). */
+  onUiActionIssue?: (issue: UiActionIssue) => void
 }
 
 export type InternalChatState = ChatState & {

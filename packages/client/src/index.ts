@@ -39,6 +39,7 @@ export {
   toPublicChatState,
 } from "./reducer"
 export { parseSseStream } from "./sse"
+export { UiActionDispatcher, parseUiActionEffect } from "./ui-actions"
 export { PlaiThreadTransport } from "./transport"
 export { normalizePlaiThreadMessages } from "./history"
 export {
@@ -48,6 +49,13 @@ export {
 } from "./turns"
 export type { PlaiThreadTransportOptions } from "./transport"
 export type {
+  UiActionContext,
+  UiActionEffect,
+  UiActionEvent,
+  UiActionHandler,
+  UiActionHandlers,
+  UiActionHandlersSource,
+  UiActionIssue,
   ChatState,
   ChatStateListener,
   ChatStatus,

@@ -449,3 +449,78 @@ describe("useChat", () => {
     expect(result.current.uploadState.status).toBe("idle")
   })
 })
+
+describe("useChat ui_action", () => {
+  const effect = {
+    action_id: "uia_1",
+    action: "set_title",
+    payload: { title: "Onboarding" },
+    replayable: true,
+  }
+  const savedMessages = [
+    {
+      id: "a1",
+      role: "assistant" as const,
+      parts: [
+        {
+          type: "tool-call" as const,
+          id: "tool_1",
+          name: "rename",
+          toolType: "http_request",
+          input: {},
+          state: "completed" as const,
+          metadata: { ui_action: effect },
+        },
+      ],
+    },
+  ] as never
+
+  it("runs the handler from the stream with handlers that change between renders", async () => {
+    const first = vi.fn()
+    const second = vi.fn()
+    const transport = createTransport([
+      {
+        type: "message_start",
+        message: { id: "m", role: "assistant", model: "x" },
+      },
+      { type: "ui_action", tool_use_id: "tool_1", ui_action: effect },
+      { type: "message_stop" },
+    ])
+    const { result, rerender } = renderHook(
+      ({ handler }) =>
+        useChat({ transport, uiActionHandlers: { set_title: handler } }),
+      { initialProps: { handler: first } },
+    )
+    rerender({ handler: second })
+    await act(async () => {
+      await result.current.sendMessage({ text: "hi" })
+    })
+    expect(first).not.toHaveBeenCalled()
+    expect(second).toHaveBeenCalledTimes(1)
+  })
+
+  it("replays the saved effects of initialMessages once mounted", async () => {
+    const handler = vi.fn()
+    const transport = createTransport([])
+    renderHook(() =>
+      useChat({
+        transport,
+        initialMessages: savedMessages,
+        uiActionHandlers: { set_title: handler },
+      }),
+    )
+    await waitFor(() => expect(handler).toHaveBeenCalledTimes(1))
+    expect(handler.mock.calls[0]?.[1]).toMatchObject({ replay: true })
+  })
+
+  it("replays the effects of hydrate(...) and skips the ones already applied", async () => {
+    const handler = vi.fn()
+    const transport = createTransport([])
+    const { result } = renderHook(() =>
+      useChat({ transport, uiActionHandlers: { set_title: handler } }),
+    )
+    act(() => result.current.hydrate(savedMessages))
+    act(() => result.current.hydrate(savedMessages))
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+})
