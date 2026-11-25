@@ -16,6 +16,8 @@ import type {
   ToolConfirmationSnapshot,
   ToolDecision,
   TranscribeAudioFn,
+  UiActionHandlers,
+  UiActionIssue,
   UploadFileFn,
   UIMessage,
   Usage,
@@ -37,6 +39,14 @@ type OwnedChatOptions = {
   generateId?: () => string
   onEvent?: (event: PlaiSseEvent) => void
   onError?: (error: PlaiChatError) => void
+  /**
+   * Handlers of the `ui_action` effects tools declare, by action slug. Read on every effect, so
+   * inline objects are fine. The effects stored in `initialMessages` and in `hydrate(...)` are
+   * re-applied (flagged `context.replay`).
+   */
+  uiActionHandlers?: UiActionHandlers
+  /** An effect with no handler (`ui_action.unmapped`) or whose handler threw (`ui_action.failed`). */
+  onUiActionIssue?: (issue: UiActionIssue) => void
   chat?: never
 }
 
@@ -52,6 +62,9 @@ type ExternalChatOptions = {
   generateId?: never
   onEvent?: never
   onError?: never
+  /** Set them on the instance you own: `chat.uiActions.setHandlers(...)`. */
+  uiActionHandlers?: never
+  onUiActionIssue?: never
 }
 
 export type UseChatOptions = OwnedChatOptions | ExternalChatOptions
@@ -105,6 +118,8 @@ export function useChat(options: UseChatOptions): UseChatResult {
         `local_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`,
       onEvent: (event) => optionsRef.current.onEvent?.(event),
       onError: (error) => optionsRef.current.onError?.(error),
+      uiActionHandlers: () => optionsRef.current.uiActionHandlers,
+      onUiActionIssue: (issue) => optionsRef.current.onUiActionIssue?.(issue),
     })
   }, [external, conversationId, transport])
 
@@ -126,6 +141,14 @@ export function useChat(options: UseChatOptions): UseChatResult {
     }
   }, [owned])
 
+  // The interface is rebuilt from the saved effects once the host is mounted (never during
+  // render or SSR). Effects the stream already applied are skipped by `action_id`.
+  useEffect(() => {
+    if (!owned) return
+    const saved = optionsRef.current.initialMessages
+    if (saved?.length) owned.uiActions.replay(saved)
+  }, [owned])
+
   const actions = useMemo(
     () => ({
       sendMessage: chat.sendMessage.bind(chat),
@@ -141,7 +164,10 @@ export function useChat(options: UseChatOptions): UseChatResult {
       uploadFile: chat.uploadFile.bind(chat),
       stop: chat.stop.bind(chat),
       reset: chat.reset.bind(chat),
-      hydrate: chat.hydrate.bind(chat),
+      hydrate: (messages: UIMessage[]) => {
+        chat.hydrate(messages)
+        chat.uiActions.replay(messages)
+      },
       clearError: chat.clearError.bind(chat),
     }),
     [chat],

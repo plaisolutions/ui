@@ -9,6 +9,7 @@ import {
   reduceChatState,
   toPublicChatState,
 } from "./reducer"
+import { UiActionDispatcher } from "./ui-actions"
 import {
   OPEN_TOOL_CONFIRMATION_STATUSES,
   ToolConfirmationStore,
@@ -123,8 +124,18 @@ export class PlaiChat {
    */
   readonly toolConfirmations = new ToolConfirmationStore()
 
+  /**
+   * Runs the `ui_action` effects of the stream with the host app's handlers. The host sets them
+   * (`setHandlers`) and, once the history is loaded, calls `replay(chat.getState().messages)`.
+   */
+  readonly uiActions: UiActionDispatcher
+
   constructor(options: PlaiChatOptions) {
     this.options = options
+    this.uiActions = new UiActionDispatcher({
+      handlers: options.uiActionHandlers,
+      onIssue: options.onUiActionIssue,
+    })
     this.state = createInitialInternalState(options.initialMessages ?? [])
     this.snapshot = toPublicChatState(this.state)
     this.initialSnapshot = this.snapshot
@@ -185,6 +196,13 @@ export class PlaiChat {
       })) {
         this.options.onEvent?.(event)
         this.setState(reduceChatState(this.state, event))
+        if (event.type === "ui_action") {
+          // Before the tool_result, which may never come (the agent can hide its tool calls).
+          this.uiActions.dispatch(event.ui_action, {
+            toolUseId: event.tool_use_id,
+            replay: false,
+          })
+        }
         if (event.type === "tool_result") {
           this.toolConfirmations.applyToolResult(event.metadata)
         }
@@ -308,10 +326,10 @@ export class PlaiChat {
     const actionIds = input.actionIds ?? this.openActionIds()
     if (actionIds.length === 0) return
     for (let start = 0; start < actionIds.length; start += 50) {
-      const response = await getToolConfirmations.call(
-        this.options.transport,
-        { actionIds: actionIds.slice(start, start + 50), signal: input.signal },
-      )
+      const response = await getToolConfirmations.call(this.options.transport, {
+        actionIds: actionIds.slice(start, start + 50),
+        signal: input.signal,
+      })
       this.toolConfirmations.applyServer(response)
     }
   }
